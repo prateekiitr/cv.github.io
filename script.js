@@ -35,14 +35,14 @@ $(document).ready(function(){
 
     // typing text animation script
     var typed = new Typed(".typing", {
-        strings: ["Consultant", "Biomedical Engineer", "AI/ML Engineer", "Researcher", "Freelancer"],
+        strings: ["Consultant", "Biomedical Engineer", "AI/ML Engineer", "Researcher", "Signal Processing Engineer"],
         typeSpeed: 100,
         backSpeed: 60,
         loop: true
     });
 
     var typed = new Typed(".typing-2", {
-        strings: ["Consultant", "Biomedical Engineer", "AI/ML Engineer", "Researcher", "Freelancer"],
+        strings: ["Consultant", "Biomedical Engineer", "AI/ML Engineer", "Researcher", "Signal Processing Engineer"],
         typeSpeed: 100,
         backSpeed: 60,
         loop: true
