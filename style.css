@@ -678,3 +678,45 @@ footer span a:hover{
         line-height: 38px;
     }
 }
+/* publications section styling */
+.publications {
+    background: #fff; /* Change background color to white */
+    color: #111; /* Change text color to dark */
+    padding: 100px 0;
+    font-family: 'Poppins', sans-serif;
+}
+
+.publications .max-width {
+    text-align: center;
+}
+
+.publications .title::before {
+    background: #111;
+}
+
+.publications .title::after {
+    background: #fff;
+    content: "";
+}
+
+.publications ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 30px;
+}
+
+.publications li {
+    font-size: 20px;
+    margin: 10px 0;
+}
+
+.publications a {
+    color: crimson;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.publications a:hover {
+    color: #111;
+    text-decoration: underline;
+}
