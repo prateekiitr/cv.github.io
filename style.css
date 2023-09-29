@@ -708,6 +708,7 @@ footer span a:hover{
 .publications li {
     font-size: 20px;
     margin: 10px 0;
+    text-align: left;
 }
 
 .publications a {
