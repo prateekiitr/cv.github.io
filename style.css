@@ -721,3 +721,39 @@ footer span a:hover{
     color: #111;
     text-decoration: underline;
 }
+
+/* Blogs Page Styling */
+.blog-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+
+.blog-post {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    width: 300px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.blog-post h3 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.blog-post p {
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.blog-post a {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.blog-post a:hover {
+    text-decoration: underline;
+}
