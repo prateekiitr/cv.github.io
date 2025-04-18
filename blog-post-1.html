@@ -35,23 +35,23 @@
 <h2>Core CNN Operations (2D Example)</h2>
 <h2>Core CNN Operations (2D Example)</h2>
 
-<p>Let’s break down the key operations that make CNNs so powerful for spatial data:</p>
+<p>Let's break down the key operations that make CNNs so powerful for spatial data:</p>
 
 <div class="cnn-operation">
     <h3>1. Convolution: The Pattern Detector</h3>
     <div class="operation-content">
-        <div class="code-visualization">
-            <div class="code-block">
-                # Typical 2D convolution in PyTorch/Keras
-                conv_layer = Conv2D(filters=32, 
-                                  kernel_size=(3,3), 
-                                  strides=1, 
-                                  padding='same')
-            </div>
-            <div class="visualization">
-                <img src="images/cnn-layers.jpeg" alt="CNN Convolution Layers" class="operation-image">
-                <p class="caption">Three-layer CNN architecture showing feature map evolution</p>
-            </div>
+        <div class="code-block">
+            # Typical 2D convolution in PyTorch/Keras
+            conv_layer = Conv2D(filters=32, 
+                             kernel_size=(3,3), 
+                             strides=1, 
+                             padding='same')
+        </div>
+        <div style="flex: 1; min-width: 300px; max-width: 450px; text-align: center; margin: 20px auto;">
+            <img src="images/cnn-layers.jpeg" alt="CNN Convolution Layers" style="width: 100%; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            <p style="font-size: 0.9em; color: #555; margin-top: 8px;">
+                Three-layer CNN architecture showing feature map evolution
+            </p>
         </div>
         <div class="operation-details">
             <ul>
@@ -72,16 +72,16 @@
 <div class="cnn-operation">
     <h3>2. Pooling: The Information Compressor</h3>
     <div class="operation-content">
-        <div class="code-visualization">
-            <div class="code-block">
-                # Max pooling reduces spatial dimensions
-                pool_layer = MaxPool2D(pool_size=(2,2), 
-                                     strides=2)
-            </div>
-            <div class="visualization">
-                <img src="images/max-pooling.jpeg" alt="Max Pooling Operation" class="operation-image">
-                <p class="caption">Max pooling operation preserving strongest activations</p>
-            </div>
+        <div class="code-block">
+            # Max pooling reduces spatial dimensions
+            pool_layer = MaxPool2D(pool_size=(2,2), 
+                                strides=2)
+        </div>
+        <div style="flex: 1; min-width: 300px; max-width: 450px; text-align: center; margin: 20px auto;">
+            <img src="images/max-pooling.jpeg" alt="Max Pooling Operation" style="width: 100%; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            <p style="font-size: 0.9em; color: #555; margin-top: 8px;">
+                Max pooling operation preserving strongest activations
+            </p>
         </div>
         <div class="operation-details">
             <ul>
