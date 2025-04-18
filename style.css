@@ -721,3 +721,57 @@ footer span a:hover{
     color: #111;
     text-decoration: underline;
 }
+
+/* CNN Operations Section Styles */
+.cnn-operation {
+    margin: 30px 0;
+    border-left: 4px solid #3498db;
+    padding-left: 20px;
+}
+
+.operation-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.code-visualization {
+    flex: 1;
+    min-width: 300px;
+}
+
+.operation-details {
+    flex: 2;
+    min-width: 300px;
+}
+
+.operation-image {
+    width: 100%;
+    max-width: 400px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    display: block;
+    margin: 10px auto;
+}
+
+.full-width-box {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin: 30px 0;
+}
+
+.pro-tip {
+    background: #e3f2fd;
+    padding: 15px;
+    border-radius: 6px;
+    margin-top: 15px;
+    border-left: 4px solid #2196f3;
+}
+
+.caption {
+    font-size: 0.85em;
+    color: #666;
+    text-align: center;
+    margin-top: 5px;
+}

@@ -33,7 +33,115 @@
 </ul>
 
 <h2>Core CNN Operations (2D Example)</h2>
-<!-- [Keep this section same] -->
+<h2>Core CNN Operations (2D Example)</h2>
+
+<p>Let’s break down the key operations that make CNNs so powerful for spatial data:</p>
+
+<div class="cnn-operation">
+    <h3>1. Convolution: The Pattern Detector</h3>
+    <div class="operation-content">
+        <div class="code-visualization">
+            <div class="code-block">
+                # Typical 2D convolution in PyTorch/Keras
+                conv_layer = Conv2D(filters=32, 
+                                  kernel_size=(3,3), 
+                                  strides=1, 
+                                  padding='same')
+            </div>
+            <div class="visualization">
+                <img src="images/cnn-layers.jpeg" alt="CNN Convolution Layers" class="operation-image">
+                <p class="caption">Three-layer CNN architecture showing feature map evolution</p>
+            </div>
+        </div>
+        <div class="operation-details">
+            <ul>
+                <li><strong>What happens</strong>: A 3×3 kernel slides across the image, computing dot products at each position</li>
+                <li><strong>Why it matters</strong>: Learns local features like edges, textures, or medical anomalies</li>
+                <li><strong>Key parameters</strong>:
+                    <ul>
+                        <li>Filters: Number of feature detectors (32 here)</li>
+                        <li>Kernel size: Receptive field (3×3 is standard)</li>
+                        <li>Stride: How many pixels to shift (1=high resolution)</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="cnn-operation">
+    <h3>2. Pooling: The Information Compressor</h3>
+    <div class="operation-content">
+        <div class="code-visualization">
+            <div class="code-block">
+                # Max pooling reduces spatial dimensions
+                pool_layer = MaxPool2D(pool_size=(2,2), 
+                                     strides=2)
+            </div>
+            <div class="visualization">
+                <img src="images/max-pooling.jpeg" alt="Max Pooling Operation" class="operation-image">
+                <p class="caption">Max pooling operation preserving strongest activations</p>
+            </div>
+        </div>
+        <div class="operation-details">
+            <ul>
+                <li><strong>What happens</strong>: Downsamples feature maps by taking maximum values in 2×2 windows</li>
+                <li><strong>Why it matters</strong>:
+                    <ul>
+                        <li>Makes network invariant to small translations</li>
+                        <li>Reduces computational load</li>
+                        <li>Expands receptive field without adding parameters</li>
+                    </ul>
+                </li>
+                <li><strong>Medical imaging tip</strong>: Sometimes use average pooling for smoother feature maps</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="cnn-operation">
+    <h3>3. Activation: The Non-Linear Transformer</h3>
+    <div class="operation-content">
+        <div class="code-visualization">
+            <div class="code-block">
+                # ReLU activation (standard for CNNs)
+                activation = ReLU()  
+                # or LeakyReLU(alpha=0.1) for medical data
+            </div>
+        </div>
+        <div class="operation-details">
+            <ul>
+                <li><strong>Mathematically</strong>: max(0, x) - zeros out negative activations</li>
+                <li><strong>Why ReLU?</strong>:
+                    <ul>
+                        <li>Mitigates vanishing gradients</li>
+                        <li>Computationally efficient</li>
+                        <li>Encourages sparse activations (helpful for localized medical features)</li>
+                    </ul>
+                </li>
+                <li><strong>Medical variant</strong>: LeakyReLU often works better for ECG/EEG data</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="full-width-box">
+    <h3>Putting It All Together</h3>
+    <p>A typical CNN block for medical imaging:</p>
+    <div class="code-block">
+        Sequential(
+            Conv2D(64, (3,3), padding='same'),  # Feature extraction
+            BatchNormalization(),                # Stabilizes training
+            ReLU(),
+            MaxPool2D((2,2)),                   # Dimensionality reduction
+            Dropout(0.2)                         # Regularization
+        )
+    </div>
+    <div class="pro-tip">
+        <strong>Pro Tip</strong>: For medical images, we often use smaller strides (1 instead of 2) 
+        in early layers to preserve fine diagnostic details that might indicate early-stage pathology.
+    </div>
+</div>
 
 <h2>From Pixels to Pulses: CNNs for 1D Signals</h2>
 <p>What if I told you the same magic behind facial recognition also helps decode heart rhythms? While CNNs were born in the image world, their DNA works just as well for 1D signals like ECGs.</p>
