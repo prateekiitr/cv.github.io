@@ -69,29 +69,29 @@
     <li><strong>Attention (ECA Module):</strong> An efficient channel attention mechanism dynamically focuses on the most diagnostically relevant parts of the signal during reconstruction and classification.</li>
 </ul>
 
-<div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px; margin: 30px 0;">
-    <!-- Noise Robustness -->
-    <div style="flex: 1; min-width: 300px; max-width: 48%;">
-        <h4 style="margin-bottom: 10px;">1. Noise Robustness</h4>
-        <div style="border-radius: 10px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-            <img src="images/denoised-ecg.jpeg" alt="ECG Denoising" style="width: 100%; display: block;">
-        </div>
-        <p style="font-size: 0.9em; color: #555; margin-top: 8px;">
-            The ACDAE model successfully filters out common noise sources—motion artifacts, baseline wander, and muscle activity—while preserving the critical morphological features of ECGs like P-waves, QRS complexes, and T-waves.
+
+<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; margin: 40px 0;">
+
+    <!-- Card 1: Noise Reduction -->
+    <div style="flex: 1; min-width: 300px; max-width: 450px; text-align: center;">
+        <h4 style="color: #2c3e50;">1. Noise Robustness</h4>
+        <img src="images/denoised-ecg.jpeg" alt="ECG Denoising" style="width: 100%; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        <p style="font-size: 0.9em; color: #555;">
+            The denoising autoencoder filters out movement artifacts and high-frequency noise, ensuring that clinical features (like P and T waves) remain intact for accurate diagnosis.
         </p>
     </div>
 
-    <!-- Attention Mechanism -->
-    <div style="flex: 1; min-width: 300px; max-width: 48%;">
-        <h4 style="margin-bottom: 10px;">2. Attention Mechanism</h4>
-        <div style="border-radius: 10px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-            <img src="images/gc.png" alt="ECG Attention" style="width: 100%; display: block;">
-        </div>
-        <p style="font-size: 0.9em; color: #555; margin-top: 8px;">
-            The embedded Efficient Channel Attention (ECA) module learns which parts of the signal are clinically significant, dynamically boosting meaningful features while suppressing irrelevant noise — critical for reliable arrhythmia classification.
+    <!-- Card 2: Attention Mechanism -->
+    <div style="flex: 1; min-width: 300px; max-width: 450px; text-align: center;">
+        <h4 style="color: #2c3e50;">2. Attention Mechanism</h4>
+        <img src="images/gc.png" alt="ECG Attention" style="width: 100%; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        <p style="font-size: 0.9em; color: #555;">
+            Attention gates learn to prioritize signal segments with clinical significance—such as an ST-segment elevation—enhancing interpretability and model trust.
         </p>
     </div>
+
 </div>
+
 
 <p>We evaluated ACDAE across four major ECG databases and under varying noise levels from -20 dB to +20 dB SNR. The model achieved impressive results:</p>
 <ul>
