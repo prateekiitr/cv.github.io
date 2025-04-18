@@ -125,23 +125,29 @@
     </div>
 </div>
 
-<div class="full-width-box">
+<div class="cnn-block-container">
     <h3>Putting It All Together</h3>
     <p>A typical CNN block for medical imaging:</p>
-    <div class="code-block">
-        Sequential(
-            Conv2D(64, (3,3), padding='same'),  # Feature extraction
-            BatchNormalization(),                # Stabilizes training
-            ReLU(),
-            MaxPool2D((2,2)),                   # Dimensionality reduction
-            Dropout(0.2)                         # Regularization
-        )
+    
+    <div class="code-block cnn-architecture">
+        <div class="code-line"><span class="keyword">Sequential</span>(</div>
+        <div class="code-line indent-1"><span class="keyword">Conv2D</span>(<span class="number">64</span>, (<span class="number">3</span>,<span class="number">3</span>), <span class="param">padding=</span><span class="string">'same'</span>),  <span class="comment"># Feature extraction</span></div>
+        <div class="code-line indent-1"><span class="keyword">BatchNormalization</span>(),  <span class="comment"># Stabilizes training</span></div>
+        <div class="code-line indent-1"><span class="keyword">ReLU</span>(),</div>
+        <div class="code-line indent-1"><span class="keyword">MaxPool2D</span>((<span class="number">2</span>,<span class="number">2</span>)),  <span class="comment"># Dimensionality reduction</span></div>
+        <div class="code-line indent-1"><span class="keyword">Dropout</span>(<span class="number">0.2</span>)  <span class="comment"># Regularization</span></div>
+        <div class="code-line">)</div>
     </div>
-    <div class="pro-tip">
-        <strong>Pro Tip</strong>: For medical images, we often use smaller strides (1 instead of 2) 
-        in early layers to preserve fine diagnostic details that might indicate early-stage pathology.
+    
+    <div class="pro-tip medical-tip">
+        <div class="tip-icon">💡</div>
+        <div class="tip-content">
+            <strong>Pro Tip:</strong> For medical images, we often use smaller strides (1 instead of 2) 
+            in early layers to preserve fine diagnostic details that might indicate early-stage pathology.
+        </div>
     </div>
 </div>
+
 
 <h2>From Pixels to Pulses: CNNs for 1D Signals</h2>
 <p>What if I told you the same magic behind facial recognition also helps decode heart rhythms? While CNNs were born in the image world, their DNA works just as well for 1D signals like ECGs.</p>
