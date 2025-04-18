@@ -1,118 +1,32 @@
-<!DOCTYPE html>
-<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>CNNs Demystified: From Image Recognition to ECG Analysis</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      line-height: 1.6;
-      margin: 40px;
-      background-color: #f9f9f9;
-      color: #333;
-    }
-
-    .blog-header {
-      text-align: center;
-      margin-bottom: 40px;
-    }
-
-    .blog-title {
-      font-size: 2.5em;
-      margin-bottom: 10px;
-    }
-
-    .blog-meta {
-      color: #888;
-      font-size: 0.9em;
-    }
-
-    .image-row {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      gap: 20px;
-      margin: 30px 0;
-    }
-
-    .image-column {
-      flex: 1;
-      min-width: 300px;
-      max-width: 48%;
-      box-sizing: border-box;
-    }
-
-    .image-column img {
-      width: 100%;
-      height: auto;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-
-    .caption {
-      font-size: 0.9em;
-      color: #555;
-      margin-top: 8px;
-      text-align: center;
-    }
-
-    .code-block {
-      background: #f4f4f4;
-      padding: 15px;
-      border-left: 5px solid #3498db;
-      font-family: monospace;
-      white-space: pre;
-      overflow-x: auto;
-      border-radius: 5px;
-    }
-
-    .concept-box {
-      background: #e8f4fc;
-      padding: 15px;
-      border-left: 5px solid #3498db;
-      margin: 20px 0;
-      border-radius: 5px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 20px 0;
-    }
-
-    table th, table td {
-      padding: 10px;
-      border-bottom: 1px solid #ddd;
-    }
-
-    table th {
-      background: #3498db;
-      color: white;
-    }
-
-    .paper-reference {
-      background: #fff;
-      border-left: 5px solid #2ecc71;
-      padding: 15px;
-      margin: 30px 0;
-      border-radius: 5px;
-    }
-
-    h2, h3, h4 {
-      color: #2c3e50;
-    }
-
-    a {
-      color: #3498db;
-      text-decoration: none;
-    }
-  </style>
-</head>
-<body>
-
+    <style>
+      .image-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 20px;
+        margin: 30px 0;
+      }
+  
+      .image-column {
+        flex: 1;
+        min-width: 300px;
+        max-width: 48%;
+        box-sizing: border-box;
+      }
+  
+      .image-column img {
+        width: 100%;
+        height: auto;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      }
+    </style>
+  </head>
+  
 <div class="blog-header">
-  <h1 class="blog-title">CNNs Demystified: From Image Recognition to ECG Analysis</h1>
-  <p class="blog-meta">Published on April 18, 2025 | 12 min read</p>
+    <h1 class="blog-title">CNNs Demystified: From Image Recognition to ECG Analysis</h1>
+    <p class="blog-meta">Published on April 18, 2025 | 12 min read</p>
 </div>
 
 <p>As a Senior Chief AI Engineer at Samsung R&D, I’ve spent the last few years working at the intersection of machine learning and human health. From improving smartphone vision systems to decoding heartbeats, I’ve seen Convolutional Neural Networks (CNNs) evolve into powerful tools beyond just image recognition.</p>
@@ -122,107 +36,116 @@
 <h2>The CNN Advantage: Preserving Spatial Relationships</h2>
 <p>Imagine trying to understand a sentence after randomly shuffling its words—that’s what traditional neural networks do to images. Flattening a 256×256 MRI scan into a 1D vector throws away the spatial relationships that matter most.</p>
 
-<div class="image-row">
-  <div class="image-column">
-    <div class="code-block">
-# Problem: Flattening a 256×256 MRI scan
-flattened = image.reshape(1, 256*256*3)  # 196,608 features!
-# Loses all spatial context between pixels
+<div style="display: flex; align-items: center; margin: 20px 0;">
+    <div style="flex: 1; padding: 10px;">
+        <div class="code-block">
+            # Problem: Flattening a 256×256 MRI scan
+            flattened = image.reshape(1, 256*256*3) # 196,608 features!
+            # Loses all spatial context between pixels
+        </div>
     </div>
-  </div>
-  <div class="image-column">
-    <img src="images/flatten-problem.jpeg" alt="Flattening Problem">
-    <p class="caption">Flattening destroys local relationships</p>
-  </div>
+    <div style="flex: 1; padding: 10px; text-align: center;">
+        <img src="images/flatten-problem.jpeg" alt="Flattening Problem" style="max-width: 100%; border-radius: 5px;">
+        <p class="caption">Flattening destroys local relationships</p>
+    </div>
 </div>
 
 <p>That’s where CNNs shine:</p>
 <ul>
-  <li><strong>Local connectivity:</strong> Filters look at small patches (receptive fields)</li>
-  <li><strong>Parameter sharing:</strong> The same kernel slides across the image</li>
-  <li><strong>Hierarchical learning:</strong> From simple edges to complex organs</li>
+    <li><strong>Local connectivity:</strong> Filters look at small patches (receptive fields)</li>
+    <li><strong>Parameter sharing:</strong> The same kernel slides across the image</li>
+    <li><strong>Hierarchical learning:</strong> From simple edges to complex organs</li>
 </ul>
 
 <h2>Core CNN Operations (2D Example)</h2>
-<!-- [You can add images or code blocks here as needed] -->
+<!-- [Keep this section same] -->
 
 <h2>From Pixels to Pulses: CNNs for 1D Signals</h2>
 <p>What if I told you the same magic behind facial recognition also helps decode heart rhythms? While CNNs were born in the image world, their DNA works just as well for 1D signals like ECGs.</p>
 
 <div class="concept-box">
-  <strong>Think about it:</strong> An ECG is like a one-dimensional image. Local waveform patterns like P-waves and QRS complexes hold crucial information—exactly the kind of features CNNs are good at extracting.
+    <strong>Think about it:</strong> An ECG is like a one-dimensional image. Local waveform patterns like P-waves and QRS complexes hold crucial information—exactly the kind of features CNNs are good at extracting.
 </div>
 
 <h3>1D Convolution for ECG Analysis</h3>
-<img src="images/1d-conv-ecg.jpeg" alt="1D Convolution on ECG" style="max-width: 300px;">
+<img src="images/1d-conv-ecg.jpeg" alt="1D Convolution on ECG" class="blog-image" style="max-width: 300px;">
 <p class="caption">CNN kernels sliding over ECG signals to detect QRS complexes—just like detecting edges in images</p>
 
 <div class="code-block">
-# 1D vs 2D convolution comparison
-# 2D (images)              # 1D (ECG)
-Conv2D(32, (3,3))         Conv1D(32, 3)
-Input: (256,256,3)         Input: (1000,1)  # 1000 samples
+    # 1D vs 2D convolution comparison
+    # 2D (images)              # 1D (ECG)
+    Conv2D(32, (3,3))         Conv1D(32, 3)
+    Input: (256,256,3)         Input: (1000,1)  # 1000 samples
 </div>
 
 <h2>Case Study: Cleaning Noisy ECGs with CNNs + Attention</h2>
 <p>In one of my recent research projects, we developed a hybrid model called the <strong>Attention-Based Convolutional Denoising Autoencoder (ACDAE)</strong>. The goal? Clean up noisy ECGs and simultaneously detect arrhythmias.</p>
 
-<div class="image-row">
-  <div class="image-column">
-    <h4>1. Noise Robustness</h4>
-    <img src="images/denoised-ecg.jpeg" alt="ECG Denoising">
-    <p class="caption">Removes motion artifacts while preserving clinical features.</p>
-  </div>
-  <div class="image-column">
-    <h4>2. Attention Mechanism</h4>
-    <img src="images/gc.png" alt="ECG Attention">
-    <p class="caption">Model learns to “pay attention” to diagnostically relevant parts.</p>
-  </div>
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px; margin: 30px 0;">
+    <!-- Noise Robustness -->
+    <div style="flex: 1; min-width: 300px; max-width: 48%;">
+        <h4 style="margin-bottom: 10px;">1. Noise Robustness</h4>
+        <div style="border-radius: 10px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+            <img src="images/denoised-ecg.jpeg" alt="ECG Denoising" style="width: 100%; display: block;">
+        </div>
+        <p style="font-size: 0.9em; color: #555; margin-top: 8px;">
+            Removes motion artifacts while preserving clinical features.
+        </p>
+    </div>
+
+    <!-- Attention Mechanism -->
+    <div style="flex: 1; min-width: 300px; max-width: 48%;">
+        <h4 style="margin-bottom: 10px;">2. Attention Mechanism</h4>
+        <div style="border-radius: 10px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+            <img src="images/gc.png" alt="ECG Attention" style="width: 100%; display: block;">
+        </div>
+        <p style="font-size: 0.9em; color: #555; margin-top: 8px;">
+            Model learns to “pay attention” to diagnostically relevant parts.
+        </p>
+    </div>
 </div>
 
+
 <div class="paper-reference">
-  <strong>Under the Hood:</strong>
-  <ul>
-    <li><strong>Encoder:</strong> Stacked 1D conv layers (leaky ReLU)</li>
-    <li><strong>Bottleneck:</strong> Attention gates for highlighting important features</li>
-    <li><strong>Decoder:</strong> Transposed conv layers reconstruct the clean signal</li>
-    <li><strong>Classifier:</strong> Optional path for arrhythmia detection</li>
-  </ul>
-  <a href="https://ieeexplore.ieee.org/abstract/document/9853604" target="_blank">Read the full IEEE paper</a>
+    <strong>Under the Hood:</strong>
+    <ul>
+        <li><strong>Encoder:</strong> Stacked 1D conv layers (leaky ReLU)</li>
+        <li><strong>Bottleneck:</strong> Attention gates for highlighting important features</li>
+        <li><strong>Decoder:</strong> Transposed conv layers reconstruct the clean signal</li>
+        <li><strong>Classifier:</strong> Optional path for arrhythmia detection</li>
+    </ul>
+    <a href="https://ieeexplore.ieee.org/abstract/document/9853604" target="_blank">Read the full IEEE paper</a>
 </div>
 
 <h2>Practical Tips: Images vs Signals</h2>
 <p>Medical signals behave differently from natural images. Here's a cheat sheet I always keep in mind:</p>
 
-<table>
-  <tr>
-    <th>Factor</th>
-    <th>Natural Images</th>
-    <th>Medical Signals (e.g. ECG)</th>
-  </tr>
-  <tr>
-    <td>Augmentation</td>
-    <td>Flip, rotate freely</td>
-    <td>Use time-warping, scaling only</td>
-  </tr>
-  <tr>
-    <td>Kernel Size</td>
-    <td>Typically 3×3</td>
-    <td>Depends on waveform duration (e.g., QRS ≈ 120ms)</td>
-  </tr>
+<table style="width:100%; border-collapse: collapse; margin:20px 0;">
+    <tr style="background:#3498db; color:white;">
+        <th style="padding:10px;">Factor</th>
+        <th style="padding:10px;">Natural Images</th>
+        <th style="padding:10px;">Medical Signals (e.g. ECG)</th>
+    </tr>
+    <tr style="border-bottom:1px solid #ddd;">
+        <td style="padding:10px;">Augmentation</td>
+        <td style="padding:10px;">Flip, rotate freely</td>
+        <td style="padding:10px;">Use time-warping, scaling only</td>
+    </tr>
+    <tr style="border-bottom:1px solid #ddd;">
+        <td style="padding:10px;">Kernel Size</td>
+        <td style="padding:10px;">Typically 3×3</td>
+        <td style="padding:10px;">Depends on waveform duration (e.g., QRS ≈ 120ms)</td>
+    </tr>
 </table>
 
 <h2>Takeaway: The CNN Mindset</h2>
 <p>Whether I’m analyzing X-rays or heartbeats, my approach remains the same:</p>
 <ol>
-  <li><strong>Look locally:</strong> Slide filters to extract small patterns</li>
-  <li><strong>Go deep:</strong> Stack layers to build abstraction</li>
-  <li><strong>Tune wisely:</strong> Adapt kernel shapes to the data’s domain</li>
+    <li><strong>Look locally:</strong> Slide filters to extract small patterns</li>
+    <li><strong>Go deep:</strong> Stack layers to build abstraction</li>
+    <li><strong>Tune wisely:</strong> Adapt kernel shapes to the data’s domain</li>
 </ol>
 
 <p>CNNs are no longer just for selfies or cat videos—they’re helping diagnose heart disease, detect tumors, and even enhance driver safety. And as we adapt them to new domains, their impact only grows.</p>
 
 <p>Thanks for reading! Feel free to connect if you're working on AI in healthcare—I’d love to learn from your journey too.</p>
-
-</body>
-</html>
