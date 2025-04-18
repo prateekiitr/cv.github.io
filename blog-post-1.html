@@ -22,8 +22,28 @@
         <!-- [Keep Fun Fact box] -->
 
         <h2>The CNN Advantage: Preserving Spatial Relationships</h2>
-        <!-- [Keep image flattening explanation] -->
+<p>Traditional neural networks fail with image data because flattening destroys the spatial relationships that make visual patterns meaningful. Consider medical imaging:</p>
 
+<div style="display: flex; align-items: center; margin: 20px 0;">
+    <div style="flex: 1; padding: 10px;">
+        <div class="code-block">
+            # Problem: Flattening a 256×256 MRI scan
+            flattened = image.reshape(1, 256*256*3) # 196,608 features!
+            # Loses all spatial context between pixels
+        </div>
+    </div>
+    <div style="flex: 1; padding: 10px; text-align: center;">
+        <img src="images/flatten-problem.jpeg" alt="Flattening Problem" style="max-width: 100%; border-radius: 5px;">
+        <p class="caption">Spatial hierarchy destruction in flattening</p>
+    </div>
+</div>
+
+<p>CNNs solve this through:</p>
+<ul>
+    <li><strong>Local connectivity:</strong> Neurons connect only to local regions (receptive fields)</li>
+    <li><strong>Parameter sharing:</strong> Same weights used across all image positions</li>
+    <li><strong>Hierarchical learning:</strong> Early layers detect edges → late layers detect complex patterns</li>
+</ul>
         <h2>Core CNN Operations (2D Example)</h2>
         <!-- [Keep convolution/pooling/FC sections with images] -->
 
