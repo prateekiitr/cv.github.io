@@ -3,209 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Understanding CNNs: From Pixels to Predictions | Prateek Singh</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
-    <style>
-        .blog-container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            line-height: 1.6;
-            color: #333;
-        }
-        .blog-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        .blog-title {
-            font-size: 2.5rem;
-            color: #2c3e50;
-        }
-        .blog-meta {
-            color: #7f8c8d;
-            font-style: italic;
-        }
-        .blog-image {
-            width: 100%;
-            border-radius: 8px;
-            margin: 20px 0;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        .code-block {
-            background: #f5f5f5;
-            padding: 15px;
-            border-radius: 5px;
-            overflow-x: auto;
-            font-family: 'Courier New', monospace;
-        }
-        .caption {
-            text-align: center;
-            font-style: italic;
-            color: #7f8c8d;
-            margin-top: -15px;
-            margin-bottom: 20px;
-        }
-        .concept-box {
-            background: #e8f4f8;
-            padding: 15px;
-            border-left: 4px solid #3498db;
-            margin: 20px 0;
-        }
-        .paper-reference {
-            background: #f9f9f9;
-            padding: 15px;
-            border-left: 4px solid #e74c3c;
-            margin: 20px 0;
-        }
-    </style>
+    <title>Understanding CNNs: From Images to Life-Saving Signals | Prateek Singh</title>
+    <!-- [Keep all CSS and meta tags same as before] -->
 </head>
 <body>
-    <nav class="navbar">
-        <div class="max-width">
-            <div class="logo"><a href="index.html">Back to <span>Portfolio</span></a></div>
-        </div>
-    </nav>
+    <!-- [Keep navbar same] -->
 
     <div class="blog-container">
         <div class="blog-header">
-            <h1 class="blog-title">Understanding CNNs: How Computers Learn to See</h1>
-            <p class="blog-meta">Published on April 18, 2025 | 10 min read</p>
+            <h1 class="blog-title">CNNs Demystified: From Image Recognition to ECG Analysis</h1>
+            <p class="blog-meta">Published on April 18, 2025 | 12 min read</p>
         </div>
 
-        <img src="images/cnn-banner.jpeg" alt="CNN Visualization" class="blog-image">
-        <p class="caption">Feature maps learned by a CNN (Source: ResearchGate)</p>
+        <!-- [Keep banner image] -->
 
-        <p>As a Chief AI Engineer working on computer vision at Samsung, I often get asked: <em>"How do machines actually understand images?"</em> The answer lies in Convolutional Neural Networks (CNNs) — the workhorses of modern computer vision. Let me break down how they work, why they're revolutionary, and how you can implement one yourself.</p>
+        <p>As a Senior Chief AI Engineer at Samsung R&D, I've deployed Convolutional Neural Networks (CNNs) across domains from medical imaging to automotive systems. While CNNs famously power computer vision, their ability to extract hierarchical features makes them equally revolutionary for signal processing. Let me walk you through the core principles and my hands-on experience adapting them for healthcare.</p>
+
+        <!-- [Keep Fun Fact box] -->
+
+        <h2>The CNN Advantage: Preserving Spatial Relationships</h2>
+        <!-- [Keep image flattening explanation] -->
+
+        <h2>Core CNN Operations (2D Example)</h2>
+        <!-- [Keep convolution/pooling/FC sections with images] -->
+
+        <h2>Adapting CNNs for 1D Signals</h2>
+        <p>While CNNs naturally fit image data (2D), their core principles translate brilliantly to 1D signals like ECGs. Here's how we adapt the architecture:</p>
 
         <div class="concept-box">
-            <strong>Fun Fact:</strong> The first CNN (LeNet-5) was created by Yann LeCun in 1998 to recognize handwritten digits for postal services. Today, CNNs power everything from medical diagnostics to self-driving cars.
+            <strong>Key Insight:</strong> An ECG trace is essentially a 1D "image" where local waveform morphology matters most - perfect for convolutional feature extraction.
         </div>
 
-        <h2>Why CNNs Beat Traditional Neural Networks for Images</h2>
-        <p>Imagine flattening a 256x256 RGB image into a 1D vector for a regular neural network:</p>
+        <h3>1D Convolution for ECG Analysis</h3>
+        <img src="images/1d-conv-ecg.jpeg" alt="1D Convolution on ECG" class="blog-image" style="max-width: 600px;">
+        <p class="caption">Sliding kernel detecting QRS complexes in raw ECG (compare to 2D image kernels above)</p>
+
+        <div class="code-block">
+            # 1D vs 2D convolution comparison
+            # 2D (images)              # 1D (ECG)
+            Conv2D(32, (3,3))         Conv1D(32, 3)
+            Input: (256,256,3)         Input: (1000,1)  # 1000 samples
+        </div>
+
+        <h2>Case Study: ECG Denoising & Classification</h2>
+        <p>In my <a href="https://ieeexplore.ieee.org/abstract/document/9853604" target="_blank">IEEE TIM paper</a>, we developed an <strong>Attention-Based Convolutional Denoising Autoencoder (ACDAE)</strong> that:</p>
         
-        <div class="code-block">
-            256 × 256 × 3 = 196,608 input neurons!
+        <div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 300px; padding: 10px;">
+                <h4>1. Noise Robustness</h4>
+                <img src="images/denoised-ecg.jpeg" alt="ECG Denoising" style="width:100%; border-radius:5px;">
+                <p>Removes motion artifacts while preserving clinical features</p>
+            </div>
+            <div style="flex: 1; min-width: 300px; padding: 10px;">
+                <h4>2. Attention Mechanism</h4>
+                <img src="images/attention.jpeg" alt="ECG Attention" style="width:100%; border-radius:5px;">
+                <p>Focuses on diagnostically critical segments</p>
+            </div>
         </div>
-
-        <p>This approach fails because:</p>
-        <ul>
-            <li><strong>Computational overload:</strong> Billions of parameters to learn</li>
-            <li><strong>Ignores spatial hierarchy:</strong> Pixels close to each other matter more</li>
-            <li><strong>Not translation invariant:</strong> A cat in the corner ≠ a centered cat</li>
-        </ul>
-
-        <h2>The CNN Architecture: A Biological Inspiration</h2>
-        <p>CNNs mimic the human visual cortex through three key operations:</p>
-
-        <img src="images/cnn-layers.jpeg" alt="CNN Layers" class="blog-image">
-        <p class="caption">Typical CNN architecture with convolution, pooling, and fully connected layers</p>
-
-        <h3>1. Convolution Layers: Feature Detectors</h3>
-        <p>Small filters (kernels) slide across the image to detect patterns:</p>
-
-        <div class="code-block">
-            # Python implementation of 2D convolution
-            import numpy as np
-            
-            def conv2d(image, kernel):
-                h, w = image.shape
-                k_h, k_w = kernel.shape
-                output = np.zeros((h - k_h + 1, w - k_w + 1))
-                
-                for i in range(output.shape[0]):
-                    for j in range(output.shape[1]):
-                        output[i,j] = np.sum(image[i:i+k_h, j:j+k_w] * kernel)
-                
-                return output
-        </div>
-
-        <h3>2. Pooling: Dimensionality Reduction</h3>
-        <p>Max pooling retains only the most activated features:</p>
-        <img src="images/max-pooling.jpeg" alt="Max Pooling" class="blog-image" style="max-width: 400px;">
-
-        <h3>3. Fully Connected Layers: The Classifier</h3>
-        <p>Final layers map extracted features to class probabilities:</p>
-        <div class="code-block">
-            model = Sequential([
-                Conv2D(32, (3,3), activation='relu', input_shape=(256,256,3)),
-                MaxPooling2D((2,2)),
-                Flatten(),
-                Dense(128, activation='relu'),
-                Dense(10, activation='softmax')  # 10-class classification
-            ])
-        </div>
-
-        <h2>Real-World Case Study: ECG Classification</h2>
-        <p>In my PhD work at IIT Roorkee, I adapted CNNs for 1D ECG signals denoising using denoising autoencoders:</p>
-        <ol>
-            <li>Used <strong>Attention-Based Convolutional Denoising Autoencoder (ACDAE)</strong> for denoising real-time noise from wearable devices while simultaneously classifying arrhythmias</li>
-            <li>Implemented attention mechanisms to focus on diagnostically critical segments</li>
-            <li>Achieved state-of-the-art 98.7% accuracy on MIT-BIH dataset (surpassing cardiologist consensus)</li>
-        </ol>
 
         <div class="paper-reference">
-            <strong>Published in IEEE Transactions on Instrumentation & Measurement (Impact Factor: 5.6)</strong><br>
-            <a href="https://ieeexplore.ieee.org/abstract/document/9853604" target="_blank">Singh, P., & Sharma, A. (2022). "Attention-Based Convolutional Denoising Autoencoder for Two-Lead ECG Denoising and Arrhythmia Classification"</a><br>
-            Key innovations:
+            <strong>Architecture Highlights:</strong>
             <ul>
-                <li>End-to-end system for noise-robust ECG analysis</li>
-                <li>Novel attention gates in decoder architecture</li>
-                <li>Validated on 5 public datasets</li>
+                <li><strong>Encoder:</strong> Stacked 1D conv layers with leaky ReLU</li>
+                <li><strong>Bottleneck:</strong> Attention gates highlight key features</li>
+                <li><strong>Decoder:</strong> Transposed conv layers reconstruct clean signal</li>
+                <li><strong>Classifier:</strong> Parallel branch for arrhythmia detection</li>
             </ul>
+            <a href="https://ieeexplore.ieee.org/abstract/document/9853604" target="_blank">Full paper on IEEE Xplore</a>
         </div>
 
-        <img src="images/ecg-cnn.jpeg" alt="ECG CNN" class="blog-image">
-        <p class="caption">Our ACDAE architecture (from <a href="https://ieeexplore.ieee.org/abstract/document/9853604" target="_blank">IEEE TIM 2022</a>)</p>
+        <h2>Practical Considerations</h2>
+        <h3>Medical vs. Natural Images</h3>
+        <table style="width:100%; border-collapse: collapse; margin:20px 0;">
+            <tr style="background:#3498db; color:white;">
+                <th style="padding:10px; text-align:left;">Factor</th>
+                <th style="padding:10px; text-align:left;">Natural Images</th>
+                <th style="padding:10px; text-align:left;">Medical Signals</th>
+            </tr>
+            <tr style="border-bottom:1px solid #ddd;">
+                <td style="padding:10px;">Augmentation</td>
+                <td style="padding:10px;">Flip, rotate freely</td>
+                <td style="padding:10px;">Time-warping only (ECG)</td>
+            </tr>
+            <tr style="border-bottom:1px solid #ddd;">
+                <td style="padding:10px;">Kernel Size</td>
+                <td style="padding:10px;">3×3 typical</td>
+                <td style="padding:10px;">Match waveform scale (e.g., QRS duration)</td>
+            </tr>
+        </table>
 
-        <h2>Practical Tips for CNN Implementation</h2>
-        <div class="concept-box">
-            <strong>Pro Tip:</strong> Always visualize your filters and feature maps using tools like TensorBoard. If early layers aren't learning edge detectors, your model may need tuning.
-        </div>
+        <h2>Conclusion: The CNN Mindset</h2>
+        <p>Whether processing 2D chest X-rays or 1D ECG traces, the CNN approach remains consistent:</p>
+        <ol>
+            <li><strong>Local feature extraction</strong> through sliding kernels</li>
+            <li><strong>Hierarchical abstraction</strong> via deep layers</li>
+            <li><strong>Domain-specific adaptation</strong> of kernel shapes and network topology</li>
+        </ol>
 
-        <ul>
-            <li><strong>Medical Imaging Specifics:</strong> Rotate/flip images only if anatomically plausible (unlike natural images)</li>
-            <li><strong>Transfer Learning:</strong> Models pretrained on ImageNet can surprisingly work well for medical imaging with proper fine-tuning</li>
-            <li><strong>Explainability:</strong> Use Grad-CAM to understand what your model focuses on - critical for FDA submissions</li>
-        </ul>
+        <p>This flexibility explains why CNNs remain indispensable in my work at Samsung, whether developing smartphone health features or automotive safety systems.</p>
 
-        <h2>Beyond Vision: CNNs for Time-Series</h2>
-        <p>At Mercedes-Benz R&D, we repurposed CNNs for automotive applications:</p>
-        <ul>
-            <li><strong>Engine vibration analysis:</strong> Converted 1D signals to 2D spectrograms for CNN processing</li>
-            <li><strong>Driver monitoring:</strong> 1D temporal convolutions for behavior prediction from wearable data</li>
-        </ul>
-
-        <div class="code-block">
-            # 1D CNN for automotive sensor data (similar to our implementation)
-            model = Sequential([
-                Conv1D(64, 3, activation='relu', input_shape=(1000, 12)),  # 12-channels
-                GlobalMaxPooling1D(),
-                Dense(32, activation='relu'),
-                Dense(1, activation='sigmoid')  # anomaly detection
-            ])
-        </div>
-
-        <h2>Conclusion</h2>
-        <p>From classifying cats in photos to detecting life-threatening arrhythmias in ECGs, CNNs have revolutionized how machines perceive the world. Our work on <a href="https://ieeexplore.ieee.org/abstract/document/9853604" target="_blank">attention-based denoising architectures</a> demonstrates their adaptability to critical healthcare applications.</p>
-
-        <p>As I continue developing next-gen AI systems at Samsung Research, I'm exploring hybrid architectures combining CNNs with transformers - but that's a topic for another blog!</p>
-
-        <p><strong>Try it yourself:</strong> <a href="https://colab.research.google.com/gist/Prateek29s/your-ecg-demo" target="_blank">Open our ECG demo in Colab</a></p>
-
-        <div style="margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px;">
-            <p>Share this post: 
-                <a href="https://twitter.com/intent/tweet?text=Check%20out%20this%20CNN%20blog%20by%20@prateek2987%20https://prateeksinghphd.com/blogs/cnn-explained" target="_blank"><i class="fab fa-twitter"></i></a>
-                <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://prateeksinghphd.com/blogs/cnn-explained" target="_blank"><i class="fab fa-linkedin"></i></a>
-                <a href="https://www.facebook.com/sharer/sharer.php?u=https://prateeksinghphd.com/blogs/cnn-explained" target="_blank"><i class="fab fa-facebook"></i></a>
-            </p>
-            <p><a href="blogs.html">← Back to all blogs</a></p>
-        </div>
+        <!-- [Keep footer and sharing buttons] -->
     </div>
-
-    <footer>
-        <span>Created By <a href="https://www.prateeksinghphd.com">Prateek Singh</a> | <span class="far fa-copyright"></span> 2025</span>
-    </footer>
 </body>
 </html>
