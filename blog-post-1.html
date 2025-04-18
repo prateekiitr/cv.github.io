@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Understanding CNNs: From Pixels to Predictions | Prateek Singh</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+    <style>
+        .blog-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        .blog-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .blog-title {
+            font-size: 2.5rem;
+            color: #2c3e50;
+        }
+        .blog-meta {
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        .blog-image {
+            width: 100%;
+            border-radius: 8px;
+            margin: 20px 0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .code-block {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+        }
+        .caption {
+            text-align: center;
+            font-style: italic;
+            color: #7f8c8d;
+            margin-top: -15px;
+            margin-bottom: 20px;
+        }
+        .concept-box {
+            background: #e8f4f8;
+            padding: 15px;
+            border-left: 4px solid #3498db;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="max-width">
+            <div class="logo"><a href="index.html">Back to <span>Portfolio</span></a></div>
+        </div>
+    </nav>
+
+    <div class="blog-container">
+        <div class="blog-header">
+            <h1 class="blog-title">Understanding CNNs: How Computers Learn to See</h1>
+            <p class="blog-meta">Published on May 15, 2025 | 10 min read</p>
+        </div>
+
+        <img src="images/cnn-banner.jpeg" alt="CNN Visualization" class="blog-image">
+        <p class="caption">Feature maps learned by a CNN (Source: ResearchGate)</p>
+
+        <p>As a Senior AI Engineer working on computer vision at Samsung, I often get asked: <em>"How do machines actually understand images?"</em> The answer lies in Convolutional Neural Networks (CNNs) — the workhorses of modern computer vision. Let me break down how they work, why they're revolutionary, and how you can implement one yourself.</p>
+
+        <div class="concept-box">
+            <strong>Fun Fact:</strong> The first CNN (LeNet-5) was created by Yann LeCun in 1998 to recognize handwritten digits for postal services. Today, CNNs power everything from medical diagnostics to self-driving cars.
+        </div>
+
+        <h2>Why CNNs Beat Traditional Neural Networks for Images</h2>
+        <p>Imagine flattening a 256x256 RGB image into a 1D vector for a regular neural network:</p>
+        
+        <div class="code-block">
+            256 × 256 × 3 = 196,608 input neurons!
+        </div>
+
+        <p>This approach fails because:</p>
+        <ul>
+            <li><strong>Computational overload:</strong> Billions of parameters to learn</li>
+            <li><strong>Ignores spatial hierarchy:</strong> Pixels close to each other matter more</li>
+            <li><strong>Not translation invariant:</strong> A cat in the corner ≠ a centered cat</li>
+        </ul>
+
+        <h2>The CNN Architecture: A Biological Inspiration</h2>
+        <p>CNNs mimic the human visual cortex through three key operations:</p>
+
+        <img src="images/cnn-layers.jpeg" alt="CNN Layers" class="blog-image">
+        <p class="caption">Typical CNN architecture with convolution, pooling, and fully connected layers</p>
+
+        <h3>1. Convolution Layers: Feature Detectors</h3>
+        <p>Small filters (kernels) slide across the image to detect patterns:</p>
+
+        <div class="code-block">
+            # Python implementation of 2D convolution
+            import numpy as np
+            
+            def conv2d(image, kernel):
+                h, w = image.shape
+                k_h, k_w = kernel.shape
+                output = np.zeros((h - k_h + 1, w - k_w + 1))
+                
+                for i in range(output.shape[0]):
+                    for j in range(output.shape[1]):
+                        output[i,j] = np.sum(image[i:i+k_h, j:j+k_w] * kernel)
+                
+                return output
+        </div>
+
+        <h3>2. Pooling: Dimensionality Reduction</h3>
+        <p>Max pooling retains only the most activated features:</p>
+        <img src="images/max-pooling.jpeg" alt="Max Pooling" class="blog-image" style="max-width: 400px;">
+
+        <h3>3. Fully Connected Layers: The Classifier</h3>
+        <p>Final layers map extracted features to class probabilities:</p>
+        <div class="code-block">
+            model = Sequential([
+                Conv2D(32, (3,3), activation='relu', input_shape=(256,256,3)),
+                MaxPooling2D((2,2)),
+                Flatten(),
+                Dense(128, activation='relu'),
+                Dense(10, activation='softmax')  # 10-class classification
+            ])
+        </div>
+
+        <h2>Real-World Case Study: ECG Classification</h2>
+        <p>In my PhD work at IIT Roorkee, I adapted CNNs for 1D ECG signals:</p>
+        <ol>
+            <li>Used 1D convolutions to detect QRS complexes</li>
+            <li>Implemented attention mechanisms to focus on arrhythmia segments</li>
+            <li>Achieved 98.7% accuracy on MIT-BIH dataset (better than cardiologists!)</li>
+        </ol>
+
+        <img src="images/ecg-cnn.jpeg" alt="ECG CNN" class="blog-image">
+        <p class="caption">Our CNN architecture for arrhythmia detection (from my IEEE TIM paper)</p>
+
+        <h2>Practical Tips for CNN Implementation</h2>
+        <div class="concept-box">
+            <strong>Pro Tip:</strong> Always visualize your filters and feature maps using tools like TensorBoard. If early layers aren't learning edge detectors, your model may need tuning.
+        </div>
+
+        <ul>
+            <li><strong>Data Augmentation:</strong> Rotate/flip medical images? Only if anatomically plausible!</li>
+            <li><strong>Transfer Learning:</strong> Models pretrained on ImageNet can surprisingly work well for medical imaging</li>
+            <li><strong>Explainability:</strong> Use Grad-CAM to understand what your model focuses on</li>
+        </ul>
+
+        <h2>Beyond Vision: CNNs for Time-Series</h2>
+        <p>At Mercedes-Benz, we repurposed CNNs for:</p>
+        <ul>
+            <li>Engine vibration analysis (2D spectrograms)</li>
+            <li>Driver behavior prediction (1D temporal convolutions)</li>
+        </ul>
+
+        <div class="code-block">
+            # 1D CNN for sensor data
+            model = Sequential([
+                Conv1D(64, 3, activation='relu', input_shape=(1000, 12)),  # 12 sensors
+                GlobalMaxPooling1D(),
+                Dense(32, activation='relu'),
+                Dense(1, activation='sigmoid')  # anomaly detection
+            ])
+        </div>
+
+        <h2>Conclusion</h2>
+        <p>CNNs have revolutionized how machines perceive the world. From classifying cats in photos to detecting life-threatening arrhythmias in ECGs, their hierarchical feature learning makes them uniquely powerful. As I continue working on next-gen AI at Samsung, I'm excited by emerging variants like Vision Transformers — but that's a topic for another blog!</p>
+
+        <p><strong>Try it yourself:</strong> <a href="https://colab.research.google.com/" target="_blank">Open in Colab</a> to experiment with CNNs on medical images.</p>
+
+        <div style="margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px;">
+            <p>Share this post: 
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-linkedin"></i></a>
+                <a href="#"><i class="fab fa-facebook"></i></a>
+            </p>
+            <p><a href="blogs.html">← Back to all blogs</a></p>
+        </div>
+    </div>
+
+    <footer>
+        <span>Created By <a href="https://www.prateeksinghphd.com">Prateek Singh</a> | <span class="far fa-copyright"></span> 2025</span>
+    </footer>
+</body>
+</html>
