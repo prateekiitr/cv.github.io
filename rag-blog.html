@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How RAG Makes AI Smarter | Prateek Singh</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+    <style>
+        /* Additional styles for the RAG blog */
+        .blog-header {
+            background: linear-gradient(135deg, #4361ee, #3f37c9);
+            color: white;
+            padding: 80px 0 40px;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .blog-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        
+        .blog-header .meta {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+        
+        .blog-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .blog-content {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            margin-bottom: 40px;
+        }
+        
+        .blog-content h2 {
+            color: #4361ee;
+            margin: 30px 0 20px;
+            border-bottom: 2px solid #4895ef;
+            padding-bottom: 10px;
+        }
+        
+        .blog-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .image-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .image-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        
+        .image-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            margin: 0;
+            transition: transform 0.3s ease;
+        }
+        
+        .image-card:hover img {
+            transform: scale(1.05);
+        }
+        
+        .image-card .caption {
+            padding: 15px;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+        }
+        
+        .comparison-table th, .comparison-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .comparison-table th {
+            background-color: #4361ee;
+            color: white;
+        }
+        
+        .comparison-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        .comparison-table tr:hover {
+            background-color: #e9ecef;
+        }
+        
+        .cta {
+            background: linear-gradient(135deg, #4895ef, #4cc9f0);
+            color: white;
+            text-align: center;
+            padding: 60px 20px;
+            border-radius: 15px;
+            margin: 60px 0;
+        }
+        
+        .cta h2 {
+            color: white;
+            border-bottom: 2px solid white;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: white;
+            color: #4361ee;
+            padding: 12px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+        
+        .back-to-blogs {
+            text-align: center;
+            margin: 40px 0;
+        }
+        
+        .back-to-blogs a {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #4361ee;
+            color: white;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .back-to-blogs a:hover {
+            background: #3f37c9;
+            transform: translateY(-2px);
+        }
+        
+        /* Animation classes */
+        .fade-in {
+            opacity: 0;
+            animation: fadeIn 1s ease-in forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Diagram styles */
+        .diagram-container {
+            margin: 40px 0;
+            text-align: center;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .diagram-caption {
+            margin-top: 15px;
+            font-style: italic;
+            color: #666;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .blog-header {
+                padding: 60px 0 30px;
+            }
+            
+            .blog-header h1 {
+                font-size: 2rem;
+            }
+            
+            .blog-content {
+                padding: 20px;
+            }
+            
+            .image-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="max-width">
+            <div class="logo"><a href="index.html">Back to <span>Portfolio</span></a></div>
+        </div>
+    </nav>
+
+    <header class="blog-header">
+        <div class="blog-container">
+            <h1>How RAG Makes AI Smarter</h1>
+            <p class="meta">Posted on May 24, 2025</p>
+        </div>
+    </header>
+
+    <div class="blog-container">
+        <div class="blog-content">
+            <section class="fade-in">
+                <h2>What Exactly is RAG?</h2>
+                <p>Retrieval-Augmented Generation (RAG) is like giving AI a super-powered research assistant. Instead of relying solely on what it memorized during training, RAG allows AI to:</p>
+                
+                <div class="image-grid">
+                    <div class="image-card">
+                        <img src="images/rag-retrieve.png" alt="Searching through data">
+                        <div class="caption">
+                            <h3>1. Retrieve Information</h3>
+                            <p>Find relevant facts from up-to-date sources when you ask a question</p>
+                        </div>
+                    </div>
+                    
+                    <div class="image-card">
+                        <img src="images/rag-generate.png" alt="Generating answers">
+                        <div class="caption">
+                            <h3>2. Generate Answers</h3>
+                            <p>Combine found information with its knowledge to create helpful responses</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <p>This two-step process results in answers that are more accurate, up-to-date, and trustworthy than traditional AI responses.</p>
+            </section>
+            
+            <section class="fade-in">
+                <h2>The RAG Process: Step by Step</h2>
+                <p>Here's how RAG works behind the scenes when you ask a question:</p>
+                
+                <div class="diagram-container">
+                    <img src="images/rag-process.png" alt="RAG Process Diagram">
+                    <p class="diagram-caption">Figure 1: RAG Process Flow Diagram</p>
+                </div>
+                
+                <ol style="margin-left: 20px; font-size: 1.1rem;">
+                    <li style="margin-bottom: 10px;"><strong>Your question</strong> is converted into a mathematical representation (vector)</li>
+                    <li style="margin-bottom: 10px;">The system <strong>searches</strong> through documents to find the most relevant information</li>
+                    <li style="margin-bottom: 10px;">The AI <strong>combines</strong> this information with its general knowledge</li>
+                    <li style="margin-bottom: 10px;">A <strong>clear, helpful answer</strong> is generated specifically for you</li>
+                </ol>
+            </section>
+            
+            <section class="fade-in">
+                <h2>Why RAG Beats Traditional AI</h2>
+                <p>Traditional AI models have limitations that RAG solves:</p>
+                
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Problem</th>
+                            <th>Traditional AI</th>
+                            <th>RAG Solution</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Outdated information</td>
+                            <td>Only knows what it was trained on</td>
+                            <td>Can access current documents</td>
+                        </tr>
+                        <tr>
+                            <td>"Hallucinations"</td>
+                            <td>Makes up answers when unsure</td>
+                            <td>Grounds answers in real sources</td>
+                        </tr>
+                        <tr>
+                            <td>Company knowledge</td>
+                            <td>Doesn't know internal documents</td>
+                            <td>Can reference your specific files</td>
+                        </tr>
+                        <tr>
+                            <td>Transparency</td>
+                            <td>No way to check sources</td>
+                            <td>Can show where info came from</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+            
+            <section class="fade-in">
+                <h2>6 Types of RAG Systems</h2>
+                <p>Different situations call for different RAG approaches:</p>
+                
+                <div class="image-grid">
+                    <div class="image-card">
+                        <img src="images/rag-basic.png" alt="Basic RAG">
+                        <div class="caption">
+                            <h3>1. Basic RAG</h3>
+                            <p>The standard retrieve-and-generate approach</p>
+                        </div>
+                    </div>
+                    
+                    <div class="image-card">
+                        <img src="images/rag-advanced.png" alt="Advanced RAG">
+                        <div class="caption">
+                            <h3>2. Advanced RAG</h3>
+                            <p>Improves searches with query optimization</p>
+                        </div>
+                    </div>
+                    
+                    <div class="image-card">
+                        <img src="images/rag-graph.png" alt="Graph RAG">
+                        <div class="caption">
+                            <h3>3. Graph RAG</h3>
+                            <p>Uses knowledge graphs for smarter connections</p>
+                        </div>
+                    </div>
+                    
+                    <div class="image-card">
+                        <img src="images/rag-hybrid.png" alt="Hybrid RAG">
+                        <div class="caption">
+                            <h3>4. Hybrid RAG</h3>
+                            <p>Combines multiple search methods</p>
+                        </div>
+                    </div>
+                    
+                    <div class="image-card">
+                        <img src="images/rag-multimodal.png" alt="Multimodal RAG">
+                        <div class="caption">
+                            <h3>5. Multimodal RAG</h3>
+                            <p>Works with both text and images</p>
+                        </div>
+                    </div>
+                    
+                    <div class="image-card">
+                        <img src="images/rag-agent.png" alt="Agent RAG">
+                        <div class="caption">
+                            <h3>6. Agent RAG</h3>
+                            <p>Uses helper programs for complex searches</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="fade-in">
+                <h2>Where You'll See RAG in Action</h2>
+                <p>RAG is transforming industries with more accurate AI assistance:</p>
+                
+                <div class="image-grid">
+                    <div class="image-card">
+                        <img src="images/rag-customer-service.png" alt="Customer Service">
+                        <div class="caption">
+                            <h3>Customer Support</h3>
+                            <p>Chatbots that actually know your products and policies</p>
+                        </div>
+                    </div>
+                    
+                    <div class="image-card">
+                        <img src="images/rag-healthcare.png" alt="Healthcare">
+                        <div class="caption">
+                            <h3>Healthcare</h3>
+                            <p>AI that references the latest medical research</p>
+                        </div>
+                    </div>
+                    
+                    <div class="image-card">
+                        <img src="images/rag-legal.png" alt="Legal">
+                        <div class="caption">
+                            <h3>Legal</h3>
+                            <p>Quick case law references and contract analysis</p>
+                        </div>
+                    </div>
+                    
+                    <div class="image-card">
+                        <img src="images/rag-education.png" alt="Education">
+                        <div class="caption">
+                            <h3>Education</h3>
+                            <p>Tutoring systems with access to learning materials</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <div class="cta fade-in">
+                <h2>Ready to See RAG in Action?</h2>
+                <p>This technology is transforming how businesses use AI every day</p>
+                <a href="#" class="btn">Learn How to Implement RAG</a>
+            </div>
+            
+            <div class="back-to-blogs">
+                <a href="blogs.html"><i class="fas fa-arrow-left"></i> Back to All Blogs</a>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <span>Created By <a href="https://www.prateeksinghphd.com">Prateek Singh</a> | <span class="far fa-copyright"></span> 2025</span>
+            <p style="margin-top: 10px; opacity: 0.8;">Visual guide to Retrieval-Augmented Generation</p>
+        </div>
+    </footer>
+    
+    <script>
+        // JavaScript for interactive elements
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add animation to sections as they scroll into view
+            const sections = document.querySelectorAll('section');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('fade-in');
+                    }
+                });
+            }, { threshold: 0.1 });
+            
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+            
+            // Make image cards interactive
+            const imageCards = document.querySelectorAll('.image-card');
+            imageCards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.querySelector('img').style.transform = 'scale(1.05)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.querySelector('img').style.transform = 'scale(1)';
+                });
+            });
+            
+            // Smooth scroll for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>
