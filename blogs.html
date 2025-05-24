@@ -6,6 +6,26 @@
     <title>My Blogs | Prateek Singh</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+    <style>
+        /* Additional styles for the RAG blog card */
+        .blog-post.rag-special {
+            border-left: 5px solid #4361ee;
+            background: linear-gradient(to right, #f5f7ff, white);
+        }
+        .blog-post.rag-special h3 {
+            color: #4361ee;
+        }
+        .blog-post.rag-special .tag {
+            display: inline-block;
+            background: #4895ef;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -18,18 +38,26 @@
         <div class="max-width">
             <h2 class="title">My Blogs</h2>
             <div class="blog-content">
+                <!-- New RAG Blog Post -->
+                <div class="blog-post rag-special">
+                    <h3>How RAG Makes AI Smarter: A Visual Guide <span class="tag">NEW</span></h3>
+                    <p>Published on: <span>May 24, 2025</span></p>
+                    <p>Discover how Retrieval-Augmented Generation combines information retrieval with AI to create more accurate, up-to-date answers. This visual guide explains RAG in simple terms with practical examples.</p>
+                    <a href="rag-blog.html">Read More <i class="fas fa-arrow-right"></i></a>
+                </div>
+
                 <div class="blog-post">
-                    <h3>CNNs Demystified: From Image Recognition to ECG Analysis
-                    </h3>
+                    <h3>CNNs Demystified: From Image Recognition to ECG Analysis</h3>
                     <p>Published on: <span>April 18, 2025</span></p>
                     <p>Summary or introduction to the blog post...</p>
-                    <a href="blog-post-1.html">Read More</a>
+                    <a href="blog-post-1.html">Read More <i class="fas fa-arrow-right"></i></a>
                 </div>
+                
                 <div class="blog-post">
                     <h3>Coming soon..</h3>
                     <p>Published on: <span>May 15, 2025</span></p>
                     <p>Summary or introduction to the blog post...</p>
-                    <a href="blog-post-2.html">Read More</a>
+                    <a href="blog-post-2.html">Read More <i class="fas fa-arrow-right"></i></a>
                 </div>
                 <!-- Add more blog posts as needed -->
             </div>
