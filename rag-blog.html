@@ -746,6 +746,8 @@
                     </div>
                 </div>
             </section>
+
+
             
             <div class="cta fade-in">
                 <h2>Ready to See RAG in Action?</h2>
@@ -758,6 +760,287 @@
             </div>
         </div>
     </div>
+
+    <!-- Add this right before your footer section -->
+<section class="comments-section fade-in">
+    <div class="blog-container">
+        <h2>Share Your Thoughts</h2>
+        <p class="comments-intro">Have questions about RAG or experiences to share? Leave a comment below!</p>
+        
+        <!-- Comment Form -->
+        <div class="comment-form">
+            <h3>Post a Comment</h3>
+            <form id="commentForm">
+                <div class="form-group">
+                    <label for="name">Name*</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email (never shown)*</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="comment">Comment*</label>
+                    <textarea id="comment" name="comment" rows="5" required></textarea>
+                </div>
+                <button type="submit" class="comment-submit-btn">
+                    <i class="fas fa-paper-plane"></i> Post Comment
+                </button>
+            </form>
+        </div>
+        
+        <!-- Comments List -->
+        <div class="comments-list">
+            <h3>Reader Comments</h3>
+            
+            
+            <!-- Another Sample Comment -->
+            <div class="comment">
+                <div class="comment-header">
+                    <div class="comment-author">Prateek S.</div>
+                    <div class="comment-date">May 24, 2025</div>
+                </div>
+                <div class="comment-body">
+                    <p>Share your thoughts..</p>
+                </div>
+                <div class="comment-reply">
+                    <a href="#"><i class="fas fa-reply"></i> Reply</a>
+                </div>
+            </div>
+            
+            <!-- Empty State -->
+            <div class="no-comments">
+                <p>No comments yet. Be the first to share your thoughts!</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+/* Comments Section Styling */
+.comments-section {
+    background: #f8f9ff;
+    padding: 60px 0;
+    margin-top: 60px;
+    border-top: 1px solid #e0e7ff;
+}
+
+.comments-intro {
+    text-align: center;
+    margin-bottom: 40px;
+    color: #555;
+}
+
+.comment-form {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    margin-bottom: 40px;
+}
+
+.comment-form h3 {
+    color: #4361ee;
+    margin-top: 0;
+    margin-bottom: 25px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #3f37c9;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 1rem;
+    transition: border 0.3s ease;
+}
+
+.form-group textarea {
+    min-height: 150px;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #4361ee;
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+}
+
+.comment-submit-btn {
+    background: #4361ee;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.comment-submit-btn:hover {
+    background: #3f37c9;
+    transform: translateY(-2px);
+}
+
+.comments-list {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.comments-list h3 {
+    color: #4361ee;
+    margin-top: 0;
+    margin-bottom: 25px;
+}
+
+.comment {
+    padding: 20px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.comment:last-child {
+    border-bottom: none;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.comment-author {
+    font-weight: 600;
+    color: #333;
+}
+
+.comment-date {
+    color: #777;
+    font-size: 0.9rem;
+}
+
+.comment-body {
+    margin-bottom: 10px;
+    line-height: 1.6;
+}
+
+.comment-reply a {
+    color: #4895ef;
+    text-decoration: none;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.comment-reply a:hover {
+    text-decoration: underline;
+}
+
+.no-comments {
+    text-align: center;
+    padding: 30px;
+    color: #777;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .comments-section {
+        padding: 40px 0;
+    }
+    
+    .comment-form,
+    .comments-list {
+        padding: 20px;
+    }
+    
+    .comment-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form submission handling
+    const commentForm = document.getElementById('commentForm');
+    
+    commentForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Get form values
+        const name = document.getElementById('name').value;
+        const comment = document.getElementById('comment').value;
+        
+        // In a real implementation, you would send this to a server
+        // For now, we'll just add it to the page
+        addComment(name, comment);
+        
+        // Reset form
+        commentForm.reset();
+    });
+    
+    function addComment(name, comment) {
+        const commentsList = document.querySelector('.comments-list');
+        const noComments = document.querySelector('.no-comments');
+        
+        // Remove "no comments" message if it exists
+        if (noComments) {
+            noComments.remove();
+        }
+        
+        // Create new comment element
+        const commentDiv = document.createElement('div');
+        commentDiv.className = 'comment';
+        
+        const today = new Date();
+        const dateString = today.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+        
+        commentDiv.innerHTML = `
+            <div class="comment-header">
+                <div class="comment-author">${name}</div>
+                <div class="comment-date">${dateString}</div>
+            </div>
+            <div class="comment-body">
+                <p>${comment}</p>
+            </div>
+            <div class="comment-reply">
+                <a href="#"><i class="fas fa-reply"></i> Reply</a>
+            </div>
+        `;
+        
+        // Add to top of comments list
+        commentsList.insertBefore(commentDiv, commentsList.firstChild);
+        
+        // Show success message
+        alert('Comment submitted successfully!');
+    }
+});
+</script>
 
     <footer>
         <div class="container">
@@ -807,5 +1090,6 @@
             });
         });
     </script>
+
 </body>
 </html>
