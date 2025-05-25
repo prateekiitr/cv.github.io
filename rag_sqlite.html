@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building a RAG System with SQLite: Deep Dive | Prateek Singh</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+    <style>
+        /* Additional styles for the RAG blog */
+        .blog-header {
+            background: linear-gradient(135deg, #4361ee, #3f37c9);
+            color: white;
+            padding: 80px 0 40px;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .blog-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        
+        .blog-header .meta {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+        
+        .blog-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .blog-content {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            margin-bottom: 40px;
+        }
+        
+        .blog-content h2 {
+            color: #4361ee;
+            margin: 30px 0 20px;
+            border-bottom: 2px solid #4895ef;
+            padding-bottom: 10px;
+        }
+        
+        .blog-content h3 {
+            color: #3f37c9;
+            margin: 25px 0 15px;
+        }
+        
+        .blog-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        pre {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            border-left: 4px solid #4361ee;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin: 25px 0;
+        }
+        
+        code {
+            font-family: 'Courier New', monospace;
+            color: #333;
+        }
+        
+        .image-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin: 30px 0;
+        }
+        
+        .image-card img {
+            width: 100%;
+            height: auto;
+            margin: 0;
+        }
+        
+        .image-card .caption {
+            padding: 15px;
+            text-align: center;
+            font-style: italic;
+            color: #666;
+            background: #f8f9fa;
+        }
+        
+        .feature-box {
+            background: #f8f9ff;
+            border-left: 4px solid #4361ee;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .feature-box h4 {
+            color: #3f37c9;
+            margin-top: 0;
+        }
+        
+        .back-to-blogs {
+            text-align: center;
+            margin: 40px 0;
+        }
+        
+        .back-to-blogs a {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #4361ee;
+            color: white;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .back-to-blogs a:hover {
+            background: #3f37c9;
+            transform: translateY(-3px);
+        }
+        
+        @media (max-width: 768px) {
+            .blog-header {
+                padding: 60px 0 30px;
+            }
+            
+            .blog-header h1 {
+                font-size: 2rem;
+            }
+            
+            .blog-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="max-width">
+            <div class="logo"><a href="index.html">Back to <span>Portfolio</span></a></div>
+        </div>
+    </nav>
+
+    <header class="blog-header">
+        <div class="blog-container">
+            <h1>Building a RAG System with SQLite</h1>
+            <p class="meta">Posted on May 25, 2025</p>
+        </div>
+    </header>
+
+    <div class="blog-container">
+        <div class="blog-content">
+            <section class="fade-in">
+                <h2>From Concept to Implementation: A Comprehensive Guide</h2>
+                <p>In this deep dive, we'll build a complete Retrieval-Augmented Generation system using SQLite as our knowledge base. I'll explain each component in detail, ensuring you understand not just how it works, but why it works.</p>
+                
+                <div class="image-card">
+                    <img src="https://via.placeholder.com/800x400?text=RAG+System+Architecture" alt="RAG System Architecture">
+                    <div class="caption">The complete RAG pipeline we'll be implementing</div>
+                </div>
+            </section>
+            
+            <section class="fade-in">
+                <h2>1. Database Setup: Creating Our Knowledge Foundation</h2>
+                
+                <p>SQLite serves as the backbone of our RAG system - it's where we'll store all our knowledge documents and their vector embeddings.</p>
+                
+                <div class="feature-box">
+                    <h4>Why SQLite?</h4>
+                    <ul>
+                        <li><strong>Serverless Architecture</strong>: Unlike MySQL or PostgreSQL, SQLite doesn't require a separate server process</li>
+                        <li><strong>Single-File Storage</strong>: The entire database is stored in one cross-platform file</li>
+                        <li><strong>Full SQL Support</strong>: We get all the power of SQL queries without setup complexity</li>
+                    </ul>
+                </div>
+                
+                <h3>The Documents Table Structure</h3>
+                <p>We create a table with four critical columns:</p>
+                
+                <pre><code>CREATE TABLE IF NOT EXISTS documents (
+    id INTEGER PRIMARY KEY,       -- Unique identifier for each document
+    title TEXT,                   -- Short descriptive title
+    content TEXT,                 -- Full text content
+    embedding BLOB                -- Vector representation stored as binary
+)</code></pre>
+                
+                <p>The <code>BLOB</code> (Binary Large Object) type is perfect for storing our vector embeddings which are essentially arrays of floating-point numbers.</p>
+            </section>
+            
+            <section class="fade-in">
+                <h2>2. Populating the Knowledge Base</h2>
+                
+                <p>Our sample dataset focuses on Python programming concepts:</p>
+                
+                <pre><code>documents = [
+    ("Python Lists", "Python lists are ordered, mutable collections..."), 
+    ("Dictionaries", "Dictionaries store key-value pairs..."),
+    ("Functions", "Functions are reusable code blocks...")
+]</code></pre>
+                
+                <h3>Insertion Process Explained</h3>
+                <p>For each document, we:</p>
+                <ol>
+                    <li>Execute an INSERT statement with the title and content</li>
+                    <li>Initially leave the embedding NULL (we'll add it later)</li>
+                    <li>Commit the transaction to make changes permanent</li>
+                </ol>
+                
+                <pre><code>for title, content in documents:
+    cursor.execute('''
+    INSERT INTO documents (title, content)
+    VALUES (?, ?)  -- Parameterized query prevents SQL injection
+    ''', (title, content))
+conn.commit()  # Save changes to disk</code></pre>
+            </section>
+            
+            <section class="fade-in">
+                <h2>3. The Magic of Text Embeddings</h2>
+                
+                <p>Embeddings transform text into numerical vectors that capture semantic meaning.</p>
+                
+                <div class="image-card">
+                    <img src="https://via.placeholder.com/600x300?text=Text+Embedding+Visualization" alt="Text Embedding Visualization">
+                    <div class="caption">How words and sentences are mapped to vector space</div>
+                </div>
+                
+                <h3>Choosing the Right Model</h3>
+                <p>We use <code>all-MiniLM-L6-v2</code> because:</p>
+                <ul>
+                    <li>It's small (80MB) but effective</li>
+                    <li>Generates 384-dimensional vectors</li>
+                    <li>Balances speed and accuracy well</li>
+                </ul>
+                
+                <pre><code>from sentence_transformers import SentenceTransformer
+
+model = SentenceTransformer('all-MiniLM-L6-v2')
+text = "Python lists are ordered collections..."
+embedding = model.encode(text)  # Returns numpy array of shape (384,)</code></pre>
+                
+                <h3>Embedding Properties</h3>
+                <p>These vectors have special properties:</p>
+                <ul>
+                    <li>Similar texts have similar vectors</li>
+                    <li>We can measure similarity using cosine distance</li>
+                    <li>The model understands context (e.g., "bank" as financial vs river)</li>
+                </ul>
+            </section>
+            
+            <section class="fade-in">
+                <h2>4. Storing Embeddings Efficiently</h2>
+                
+                <p>We need to store these numpy arrays in SQLite:</p>
+                
+                <pre><code># Convert numpy array to bytes for storage
+embedding_bytes = embedding.tobytes()
+
+# Update the database
+cursor.execute('''
+UPDATE documents 
+SET embedding = ?
+WHERE id = ?
+''', (embedding_bytes, doc_id))</code></pre>
+                
+                <h3>Why BLOB Storage?</h3>
+                <ul>
+                    <li>SQLite doesn't natively support array types</li>
+                    <li>BLOBs efficiently store binary data</li>
+                    <li>We'll convert back to numpy when retrieving</li>
+                </ul>
+            </section>
+            
+            <section class="fade-in">
+                <h2>5. The Retrieval Process</h2>
+                
+                <p>When a user asks a question, we:</p>
+                <ol>
+                    <li>Embed the question</li>
+                    <li>Compare against all document embeddings</li>
+                    <li>Return the most relevant matches</li>
+                </ol>
+                
+                <h3>Understanding Cosine Similarity</h3>
+                <p>This measures how similar two vectors are:</p>
+                
+                <pre><code>import numpy as np
+
+def cosine_similarity(a, b):
+    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))</code></pre>
+                
+                <p>Returns:</p>
+                <ul>
+                    <li><strong>1</strong> = identical meaning</li>
+                    <li><strong>0</strong> = no relationship</li>
+                    <li><strong>-1</strong> = opposite meaning</li>
+                </ul>
+                
+                <h3>Implementing the Retrieval</h3>
+                <p>We create a custom function to compare embeddings:</p>
+                
+                <pre><code>def retrieve(query, top_k=3):
+    query_embedding = model.encode(query)
+    
+    # Get all documents
+    cursor.execute("SELECT id, title, content, embedding FROM documents")
+    results = []
+    
+    for doc_id, title, content, embedding_bytes in cursor.fetchall():
+        doc_embedding = np.frombuffer(embedding_bytes, dtype=np.float32)
+        similarity = cosine_similarity(query_embedding, doc_embedding)
+        results.append((title, content, similarity))
+    
+    # Sort by similarity (descending)
+    results.sort(key=lambda x: x[2], reverse=True)
+    return results[:top_k]</code></pre>
+            </section>
+            
+            <section class="fade-in">
+                <h2>6. Generating Responses</h2>
+                
+                <p>With relevant documents retrieved, we generate an answer:</p>
+                
+                <pre><code>def generate_response(query, relevant_docs):
+    # Prepare context
+    context = "\n\n".join(
+        f"Document {i+1} ({sim:.2f}): {content[:200]}..." 
+        for i, (title, content, sim) in enumerate(relevant_docs)
+    )
+    
+    # In production, we'd use an LLM here
+    return f"""Question: {query}
+
+Relevant Context:
+{context}
+
+Summary Answer: {relevant_docs[0][1][:300]}..."""</code></pre>
+                
+                <div class="feature-box">
+                    <h4>Production Considerations</h4>
+                    <p>In a real system, you would:</p>
+                    <ul>
+                        <li>Replace the simple concatenation with an actual LLM call</li>
+                        <li>Implement proper prompt engineering</li>
+                        <li>Add citation of sources</li>
+                    </ul>
+                </div>
+            </section>
+            
+            <section class="fade-in">
+                <h2>Complete System Architecture</h2>
+                
+                <div class="image-card">
+                    <img src="images/rag-sql.png" alt="Complete RAG Flow" loading="lazy">
+                    <div class="caption">End-to-end data flow in our SQLite RAG system</div>
+                </div>
+                
+                <h3>Component Interaction</h3>
+                <ol>
+                    <li>User submits a question</li>
+                    <li>System converts question to embedding</li>
+                    <li>Compares against stored document embeddings</li>
+                    <li>Retrieves top matches from SQLite</li>
+                    <li>Generates response using context</li>
+                    <li>Returns final answer to user</li>
+                </ol>
+            </section>
+            
+            <section class="fade-in">
+                <h2>Scaling Considerations</h2>
+                
+                <p>For production systems, consider:</p>
+                
+                <div class="feature-box">
+                    <h4>Performance Optimizations</h4>
+                    <ul>
+                        <li><strong>Indexing</strong>: Add indexes on embedding columns</li>
+                        <li><strong>Chunking</strong>: Split large documents into smaller passages</li>
+                        <li><strong>Caching</strong>: Store frequent queries</li>
+                        <li><strong>Hybrid Search</strong>: Combine with keyword search</li>
+                    </ul>
+                </div>
+                
+                <h3>When to Upgrade</h3>
+                <p>SQLite works great for:</p>
+                <ul>
+                    <li>Prototyping and small datasets (&lt;10,000 documents)</li>
+                    <li>Applications with low query volume</li>
+                    <li>Systems where simplicity is prioritized</li>
+                </ul>
+                
+                <p>Consider specialized vector databases (Chroma, Weaviate) when:</p>
+                <ul>
+                    <li>Your dataset grows beyond 50,000 documents</li>
+                    <li>You need advanced similarity search features</li>
+                    <li>Your application requires high query throughput</li>
+                </ul>
+            </section>
+            
+            <div class="back-to-blogs">
+                <a href="blogs.html"><i class="fas fa-arrow-left"></i> Back to All Blogs</a>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <span>Created By <a href="https://www.prateeksinghphd.com">Prateek Singh</a> | <span class="far fa-copyright"></span> 2025</span>
+        </div>
+    </footer>
+</body>
+</html>
