@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Big LLM Architecture Comparison</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3f;
+    --accent: #7c6bff;
+    --accent2: #ff6b9d;
+    --accent3: #00d9b4;
+    --accent4: #ffb347;
+    --text: #e8e8f0;
+    --text-muted: #7878a0;
+    --text-dim: #4a4a6a;
+    --code-bg: #0f0f1a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.75;
+    overflow-x: hidden;
+  }
+
+  /* ─── NOISE OVERLAY ─── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 9999; opacity: .5;
+  }
+
+  /* ─── PROGRESS BAR ─── */
+  #progress {
+    position: fixed; top: 0; left: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+    z-index: 1000; width: 0%; transition: width .1s;
+  }
+
+  /* ─── NAV ─── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1rem 3rem;
+    background: rgba(10,10,15,.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    z-index: 100;
+    transition: all .3s;
+  }
+
+  .nav-logo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .75rem; letter-spacing: .2em;
+    color: var(--accent); text-transform: uppercase;
+  }
+
+  .nav-links {
+    display: flex; gap: 2rem; list-style: none;
+  }
+
+  .nav-links a {
+    font-size: .8rem; letter-spacing: .08em;
+    color: var(--text-muted); text-decoration: none;
+    text-transform: uppercase; transition: color .2s;
+  }
+
+  .nav-links a:hover { color: var(--accent3); }
+
+  /* ─── HERO ─── */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    padding: 8rem 3rem 5rem;
+    position: relative; overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 60% 40%, rgba(124,107,255,.12) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 40% at 20% 80%, rgba(0,217,180,.08) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 50% at 80% 70%, rgba(255,107,157,.06) 0%, transparent 60%);
+  }
+
+  .hero-grid {
+    position: absolute; inset: 0; opacity: .04;
+    background-image:
+      linear-gradient(var(--accent) 1px, transparent 1px),
+      linear-gradient(90deg, var(--accent) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  .hero-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .7rem; letter-spacing: .3em; color: var(--accent3);
+    text-transform: uppercase; margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: .75rem;
+  }
+
+  .hero-label::before {
+    content: ''; display: inline-block;
+    width: 40px; height: 1px; background: var(--accent3);
+  }
+
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(3rem, 8vw, 7rem);
+    font-weight: 900; line-height: 1;
+    max-width: 900px;
+    background: linear-gradient(135deg, #fff 0%, #c0b8ff 40%, #a0f0e0 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-sub {
+    font-size: 1.1rem; color: var(--text-muted);
+    max-width: 560px; margin-bottom: 2.5rem;
+  }
+
+  .hero-meta {
+    display: flex; gap: 2rem; align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .hero-author {
+    font-size: .85rem; color: var(--text-muted);
+  }
+
+  .hero-author span { color: var(--text); font-weight: 500; }
+
+  .hero-badges {
+    display: flex; gap: .5rem; flex-wrap: wrap;
+  }
+
+  .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .65rem; letter-spacing: .1em;
+    padding: .3rem .75rem; border-radius: 2px;
+    text-transform: uppercase; font-weight: 600;
+  }
+
+  .badge-purple { background: rgba(124,107,255,.15); color: var(--accent); border: 1px solid rgba(124,107,255,.3); }
+  .badge-teal   { background: rgba(0,217,180,.1);    color: var(--accent3); border: 1px solid rgba(0,217,180,.25); }
+  .badge-pink   { background: rgba(255,107,157,.1);  color: var(--accent2); border: 1px solid rgba(255,107,157,.25); }
+  .badge-orange { background: rgba(255,179,71,.1);   color: var(--accent4); border: 1px solid rgba(255,179,71,.25); }
+
+  /* ─── SCROLL INDICATOR ─── */
+  .scroll-hint {
+    position: absolute; bottom: 2.5rem; right: 3rem;
+    display: flex; flex-direction: column; align-items: center; gap: .5rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .6rem; letter-spacing: .2em; color: var(--text-dim);
+    text-transform: uppercase;
+    animation: float 2.5s ease-in-out infinite;
+  }
+
+  .scroll-line {
+    width: 1px; height: 50px;
+    background: linear-gradient(to bottom, var(--accent), transparent);
+  }
+
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50%      { transform: translateY(8px); }
+  }
+
+  /* ─── LAYOUT ─── */
+  .container { max-width: 860px; margin: 0 auto; padding: 0 2rem; }
+
+  .wide-container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+
+  /* ─── INTRO SECTION ─── */
+  .intro-section {
+    padding: 6rem 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .65rem; letter-spacing: .3em; color: var(--accent);
+    text-transform: uppercase; margin-bottom: 1.25rem;
+    display: flex; align-items: center; gap: .6rem;
+  }
+
+  .section-label::before {
+    content: ''; width: 20px; height: 1px; background: var(--accent);
+  }
+
+  .intro-section p {
+    font-size: 1.05rem; color: var(--text-muted); margin-bottom: 1.25rem;
+    max-width: 720px;
+  }
+
+  .intro-section p strong { color: var(--text); font-weight: 500; }
+
+  /* ─── KEY THEMES ─── */
+  .themes-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1px; background: var(--border);
+    border: 1px solid var(--border); margin: 4rem 0;
+  }
+
+  .theme-card {
+    background: var(--surface);
+    padding: 2rem 1.75rem;
+    transition: background .2s;
+    position: relative; overflow: hidden;
+  }
+
+  .theme-card:hover { background: var(--surface2); }
+
+  .theme-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  }
+
+  .theme-card:nth-child(1)::before { background: var(--accent); }
+  .theme-card:nth-child(2)::before { background: var(--accent3); }
+  .theme-card:nth-child(3)::before { background: var(--accent2); }
+  .theme-card:nth-child(4)::before { background: var(--accent4); }
+
+  .theme-icon {
+    font-size: 1.5rem; margin-bottom: 1rem;
+  }
+
+  .theme-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem; font-weight: 700;
+    margin-bottom: .5rem; color: var(--text);
+  }
+
+  .theme-card p {
+    font-size: .85rem; color: var(--text-muted); line-height: 1.6;
+  }
+
+  /* ─── DIVIDER ─── */
+  .divider {
+    height: 1px; background: var(--border);
+    margin: 0; position: relative;
+  }
+
+  .divider::after {
+    content: attr(data-num);
+    position: absolute; left: 0;
+    top: -11px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .65rem; letter-spacing: .15em;
+    color: var(--text-dim); background: var(--bg);
+    padding-right: 1rem;
+  }
+
+  /* ─── MODEL SECTIONS ─── */
+  .model-section {
+    padding: 5rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .model-header {
+    display: flex; align-items: flex-start; gap: 2rem;
+    margin-bottom: 3rem; flex-wrap: wrap;
+  }
+
+  .model-number {
+    font-family: 'Playfair Display', serif;
+    font-size: 5rem; font-weight: 900; line-height: 1;
+    color: var(--border); flex-shrink: 0;
+    user-select: none;
+  }
+
+  .model-title-group { flex: 1; }
+
+  .model-name {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 700; line-height: 1.1;
+    margin-bottom: .5rem;
+  }
+
+  .model-tagline {
+    font-size: .85rem; color: var(--text-muted);
+    margin-bottom: 1rem;
+  }
+
+  .model-stats {
+    display: flex; gap: .5rem; flex-wrap: wrap;
+  }
+
+  .stat-pill {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .65rem; padding: .25rem .7rem;
+    border-radius: 100px; letter-spacing: .05em;
+    border: 1px solid; white-space: nowrap;
+  }
+
+  .stat-params { color: var(--accent);  border-color: rgba(124,107,255,.35); background: rgba(124,107,255,.08); }
+  .stat-active { color: var(--accent3); border-color: rgba(0,217,180,.3);    background: rgba(0,217,180,.06); }
+  .stat-ctx    { color: var(--accent4); border-color: rgba(255,179,71,.3);   background: rgba(255,179,71,.06); }
+  .stat-type   { color: var(--accent2); border-color: rgba(255,107,157,.3);  background: rgba(255,107,157,.06); }
+
+  .model-body p {
+    font-size: 1rem; color: var(--text-muted);
+    margin-bottom: 1.25rem; max-width: 720px;
+  }
+
+  .model-body p strong { color: var(--text); font-weight: 500; }
+
+  /* ─── FEATURE BOXES ─── */
+  .feature-box {
+    margin: 2rem 0;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    background: var(--surface);
+    padding: 1.5rem 2rem;
+  }
+
+  .feature-box.teal   { border-left-color: var(--accent3); }
+  .feature-box.pink   { border-left-color: var(--accent2); }
+  .feature-box.orange { border-left-color: var(--accent4); }
+
+  .feature-box h4 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .75rem; letter-spacing: .2em;
+    color: var(--accent); text-transform: uppercase;
+    margin-bottom: .75rem;
+  }
+
+  .feature-box.teal h4 { color: var(--accent3); }
+  .feature-box.pink h4 { color: var(--accent2); }
+  .feature-box.orange h4 { color: var(--accent4); }
+
+  .feature-box p {
+    font-size: .9rem; color: var(--text-muted); margin: 0;
+  }
+
+  /* ─── ARCH DIAGRAM (CSS) ─── */
+  .arch-diagram {
+    margin: 2.5rem 0;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    padding: 2rem;
+    overflow-x: auto;
+  }
+
+  .arch-diagram-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .65rem; color: var(--text-dim);
+    letter-spacing: .2em; text-transform: uppercase;
+    margin-bottom: 1.25rem;
+  }
+
+  .arch-row {
+    display: flex; align-items: center; gap: .75rem;
+    margin-bottom: .5rem; flex-wrap: wrap;
+  }
+
+  .arch-block {
+    padding: .4rem 1rem; border-radius: 2px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .7rem; font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .ab-output  { background: rgba(124,107,255,.15); color: var(--accent);  border: 1px solid rgba(124,107,255,.3); }
+  .ab-norm    { background: rgba(255,179,71,.1);   color: var(--accent4); border: 1px solid rgba(255,179,71,.25); }
+  .ab-ff      { background: rgba(0,217,180,.1);    color: var(--accent3); border: 1px solid rgba(0,217,180,.25); }
+  .ab-attn    { background: rgba(255,107,157,.12); color: var(--accent2); border: 1px solid rgba(255,107,157,.3); }
+  .ab-moe     { background: rgba(124,107,255,.2);  color: #b8b0ff;        border: 1px solid rgba(124,107,255,.4); }
+  .ab-embed   { background: rgba(40,40,60,.8);     color: var(--text-muted); border: 1px solid var(--border); }
+  .ab-arrow   { color: var(--text-dim); font-size: .9rem; }
+  .ab-repeat  { font-family: 'JetBrains Mono', monospace; font-size: .65rem; color: var(--accent4); margin-left: auto; }
+
+  /* ─── COMPARISON TABLE ─── */
+  .comparison-table {
+    width: 100%; border-collapse: collapse;
+    margin: 2.5rem 0; font-size: .85rem;
+    overflow: hidden;
+  }
+
+  .comparison-table th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .65rem; letter-spacing: .15em;
+    text-transform: uppercase; color: var(--text-muted);
+    padding: .75rem 1rem; text-align: left;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .comparison-table td {
+    padding: .75rem 1rem; border-bottom: 1px solid rgba(255,255,255,.04);
+    color: var(--text-muted); vertical-align: middle;
+  }
+
+  .comparison-table tr:hover td { background: var(--surface); }
+
+  .comparison-table td:first-child {
+    color: var(--text); font-weight: 500;
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .6rem; padding: .15rem .5rem;
+    border-radius: 2px; margin: 2px;
+    background: rgba(124,107,255,.12); color: var(--accent);
+    border: 1px solid rgba(124,107,255,.25);
+  }
+
+  .tag.teal   { background: rgba(0,217,180,.08);   color: var(--accent3); border-color: rgba(0,217,180,.2); }
+  .tag.orange { background: rgba(255,179,71,.08);  color: var(--accent4); border-color: rgba(255,179,71,.2); }
+  .tag.pink   { background: rgba(255,107,157,.08); color: var(--accent2); border-color: rgba(255,107,157,.2); }
+
+  /* ─── CALLOUT ─── */
+  .callout {
+    display: flex; gap: 1.25rem;
+    padding: 1.5rem 1.75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    margin: 2rem 0;
+  }
+
+  .callout-icon { font-size: 1.25rem; flex-shrink: 0; margin-top: .1rem; }
+
+  .callout p {
+    font-size: .9rem; color: var(--text-muted); margin: 0 !important;
+    line-height: 1.65;
+  }
+
+  .callout p strong { color: var(--text); }
+
+  /* ─── TREND SECTION ─── */
+  .trends-section {
+    padding: 5rem 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .trend-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem; margin-top: 3rem;
+  }
+
+  .trend-item {
+    display: flex; gap: 1.25rem; align-items: flex-start;
+  }
+
+  .trend-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 3rem; font-weight: 900; line-height: 1;
+    color: var(--border); flex-shrink: 0;
+  }
+
+  .trend-text h4 {
+    font-size: .95rem; font-weight: 500; color: var(--text);
+    margin-bottom: .4rem;
+  }
+
+  .trend-text p {
+    font-size: .82rem; color: var(--text-muted); line-height: 1.65;
+  }
+
+  /* ─── TIMELINE ─── */
+  .timeline-section { padding: 5rem 0; }
+
+  .timeline {
+    position: relative; margin-top: 3rem;
+    padding-left: 2rem;
+  }
+
+  .timeline::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 1px; background: var(--border);
+  }
+
+  .tl-item {
+    position: relative; margin-bottom: 2.5rem; padding-left: 2rem;
+  }
+
+  .tl-item::before {
+    content: ''; position: absolute; left: -2rem;
+    top: .45rem; width: 7px; height: 7px;
+    border-radius: 50%;
+    border: 1px solid;
+    background: var(--bg);
+    transform: translateX(-3px);
+  }
+
+  .tl-item:nth-child(1)::before { border-color: var(--accent);  box-shadow: 0 0 8px var(--accent); }
+  .tl-item:nth-child(2)::before { border-color: var(--accent3); box-shadow: 0 0 8px var(--accent3); }
+  .tl-item:nth-child(3)::before { border-color: var(--accent2); box-shadow: 0 0 8px var(--accent2); }
+  .tl-item:nth-child(4)::before { border-color: var(--accent4); box-shadow: 0 0 8px var(--accent4); }
+  .tl-item:nth-child(5)::before { border-color: var(--accent);  box-shadow: 0 0 8px var(--accent); }
+  .tl-item:nth-child(6)::before { border-color: var(--accent3); box-shadow: 0 0 8px var(--accent3); }
+  .tl-item:nth-child(7)::before { border-color: var(--accent2); }
+  .tl-item:nth-child(8)::before { border-color: var(--accent4); }
+
+  .tl-date {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .65rem; letter-spacing: .15em;
+    color: var(--text-dim); margin-bottom: .4rem;
+    text-transform: uppercase;
+  }
+
+  .tl-title { font-size: .95rem; font-weight: 500; color: var(--text); margin-bottom: .3rem; }
+
+  .tl-desc { font-size: .82rem; color: var(--text-muted); }
+
+  /* ─── FOOTER ─── */
+  footer {
+    padding: 4rem 3rem;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 1.5rem;
+  }
+
+  .footer-left {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .7rem; color: var(--text-dim); letter-spacing: .1em;
+  }
+
+  .footer-right { display: flex; gap: 1.5rem; }
+
+  .footer-right a {
+    font-size: .8rem; color: var(--text-muted);
+    text-decoration: none; transition: color .2s;
+  }
+
+  .footer-right a:hover { color: var(--accent3); }
+
+  /* ─── ANIMATIONS ─── */
+  .fade-up {
+    opacity: 0; transform: translateY(28px);
+    transition: opacity .65s ease, transform .65s ease;
+  }
+
+  .fade-up.visible { opacity: 1; transform: translateY(0); }
+
+  /* ─── HIGHLIGHT ─── */
+  mark {
+    background: rgba(124,107,255,.2);
+    color: #c0b8ff; padding: 0 .2em;
+    border-radius: 2px;
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 640px) {
+    nav { padding: 1rem 1.25rem; }
+    .nav-links { display: none; }
+    .hero { padding: 7rem 1.25rem 4rem; }
+    .container, .wide-container { padding: 0 1.25rem; }
+    footer { padding: 2.5rem 1.25rem; flex-direction: column; }
+    .model-number { font-size: 3rem; }
+    .comparison-table { font-size: .75rem; }
+    .comparison-table th, .comparison-table td { padding: .5rem .6rem; }
+  }
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">LLM · Architectures · 2025</div>
+  <ul class="nav-links">
+    <li><a href="#intro">Overview</a></li>
+    <li><a href="#models">Models</a></li>
+    <li><a href="#trends">Trends</a></li>
+    <li><a href="#timeline">Timeline</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+
+  <div style="position:relative; z-index:1;">
+    <div class="hero-label">Deep Dive · Architecture Analysis</div>
+    <h1>The Big LLM Architecture Comparison</h1>
+    <p class="hero-sub">
+      From DeepSeek V3 to GLM-5 — a comprehensive look at how modern open-weight language models are structurally designed, what makes them tick, and where the field is heading.
+    </p>
+    <div class="hero-meta">
+      <div class="hero-author">Last updated <span>March 2026</span> · Prateek Singh, PhD</div>
+      <div class="hero-badges">
+        <span class="badge badge-purple">MoE</span>
+        <span class="badge badge-teal">Linear Attention</span>
+        <span class="badge badge-pink">Normalization</span>
+        <span class="badge badge-orange">KV Cache</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll-hint">
+    <div class="scroll-line"></div>
+    Scroll
+  </div>
+</section>
+
+<!-- INTRO -->
+<section id="intro" class="intro-section">
+  <div class="container">
+    <div class="section-label">Overview</div>
+    <p>
+      It has been seven years since the original GPT architecture was developed. Looking back at GPT-2 (2019) and forward to DeepSeek V3 and Llama 4 (2024–2025), one might be surprised at how <strong>structurally similar</strong> these models still are at their core.
+    </p>
+    <p>
+      Positional embeddings evolved from absolute to rotational (RoPE). Multi-Head Attention largely gave way to Grouped-Query Attention. SwiGLU replaced GELU. But beneath these refinements, the foundational transformer decoder architecture remains largely intact — we are polishing, not rebuilding.
+    </p>
+    <p>
+      This blog focuses on the <strong>structural architectural choices</strong> that define today's flagship open-weight models — not benchmark scores or training recipes. It covers what LLM developers are actually building in 2025.
+    </p>
+  </div>
+
+  <div class="wide-container">
+    <div class="themes-grid fade-up">
+      <div class="theme-card">
+        <div class="theme-icon">⚡</div>
+        <h3>Mixture-of-Experts</h3>
+        <p>Sparse activation: activate only a handful of experts per token for massive capacity at low inference cost.</p>
+      </div>
+      <div class="theme-card">
+        <div class="theme-icon">🗜️</div>
+        <h3>KV Cache Compression</h3>
+        <p>MLA, sliding window attention, and partial RoPE all target the memory bottleneck in long-context inference.</p>
+      </div>
+      <div class="theme-card">
+        <div class="theme-icon">📐</div>
+        <h3>Normalization Tricks</h3>
+        <p>Post-Norm vs. Pre-Norm, QK-Norm, and sandwich norms — placement matters for training stability.</p>
+      </div>
+      <div class="theme-card">
+        <div class="theme-icon">🌊</div>
+        <h3>Linear Attention Revival</h3>
+        <p>Gated DeltaNet, Mamba-2 hybrids, and lightning attention offer O(n) alternatives to quadratic attention.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ MODEL SECTIONS ════════════════ -->
+<div id="models">
+
+<!-- 1. DEEPSEEK V3/R1 -->
+<section class="model-section">
+  <div class="container">
+    <div class="model-header fade-up">
+      <div class="model-number">01</div>
+      <div class="model-title-group">
+        <h2 class="model-name" style="background: linear-gradient(135deg, #7c6bff, #a0a0ff); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">DeepSeek V3 / R1</h2>
+        <p class="model-tagline">The model that changed everything in early 2025</p>
+        <div class="model-stats">
+          <span class="stat-pill stat-params">671B params</span>
+          <span class="stat-pill stat-active">37B active</span>
+          <span class="stat-pill stat-ctx">128k context</span>
+          <span class="stat-pill stat-type">MoE · Sparse</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="model-body fade-up">
+      <p>DeepSeek R1 made a massive impact when released in January 2025. It is a reasoning model built on top of the <strong>DeepSeek V3 architecture</strong> (December 2024), which introduced two key innovations that distinguish it from most other LLMs.</p>
+
+      <div class="feature-box">
+        <h4>Multi-Head Latent Attention (MLA)</h4>
+        <p>Instead of sharing key/value heads like GQA, MLA <strong>compresses</strong> the K/V tensors into a lower-dimensional space before storing them in the KV cache. At inference, they are projected back. This adds a matrix multiplication but dramatically reduces cache memory — while the DeepSeek-V2 paper shows MLA actually <em>outperforms</em> standard MHA on benchmarks.</p>
+      </div>
+
+      <div class="feature-box teal">
+        <h4>Mixture-of-Experts (DeepSeekMoE)</h4>
+        <p>Each FeedForward module is replaced by <strong>256 small experts</strong> with a router selecting only 9 (1 shared + 8 routed) per token. Total parameters: 671B. Active parameters per step: just 37B. The shared expert — always active — handles common patterns, freeing specialized experts for niche knowledge.</p>
+      </div>
+
+      <div class="arch-diagram">
+        <div class="arch-diagram-label">DeepSeek V3 — Layer Stack (61×)</div>
+        <div class="arch-row"><div class="arch-block ab-output">Linear Output Layer</div></div>
+        <div class="arch-row"><div class="arch-block ab-norm">Final RMSNorm</div></div>
+        <div class="arch-row" style="margin:.5rem 0"><div class="arch-block ab-arrow" style="padding:0">↑ ×61 transformer blocks ↓</div></div>
+        <div class="arch-row">
+          <div class="arch-block ab-moe">MoE Layer (256 experts, 9 active)</div>
+          <div class="arch-block ab-norm">RMSNorm 2</div>
+          <div class="arch-block ab-repeat">First 3 blocks: Dense FFN</div>
+        </div>
+        <div class="arch-row">
+          <div class="arch-block ab-attn">Multi-Head Latent Attention</div>
+          <div class="arch-block ab-norm">RMSNorm 1</div>
+          <div class="arch-block ab-embed" style="font-size:.6rem; padding:.3rem .6rem;">+ RoPE</div>
+        </div>
+        <div class="arch-row"><div class="arch-block ab-embed">Token Embedding Layer</div></div>
+      </div>
+
+      <p>DeepSeek V3 outperformed the 405B Llama 3 at launch, despite being nearly twice as large in total parameters — but with far fewer active parameters at inference time. This efficiency/capacity tradeoff is the core insight powering the MoE revival of 2025.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 2. OLMO 2 -->
+<section class="model-section">
+  <div class="container">
+    <div class="model-header fade-up">
+      <div class="model-number">02</div>
+      <div class="model-title-group">
+        <h2 class="model-name" style="background: linear-gradient(135deg, #ff6b9d, #ffb3c6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">OLMo 2</h2>
+        <p class="model-tagline">Fully transparent — the blueprint for reproducible LLM research</p>
+        <div class="model-stats">
+          <span class="stat-pill stat-params">7B / 13B params</span>
+          <span class="stat-pill stat-ctx">4k context</span>
+          <span class="stat-pill stat-type">Dense · MHA</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="model-body fade-up">
+      <p>The Allen Institute's OLMo series is celebrated for its <strong>full transparency</strong>: training data, code, and checkpoints are all released publicly. OLMo 2 sits at the Pareto frontier of compute-to-performance at the time of its January 2025 release.</p>
+
+      <p>The architecture is mostly standard — notably still using traditional <strong>Multi-Head Attention (MHA)</strong> rather than GQA. The interesting innovations are in normalization placement.</p>
+
+      <div class="feature-box pink">
+        <h4>Post-Norm (instead of Pre-Norm)</h4>
+        <p>Most LLMs since GPT place norms <em>before</em> each sub-layer (Pre-Norm). OLMo 2 places them <em>after</em>, inside the residual connections. Combined with <strong>QK-Norm</strong> (RMSNorm applied to queries and keys inside attention), this yields smoother gradient norms and fewer training loss spikes.</p>
+      </div>
+
+      <div class="callout">
+        <div class="callout-icon">💡</div>
+        <p><strong>QK-Norm</strong> applies an additional RMSNorm to the query and key vectors before RoPE is applied. It stabilizes the dot-product magnitudes that drive attention scores. Not new to OLMo — it dates back to the 2023 <em>Scaling Vision Transformers</em> paper — but it's becoming a standard add-on across the field.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3. GEMMA 3 -->
+<section class="model-section">
+  <div class="container">
+    <div class="model-header fade-up">
+      <div class="model-number">03</div>
+      <div class="model-title-group">
+        <h2 class="model-name" style="background: linear-gradient(135deg, #00d9b4, #7fffea); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">Gemma 3</h2>
+        <p class="model-tagline">Google's underappreciated gem with a clever efficiency trick</p>
+        <div class="model-stats">
+          <span class="stat-pill stat-params">1B – 27B</span>
+          <span class="stat-pill stat-ctx">128k context</span>
+          <span class="stat-pill stat-type">Dense · Sliding Window</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="model-body fade-up">
+      <p>While others adopted MoE for efficiency, Gemma 3 went a different route: <strong>Sliding Window Attention</strong>. Instead of every token attending to all others (O(n²)), local attention layers restrict each token's view to a fixed nearby window.</p>
+
+      <div class="feature-box teal">
+        <h4>Sliding Window Attention — 5:1 Ratio</h4>
+        <p>Gemma 2 used a 1:1 ratio of local to global attention. Gemma 3 pushes this to <strong>5:1</strong> — five sliding-window layers for every one full-attention layer — and shrinks the window from 4096 (Gemma 2) to just <strong>1024 tokens</strong>. Their ablation studies show minimal impact on output quality but massive KV cache memory savings, especially at long context lengths.</p>
+      </div>
+
+      <div class="feature-box orange">
+        <h4>Pre + Post RMSNorm (Sandwich Norm)</h4>
+        <p>Gemma 3 applies RMSNorm both <em>before</em> and <em>after</em> each attention and feed-forward sub-layer. This "best of both worlds" approach costs very little compute (RMSNorm is cheap) but may improve training stability by combining the benefits of Pre-Norm gradient behavior with the output normalization of Post-Norm.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4. LLAMA 4 -->
+<section class="model-section">
+  <div class="container">
+    <div class="model-header fade-up">
+      <div class="model-number">04</div>
+      <div class="model-title-group">
+        <h2 class="model-name" style="background: linear-gradient(135deg, #ffb347, #ffe0a0); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">Llama 4 Maverick</h2>
+        <p class="model-tagline">Meta's MoE debut with a classic expert design philosophy</p>
+        <div class="model-stats">
+          <span class="stat-pill stat-params">400B params</span>
+          <span class="stat-pill stat-active">17B active</span>
+          <span class="stat-pill stat-ctx">512k context</span>
+          <span class="stat-pill stat-type">MoE · GQA</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="model-body fade-up">
+      <p>Llama 4 Maverick closely mirrors the DeepSeek V3 architecture — MoE layers, SwiGLU FeedForward, RMSNorm — but with two notable differences:</p>
+
+      <p><strong>GQA instead of MLA:</strong> Meta kept Grouped-Query Attention rather than adopting DeepSeek's more complex Multi-Head Latent Attention, likely prioritizing implementation simplicity.</p>
+
+      <p><strong>Fewer, larger experts:</strong> Llama 4 uses a more classic MoE configuration — 2 active experts with hidden size 8,192 each — compared to DeepSeek's 9 active experts with hidden size 2,048. Despite having twice as many active parameters in absolute terms (17B vs 37B), Llama 4 Maverick is roughly a third the total size.</p>
+
+      <div class="callout">
+        <div class="callout-icon">🔁</div>
+        <p>Llama 4 also alternates between <strong>dense and MoE blocks</strong> in every other transformer layer, rather than applying MoE to all layers. This is different from DeepSeek V3 (which only skips the first 3 blocks). The impact on performance versus efficiency is an open research question.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. QWEN3 -->
+<section class="model-section">
+  <div class="container">
+    <div class="model-header fade-up">
+      <div class="model-number">05</div>
+      <div class="model-title-group">
+        <h2 class="model-name" style="background: linear-gradient(135deg, #7c6bff, #00d9b4); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">Qwen3 Series</h2>
+        <p class="model-tagline">Dense + MoE, from 0.6B to 235B — consistently at the top</p>
+        <div class="model-stats">
+          <span class="stat-pill stat-params">0.6B → 235B</span>
+          <span class="stat-pill stat-active">22B active (235B-A22B)</span>
+          <span class="stat-pill stat-type">Dense + MoE</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="model-body fade-up">
+      <p>The Qwen team delivers consistently strong models. Qwen3 offers <strong>7 dense sizes</strong> (0.6B to 32B) and <strong>2 MoE variants</strong> (30B-A3B, 235B-A22B), giving practitioners flexibility depending on their inference budget.</p>
+
+      <p>The 235B-A22B architecture is remarkably similar to DeepSeek V3 — but notably drops the shared expert. The Qwen3 team explained this was partly due to not seeing significant gains and concerns around inference optimization complexity.</p>
+
+      <div class="feature-box">
+        <h4>QK-Norm + Deeper Architecture</h4>
+        <p>Compared to Llama 3 1B, the Qwen3 0.6B is a <strong>deeper but narrower</strong> architecture: more transformer blocks, smaller hidden dimensions, fewer attention heads. This trades inference speed for a smaller memory footprint — a good design for edge deployment scenarios.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. KIMI K2 -->
+<section class="model-section">
+  <div class="container">
+    <div class="model-header fade-up">
+      <div class="model-number">06</div>
+      <div class="model-title-group">
+        <h2 class="model-name" style="background: linear-gradient(135deg, #ff6b9d, #7c6bff); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">Kimi K2</h2>
+        <p class="model-tagline">1 trillion parameters — the largest open-weight model of this generation</p>
+        <div class="model-stats">
+          <span class="stat-pill stat-params">1 Trillion params</span>
+          <span class="stat-pill stat-active">32B active</span>
+          <span class="stat-pill stat-ctx">128k / 256k context</span>
+          <span class="stat-pill stat-type">MoE · MLA</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="model-body fade-up">
+      <p>Kimi K2 is essentially a <strong>scaled-up DeepSeek V3</strong>: same MLA + MoE architecture, but pushed to 1 trillion total parameters. The team uses more experts per MoE module and fewer MLA heads compared to DeepSeek, making different capacity/bandwidth tradeoffs.</p>
+
+      <p>Notably, Kimi K2 was trained using the <strong>Muon optimizer</strong> (rather than AdamW) — reportedly the first production model of this scale to do so, yielding impressively smooth loss curves.</p>
+
+      <div class="callout">
+        <div class="callout-icon">🧠</div>
+        <p>The <strong>Kimi K2 Thinking</strong> variant (released Nov 2025) shares the same architecture but extends context from 128k to <strong>256k tokens</strong>. According to Moonshot AI's benchmarks, it surpasses leading proprietary models on several agentic reasoning and coding tasks.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div> <!-- /models -->
+
+<!-- ════════════════ COMPARISON TABLE ════════════════ -->
+<section style="padding: 5rem 0; border-top: 1px solid var(--border);">
+  <div class="wide-container">
+    <div class="section-label">Side-by-side</div>
+    <h2 style="font-family:'Playfair Display',serif; font-size:2rem; margin-bottom:2.5rem; font-weight:700;">Architecture Comparison</h2>
+
+    <div style="overflow-x:auto;" class="fade-up">
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Params (Total)</th>
+            <th>Params (Active)</th>
+            <th>Attention</th>
+            <th>FFN</th>
+            <th>Key Features</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>DeepSeek V3</td>
+            <td>671B</td>
+            <td>37B</td>
+            <td><span class="tag">MLA</span></td>
+            <td><span class="tag orange">MoE ×256</span></td>
+            <td><span class="tag teal">Shared Expert</span> <span class="tag">RoPE</span></td>
+          </tr>
+          <tr>
+            <td>Llama 4 Maverick</td>
+            <td>400B</td>
+            <td>17B</td>
+            <td><span class="tag">GQA</span></td>
+            <td><span class="tag orange">MoE alternating</span></td>
+            <td><span class="tag pink">SwiGLU</span> <span class="tag">512k ctx</span></td>
+          </tr>
+          <tr>
+            <td>Gemma 3 27B</td>
+            <td>27B</td>
+            <td>27B</td>
+            <td><span class="tag">GQA + SWA</span></td>
+            <td><span class="tag teal">Dense</span></td>
+            <td><span class="tag pink">Pre+Post Norm</span> <span class="tag teal">5:1 ratio</span></td>
+          </tr>
+          <tr>
+            <td>Qwen3 235B-A22B</td>
+            <td>235B</td>
+            <td>22B</td>
+            <td><span class="tag">GQA</span></td>
+            <td><span class="tag orange">MoE ×128</span></td>
+            <td><span class="tag">QK-Norm</span> <span class="tag pink">No shared exp.</span></td>
+          </tr>
+          <tr>
+            <td>Kimi K2</td>
+            <td>1T</td>
+            <td>32B</td>
+            <td><span class="tag">MLA</span></td>
+            <td><span class="tag orange">MoE (more exp.)</span></td>
+            <td><span class="tag teal">Muon opt.</span> <span class="tag">256k ctx</span></td>
+          </tr>
+          <tr>
+            <td>OLMo 2 7B</td>
+            <td>7B</td>
+            <td>7B</td>
+            <td><span class="tag pink">MHA</span></td>
+            <td><span class="tag teal">Dense</span></td>
+            <td><span class="tag">Post-Norm</span> <span class="tag">QK-Norm</span></td>
+          </tr>
+          <tr>
+            <td>GLM-5</td>
+            <td>744B</td>
+            <td>40B</td>
+            <td><span class="tag">MLA + DSA</span></td>
+            <td><span class="tag orange">MoE ×256</span></td>
+            <td><span class="tag teal">Shared Expert</span> <span class="tag pink">Sparse Attn</span></td>
+          </tr>
+          <tr>
+            <td>Mistral 3 Large</td>
+            <td>673B</td>
+            <td>41B</td>
+            <td><span class="tag">MLA</span></td>
+            <td><span class="tag orange">MoE (32 exp.)</span></td>
+            <td><span class="tag teal">Shared Expert</span> <span class="tag">Vision enc.</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- TRENDS SECTION -->
+<section id="trends" class="trends-section">
+  <div class="wide-container">
+    <div class="section-label">Macro Patterns</div>
+    <h2 style="font-family:'Playfair Display',serif; font-size:2rem; font-weight:700;">Key Architectural Trends in 2025</h2>
+
+    <div class="trend-grid fade-up">
+      <div class="trend-item">
+        <div class="trend-num">01</div>
+        <div class="trend-text">
+          <h4>MoE is now mainstream</h4>
+          <p>DeepSeek V3's success triggered a wave of MoE adoption. Llama 4, Qwen3, GLM-5, Mistral 3 Large, Kimi K2 all use it. Fine-grained, many-small-expert designs are preferred over fewer large experts.</p>
+        </div>
+      </div>
+      <div class="trend-item">
+        <div class="trend-num">02</div>
+        <div class="trend-text">
+          <h4>KV cache is the battleground</h4>
+          <p>MLA (compress K/V), sliding window attention (truncate K/V), and partial RoPE (limit position scaling) all target the same bottleneck: KV cache memory at long context.</p>
+        </div>
+      </div>
+      <div class="trend-item">
+        <div class="trend-num">03</div>
+        <div class="trend-text">
+          <h4>Normalization experimentation</h4>
+          <p>Post-Norm (OLMo), Pre+Post Norm (Gemma 3), depth-scaled sandwich norm (Trinity), QK-Norm (Qwen3, OLMo, MiniMax) — everyone has an opinion on norm placement now.</p>
+        </div>
+      </div>
+      <div class="trend-item">
+        <div class="trend-num">04</div>
+        <div class="trend-text">
+          <h4>Linear attention revival (cautious)</h4>
+          <p>Qwen3-Next, Kimi Linear, and Nemotron 3 are betting on O(n) alternatives (Gated DeltaNet, Mamba-2). MiniMax M2 retreated to full attention after linear attention struggled on reasoning tasks.</p>
+        </div>
+      </div>
+      <div class="trend-item">
+        <div class="trend-num">05</div>
+        <div class="trend-text">
+          <h4>DeepSeek V3 as a template</h4>
+          <p>Kimi K2, Mistral 3 Large, and GLM-5 all adopt the DeepSeek V3 MLA + DeepSeekMoE architecture — sometimes almost identically. It's become the de facto reference design for large-scale open models.</p>
+        </div>
+      </div>
+      <div class="trend-item">
+        <div class="trend-num">06</div>
+        <div class="trend-text">
+          <h4>Deeper vs. wider debate</h4>
+          <p>Qwen3 goes deeper (more layers, smaller hidden dim). GPT-OSS goes wider (larger hidden dim, fewer layers). Gemma 2 ablations suggest wider is slightly better for a fixed parameter count, but the gap is small.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TIMELINE -->
+<section id="timeline" class="timeline-section">
+  <div class="container">
+    <div class="section-label">Chronology</div>
+    <h2 style="font-family:'Playfair Display',serif; font-size:2rem; font-weight:700; margin-bottom:.75rem;">Release Timeline</h2>
+    <p style="color:var(--text-muted); font-size:.9rem; margin-bottom:0;">Major open-weight releases covered in this article</p>
+
+    <div class="timeline fade-up">
+      <div class="tl-item">
+        <div class="tl-date">Dec 2024</div>
+        <div class="tl-title">DeepSeek V3</div>
+        <div class="tl-desc">671B MoE with MLA; sets the new baseline for open-weight LLMs</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">Jan 2025</div>
+        <div class="tl-title">DeepSeek R1 · OLMo 2</div>
+        <div class="tl-desc">R1 brings reasoning to V3; OLMo 2 introduces Post-Norm + QK-Norm</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">Mar 2025</div>
+        <div class="tl-title">Gemma 3 · Mistral Small 3.1</div>
+        <div class="tl-desc">Sliding window attention goes 5:1; Mistral optimizes latency over memory</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">Apr 2025</div>
+        <div class="tl-title">Llama 4 (Scout, Maverick)</div>
+        <div class="tl-desc">Meta adopts MoE; 512k context window with alternating dense/MoE blocks</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">May 2025</div>
+        <div class="tl-title">Qwen3 · SmolLM3</div>
+        <div class="tl-desc">Qwen3 covers 0.6B–235B; SmolLM3 introduces NoPE in every 4th layer</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">Jul 2025</div>
+        <div class="tl-title">Kimi K2 · GPT-OSS · GLM-4.5</div>
+        <div class="tl-desc">1T parameter Kimi K2; OpenAI's first open-weight since GPT-2; GLM-4.5 with attention bias</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">Sep–Dec 2025</div>
+        <div class="tl-title">Qwen3-Next · MiniMax-M2 · DeepSeek V3.2 · Mistral 3 · Nemotron 3</div>
+        <div class="tl-desc">Linear attention hybrids (Gated DeltaNet, Mamba-2); sparse attention; Mamba-Transformer hybrids</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">Feb 2026</div>
+        <div class="tl-title">GLM-5 · Trinity Large · Kimi K2.5</div>
+        <div class="tl-desc">GLM-5 at 744B adopts DeepSeek Sparse Attention; Trinity mixes NoPE, gated attention, and sandwich norm</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-left">
+    © 2026 · LLM Architecture Blog · Built with ♥ and a lot of attention layers
+  </div>
+  <div class="footer-right">
+    <a href="#">↑ Back to top</a>
+    <a href="#">GitHub</a>
+    <a href="#">Original Article</a>
+  </div>
+</footer>
+
+<script>
+  // Progress bar
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const scrolled = doc.scrollTop / (doc.scrollHeight - doc.clientHeight);
+    document.getElementById('progress').style.width = (scrolled * 100) + '%';
+  });
+
+  // Fade-up on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+  // Stagger theme cards
+  document.querySelectorAll('.theme-card').forEach((c, i) => {
+    c.style.transitionDelay = (i * 0.1) + 's';
+    c.classList.add('fade-up');
+    observer.observe(c);
+  });
+</script>
+</body>
+</html>
