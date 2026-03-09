@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sarvam AI: India's Sovereign LLMs | Prateek Singh</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3f;
+    --accent: #7c6bff;
+    --accent2: #ff6b9d;
+    --accent3: #00d9b4;
+    --accent4: #ffb347;
+    --text: #e8e8f0;
+    --text-muted: #7878a0;
+    --text-dim: #4a4a6a;
+    --code-bg: #0f0f1a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.75;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 9999; opacity: .5;
+  }
+
+  #progress {
+    position: fixed; top: 0; left: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+    z-index: 1000; width: 0%; transition: width .1s;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1rem 3rem;
+    background: rgba(10,10,15,.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    z-index: 100;
+  }
+
+  .nav-logo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .75rem; letter-spacing: .2em;
+    color: var(--accent); text-transform: uppercase;
+    text-decoration: none;
+  }
+
+  .nav-links { display: flex; gap: 2rem; list-style: none; }
+
+  .nav-links a {
+    font-size: .8rem; letter-spacing: .08em;
+    color: var(--text-muted); text-decoration: none;
+    text-transform: uppercase; transition: color .2s;
+  }
+  .nav-links a:hover { color: var(--accent3); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    padding: 8rem 3rem 5rem;
+    position: relative; overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 60% 40%, rgba(0,217,180,.10) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 40% at 15% 80%, rgba(124,107,255,.08) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 50% at 85% 70%, rgba(255,179,71,.06) 0%, transparent 60%);
+  }
+
+  .hero-grid {
+    position: absolute; inset: 0; opacity: .04;
+    background-image:
+      linear-gradient(var(--accent3) 1px, transparent 1px),
+      linear-gradient(90deg, var(--accent3) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  .hero-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .7rem; letter-spacing: .3em; color: var(--accent3);
+    text-transform: uppercase; margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: .75rem;
+  }
+  .hero-label::before {
+    content: ''; display: inline-block;
+    width: 40px; height: 1px; background: var(--accent3);
+  }
+
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(3rem, 8vw, 7rem);
+    font-weight: 900; line-height: 1;
+    max-width: 900px;
+    background: linear-gradient(135deg, #fff 0%, #a0f0e0 40%, #c0b8ff 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-sub {
+    font-size: 1.1rem; color: var(--text-muted);
+    max-width: 600px; margin-bottom: 2.5rem;
+  }
+
+  .hero-meta { display: flex; gap: 2rem; align-items: center; flex-wrap: wrap; }
+
+  .hero-author { font-size: .85rem; color: var(--text-muted); }
+  .hero-author span { color: var(--text); font-weight: 500; }
+
+  .hero-badges { display: flex; gap: .5rem; flex-wrap: wrap; }
+
+  .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .65rem; letter-spacing: .1em;
+    padding: .3rem .75rem; border-radius: 2px;
+    text-transform: uppercase; font-weight: 600;
+  }
+  .badge-purple { background: rgba(124,107,255,.15); color: var(--accent);  border: 1px solid rgba(124,107,255,.3); }
+  .badge-teal   { background: rgba(0,217,180,.1);    color: var(--accent3); border: 1px solid rgba(0,217,180,.25); }
+  .badge-pink   { background: rgba(255,107,157,.1);  color: var(--accent2); border: 1px solid rgba(255,107,157,.25); }
+  .badge-orange { background: rgba(255,179,71,.1);   color: var(--accent4); border: 1px solid rgba(255,179,71,.25); }
+
+  .scroll-hint {
+    position: absolute; bottom: 2.5rem; right: 3rem;
+    display: flex; flex-direction: column; align-items: center; gap: .5rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .6rem; letter-spacing: .2em; color: var(--text-dim);
+    text-transform: uppercase;
+    animation: float 2.5s ease-in-out infinite;
+  }
+  .scroll-line { width: 1px; height: 50px; background: linear-gradient(to bottom, var(--accent3), transparent); }
+
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50%      { transform: translateY(8px); }
+  }
+
+  /* LAYOUT */
+  .container { max-width: 860px; margin: 0 auto; padding: 0 2rem; }
+  .wide-container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+
+  /* SECTION LABEL */
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .65rem; letter-spacing: .3em; color: var(--accent);
+    text-transform: uppercase; margin-bottom: 1.25rem;
+    display: flex; align-items: center; gap: .6rem;
+  }
+  .section-label::before { content: ''; width: 20px; height: 1px; background: var(--accent); }
+
+  /* INTRO */
+  .intro-section {
+    padding: 6rem 0;
+    border-top: 1px solid var(--border);
+  }
+  .intro-section p {
+    font-size: 1.05rem; color: var(--text-muted);
+    margin-bottom: 1.25rem; max-width: 720px;
+  }
+  .intro-section p strong { color: var(--text); font-weight: 500; }
+
+  /* THEMES GRID */
+  .themes-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1px; background: var(--border);
+    border: 1px solid var(--border); margin: 4rem 0;
+  }
+  .theme-card {
+    background: var(--surface);
+    padding: 2rem 1.75rem;
+    transition: background .2s;
+    position: relative; overflow: hidden;
+  }
+  .theme-card:hover { background: var(--surface2); }
+  .theme-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  }
+  .theme-card:nth-child(1)::before { background: var(--accent3); }
+  .theme-card:nth-child(2)::before { background: var(--accent); }
+  .theme-card:nth-child(3)::before { background: var(--accent2); }
+  .theme-card:nth-child(4)::before { background: var(--accent4); }
+  .theme-card:nth-child(5)::before { background: var(--accent3); }
+
+  .theme-icon { font-size: 1.5rem; margin-bottom: 1rem; }
+  .theme-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem; font-weight: 700;
+    margin-bottom: .5rem; color: var(--text);
+  }
+  .theme-card p { font-size: .85rem; color: var(--text-muted); line-height: 1.6; }
+
+  /* DIVIDER */
+  .divider {
+    height: 1px; background: var(--border);
+    margin: 0; position: relative;
+  }
+  .divider::after {
+    content: attr(data-num);
+    position: absolute; left: 0; top: -11px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .65rem; letter-spacing: .15em;
+    color: var(--text-dim); background: var(--bg);
+    padding-right: 1rem;
+  }
+
+  /* MODEL SECTIONS */
+  .model-section { padding: 5rem 0; border-bottom: 1px solid var(--border); }
+
+  .model-header {
+    display: flex; align-items: flex-start; gap: 2rem;
+    margin-bottom: 3rem; flex-wrap: wrap;
+  }
+
+  .model-number {
+    font-family: 'Playfair Display', serif;
+    font-size: 5rem; font-weight: 900; line-height: 1;
+    color: var(--border); flex-shrink: 0;
+  }
+
+  .model-title-group { flex: 1; }
+
+  .model-name {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 700; line-height: 1.1; margin-bottom: .5rem;
+  }
+
+  .model-tagline { font-size: .85rem; color: var(--text-muted); margin-bottom: 1rem; }
+
+  .model-stats { display: flex; gap: .5rem; flex-wrap: wrap; }
+
+  .stat-pill {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .65rem; padding: .25rem .7rem;
+    border-radius: 100px; letter-spacing: .05em; border: 1px solid; white-space: nowrap;
+  }
+  .stat-params { color: var(--accent);  border-color: rgba(124,107,255,.35); background: rgba(124,107,255,.08); }
+  .stat-active { color: var(--accent3); border-color: rgba(0,217,180,.3);    background: rgba(0,217,180,.06); }
+  .stat-ctx    { color: var(--accent4); border-color: rgba(255,179,71,.3);   background: rgba(255,179,71,.06); }
+  .stat-type   { color: var(--accent2); border-color: rgba(255,107,157,.3);  background: rgba(255,107,157,.06); }
+
+  .model-body p {
+    font-size: 1rem; color: var(--text-muted);
+    margin-bottom: 1.25rem; max-width: 720px;
+  }
+  .model-body p strong { color: var(--text); font-weight: 500; }
+
+  /* FEATURE BOXES */
+  .feature-box {
+    margin: 2rem 0;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    background: var(--surface);
+    padding: 1.5rem 2rem;
+  }
+  .feature-box.teal   { border-left-color: var(--accent3); }
+  .feature-box.pink   { border-left-color: var(--accent2); }
+  .feature-box.orange { border-left-color: var(--accent4); }
+
+  .feature-box h4 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .75rem; letter-spacing: .2em;
+    color: var(--accent); text-transform: uppercase; margin-bottom: .75rem;
+  }
+  .feature-box.teal h4  { color: var(--accent3); }
+  .feature-box.pink h4  { color: var(--accent2); }
+  .feature-box.orange h4 { color: var(--accent4); }
+  .feature-box p { font-size: .9rem; color: var(--text-muted); margin: 0; }
+
+  /* ARCH DIAGRAM */
+  .arch-diagram {
+    margin: 2.5rem 0;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    padding: 2rem; overflow-x: auto;
+  }
+  .arch-diagram-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .65rem; color: var(--text-dim);
+    letter-spacing: .2em; text-transform: uppercase; margin-bottom: 1.25rem;
+  }
+  .arch-row {
+    display: flex; align-items: center; gap: .75rem;
+    margin-bottom: .5rem; flex-wrap: wrap;
+  }
+  .arch-block {
+    padding: .4rem 1rem; border-radius: 2px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .7rem; font-weight: 600; white-space: nowrap;
+  }
+  .ab-output  { background: rgba(124,107,255,.15); color: var(--accent);  border: 1px solid rgba(124,107,255,.3); }
+  .ab-norm    { background: rgba(255,179,71,.1);   color: var(--accent4); border: 1px solid rgba(255,179,71,.25); }
+  .ab-ff      { background: rgba(0,217,180,.1);    color: var(--accent3); border: 1px solid rgba(0,217,180,.25); }
+  .ab-attn    { background: rgba(255,107,157,.12); color: var(--accent2); border: 1px solid rgba(255,107,157,.3); }
+  .ab-moe     { background: rgba(124,107,255,.2);  color: #b8b0ff;        border: 1px solid rgba(124,107,255,.4); }
+  .ab-mla     { background: rgba(0,217,180,.15);   color: #80ffea;        border: 1px solid rgba(0,217,180,.35); }
+  .ab-embed   { background: rgba(40,40,60,.8);     color: var(--text-muted); border: 1px solid var(--border); }
+  .ab-arrow   { color: var(--text-dim); font-size: .9rem; }
+  .ab-repeat  { font-family: 'JetBrains Mono', monospace; font-size: .65rem; color: var(--accent4); margin-left: auto; }
+
+  /* COMPARISON TABLE */
+  .comparison-table {
+    width: 100%; border-collapse: collapse;
+    margin: 2.5rem 0; font-size: .85rem; overflow: hidden;
+  }
+  .comparison-table th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .65rem; letter-spacing: .15em;
+    text-transform: uppercase; color: var(--text-muted);
+    padding: .75rem 1rem; text-align: left;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+  }
+  .comparison-table td {
+    padding: .75rem 1rem; border-bottom: 1px solid rgba(255,255,255,.04);
+    color: var(--text-muted); vertical-align: middle;
+  }
+  .comparison-table tr:hover td { background: var(--surface); }
+  .comparison-table td:first-child { color: var(--text); font-weight: 500; }
+
+  .tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .6rem; padding: .15rem .5rem;
+    border-radius: 2px; margin: 2px;
+    background: rgba(124,107,255,.12); color: var(--accent);
+    border: 1px solid rgba(124,107,255,.25);
+  }
+  .tag.teal   { background: rgba(0,217,180,.08);   color: var(--accent3); border-color: rgba(0,217,180,.2); }
+  .tag.orange { background: rgba(255,179,71,.08);  color: var(--accent4); border-color: rgba(255,179,71,.2); }
+  .tag.pink   { background: rgba(255,107,157,.08); color: var(--accent2); border-color: rgba(255,107,157,.2); }
+
+  /* CALLOUT */
+  .callout {
+    display: flex; gap: 1.25rem; padding: 1.5rem 1.75rem;
+    background: var(--surface); border: 1px solid var(--border); margin: 2rem 0;
+  }
+  .callout-icon { font-size: 1.25rem; flex-shrink: 0; margin-top: .1rem; }
+  .callout p { font-size: .9rem; color: var(--text-muted); margin: 0 !important; line-height: 1.65; }
+  .callout p strong { color: var(--text); }
+
+  /* TREND SECTION */
+  .trends-section {
+    padding: 5rem 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .trend-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem; margin-top: 3rem;
+  }
+  .trend-item { display: flex; gap: 1.25rem; align-items: flex-start; }
+  .trend-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 3rem; font-weight: 900; line-height: 1;
+    color: var(--border); flex-shrink: 0;
+  }
+  .trend-text h4 { font-size: .95rem; font-weight: 500; color: var(--text); margin-bottom: .4rem; }
+  .trend-text p  { font-size: .82rem; color: var(--text-muted); line-height: 1.65; }
+
+  /* TIMELINE */
+  .timeline-section { padding: 5rem 0 7rem; }
+
+  .timeline { position: relative; margin-top: 4rem; }
+
+  .timeline::before {
+    content: ''; position: absolute;
+    left: 110px; top: 0; bottom: 0; width: 1px;
+    background: linear-gradient(to bottom, transparent, var(--border) 5%, var(--border) 95%, transparent);
+  }
+
+  .tl-item {
+    position: relative;
+    display: grid; grid-template-columns: 110px 1fr;
+    gap: 0 2.5rem; margin-bottom: 3rem; align-items: start;
+  }
+
+  .tl-item::after {
+    content: ''; position: absolute;
+    left: 110px; top: 1.1rem;
+    width: 9px; height: 9px; border-radius: 50%;
+    border: 1px solid var(--tl-color, var(--accent));
+    background: var(--bg);
+    box-shadow: 0 0 10px var(--tl-color, var(--accent));
+    transform: translateX(-4px); z-index: 2;
+  }
+
+  .tl-item:nth-child(1) { --tl-color: var(--accent3); }
+  .tl-item:nth-child(2) { --tl-color: var(--accent); }
+  .tl-item:nth-child(3) { --tl-color: var(--accent2); }
+  .tl-item:nth-child(4) { --tl-color: var(--accent4); }
+  .tl-item:nth-child(5) { --tl-color: var(--accent3); }
+
+  .tl-date-col { text-align: right; padding-top: .9rem; padding-right: 2rem; }
+
+  .tl-date {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .65rem; letter-spacing: .15em;
+    color: var(--tl-color, var(--accent3));
+    text-transform: uppercase; white-space: nowrap;
+  }
+
+  .tl-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 2px solid var(--tl-color, var(--accent));
+    padding: 1.5rem 1.75rem;
+    transition: background .2s, transform .2s;
+  }
+  .tl-card:hover { background: var(--surface2); transform: translateX(4px); }
+
+  .tl-card-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    flex-wrap: wrap; gap: .75rem; margin-bottom: 1rem;
+  }
+
+  .tl-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem; font-weight: 700; color: var(--text); line-height: 1.2;
+  }
+
+  .tl-milestone {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .6rem; padding: .2rem .65rem; border-radius: 2px;
+    letter-spacing: .08em; text-transform: uppercase; white-space: nowrap;
+    background: rgba(255,255,255,.04); border: 1px solid var(--border); color: var(--text-dim);
+  }
+
+  .tl-desc { font-size: .88rem; color: var(--text-muted); line-height: 1.65; margin-bottom: 1.1rem; }
+
+  .tl-models { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
+
+  .tl-model-chip {
+    font-family: 'JetBrains Mono', monospace; font-size: .65rem;
+    padding: .25rem .7rem; border-radius: 2px; letter-spacing: .04em;
+    border: 1px solid var(--tl-color, var(--accent3));
+    color: var(--tl-color, var(--accent3));
+    background: transparent; transition: background .15s;
+  }
+  .tl-model-chip:hover { background: rgba(255,255,255,.04); }
+
+  .tl-highlights {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: .5rem; padding-top: 1rem; border-top: 1px solid var(--border);
+  }
+
+  .tl-highlight {
+    font-size: .78rem; color: var(--text-muted);
+    display: flex; align-items: flex-start; gap: .5rem;
+  }
+  .tl-highlight::before {
+    content: '→'; color: var(--tl-color, var(--accent3));
+    flex-shrink: 0; font-family: 'JetBrains Mono', monospace;
+    font-size: .7rem; margin-top: .05rem;
+  }
+
+  /* FOOTER */
+  footer {
+    padding: 4rem 3rem; border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 1.5rem;
+  }
+  .footer-left { font-family: 'JetBrains Mono', monospace; font-size: .7rem; color: var(--text-dim); letter-spacing: .1em; }
+  .footer-right { display: flex; gap: 1.5rem; }
+  .footer-right a { font-size: .8rem; color: var(--text-muted); text-decoration: none; transition: color .2s; }
+  .footer-right a:hover { color: var(--accent3); }
+
+  /* ANIMATIONS */
+  .fade-up { opacity: 0; transform: translateY(28px); transition: opacity .65s ease, transform .65s ease; }
+  .fade-up.visible { opacity: 1; transform: translateY(0); }
+
+  mark { background: rgba(0,217,180,.15); color: #80ffea; padding: 0 .2em; border-radius: 2px; }
+
+  @media (max-width: 640px) {
+    nav { padding: 1rem 1.25rem; }
+    .nav-links { display: none; }
+    .hero { padding: 7rem 1.25rem 4rem; }
+    .container, .wide-container { padding: 0 1.25rem; }
+    footer { padding: 2.5rem 1.25rem; flex-direction: column; }
+    .model-number { font-size: 3rem; }
+    .timeline::before { left: 0; }
+    .tl-item { grid-template-columns: 1fr; padding-left: 1.5rem; }
+    .tl-item::after { left: 0; }
+    .tl-date-col { text-align: left; padding: 0 0 .5rem; }
+  }
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="blogs.html" class="nav-logo">← Back to Blogs</a>
+  <ul class="nav-links">
+    <li><a href="#intro">Overview</a></li>
+    <li><a href="#models">Models</a></li>
+    <li><a href="#architecture">Architecture</a></li>
+    <li><a href="#timeline">Timeline</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+
+  <div style="position:relative; z-index:1;">
+    <div class="hero-label">Sovereign AI · India · Deep Dive</div>
+    <h1>Sarvam AI:<br>India's Own LLMs</h1>
+    <p class="hero-sub">
+      From a 2B parameter Indic language model to a sovereign 105B MoE flagship — the story of how Sarvam AI built India's first full-stack foundation models from scratch, in India, for India.
+    </p>
+    <div class="hero-meta">
+      <div class="hero-author">Published <span>March 2026</span> · <span>Prateek Singh, PhD</span></div>
+      <div class="hero-badges">
+        <span class="badge badge-teal">Sovereign AI</span>
+        <span class="badge badge-purple">MoE Architecture</span>
+        <span class="badge badge-orange">22 Indian Languages</span>
+        <span class="badge badge-pink">Open Source</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll-hint">
+    <div class="scroll-line"></div>
+    Scroll
+  </div>
+</section>
+
+<!-- INTRO -->
+<section id="intro" class="intro-section">
+  <div class="container">
+    <div class="section-label">Overview</div>
+    <h2 style="font-family:'Playfair Display',serif; font-size:2rem; font-weight:700; margin-bottom:1.5rem;">Why Sarvam Matters</h2>
+
+    <p>India has 1.4 billion people speaking 22 scheduled languages across 12 scripts. The dominant English-centric LLMs handle most of these poorly — poor token efficiency for Indic scripts (4–8 tokens per word vs 1.4 for English), limited training data in regional languages, and cultural context gaps that matter for real-world deployment in healthcare, banking, government services, and education.</p>
+
+    <p><strong>Sarvam AI</strong>, founded in August 2023 by Vivek Raghavan and Pratyush Kumar — both formerly of AI4Bharat at IIT Madras — set out to build the full stack from scratch: tokenizer, architecture, training data, training infrastructure, post-training pipelines, and inference systems. Not a fine-tune of someone else's checkpoint. Built in India, on Indian compute, under the IndiaAI Mission.</p>
+
+    <p>The result is a model family that spans a 2B base model (Sarvam-1, Oct 2024), a 24B fine-tune (Sarvam-M, May 2025), and now two fully sovereign foundation models: <strong>Sarvam 30B</strong> and <strong>Sarvam 105B</strong>, both MoE architectures trained from scratch and open-sourced under Apache 2.0 in February–March 2026.</p>
+
+    <div class="themes-grid fade-up">
+      <div class="theme-card">
+        <div class="theme-icon">🗣️</div>
+        <h3>22 Indian Languages</h3>
+        <p>All officially scheduled Indian languages, including code-mixed formats like Hinglish. Custom tokenizer with fertility rates of 1.4–2.1 vs 4–8 for standard models.</p>
+      </div>
+      <div class="theme-card">
+        <div class="theme-icon">⚡</div>
+        <h3>Sparse MoE Efficiency</h3>
+        <p>Both 30B and 105B activate only a fraction of total parameters per token — 2.4B and 10.3B respectively — keeping inference costs practical at scale.</p>
+      </div>
+      <div class="theme-card">
+        <div class="theme-icon">🔓</div>
+        <h3>Apache 2.0 Open Source</h3>
+        <p>Weights on HuggingFace and AIKosh. Enterprise and developer use permitted. Aimed at reducing India's dependence on closed foreign AI systems.</p>
+      </div>
+      <div class="theme-card">
+        <div class="theme-icon">🇮🇳</div>
+        <h3>Sovereign Infrastructure</h3>
+        <p>Trained entirely in India on Yotta's Shakti GPU cluster using government-provided compute under the ₹10,372-crore IndiaAI Mission.</p>
+      </div>
+      <div class="theme-card">
+        <div class="theme-icon">🧠</div>
+        <h3>Reasoning-First Training</h3>
+        <p>Full pipeline: pre-training → SFT → RL. Models include extended thinking mode and agentic traces for real-world tool use and multi-step workflows.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider" data-num="01 — Model Breakdown"></div>
+
+<!-- MODEL 1: SARVAM-1 -->
+<section id="models" class="model-section">
+  <div class="container">
+    <div class="model-header">
+      <div class="model-number">01</div>
+      <div class="model-title-group">
+        <div class="model-name">Sarvam-1</div>
+        <div class="model-tagline">The Foundation — India's first purpose-built Indic LLM</div>
+        <div class="model-stats">
+          <span class="stat-pill stat-params">2B Parameters</span>
+          <span class="stat-pill stat-active">Dense</span>
+          <span class="stat-pill stat-ctx">4K Context</span>
+          <span class="stat-pill stat-type">Oct 2024</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="model-body">
+      <p>Released in October 2024, Sarvam-1 was the first model to demonstrate that a carefully curated 2B parameter model can outperform much larger general-purpose models on Indian languages. Trained on <strong>2 trillion tokens</strong> across 10 Indic languages (Bengali, Gujarati, Hindi, Kannada, Malayalam, Marathi, Oriya, Punjabi, Tamil, Telugu), it beat Gemma-2-2B and Llama-3.2-3B on Indic benchmarks, and stayed competitive with Llama-3.1-8B — at 4× smaller.</p>
+
+      <p>The key insight: <strong>token efficiency first</strong>. Existing multilingual models need 4–8 tokens per Indic word due to poor tokenizer design. Sarvam-1's custom tokenizer achieves 1.4–2.1 fertility across all supported languages — matching English efficiency — which directly improves model capacity utilization and training signal quality.</p>
+
+      <div class="arch-diagram">
+        <div class="arch-diagram-label">Sarvam-1 Architecture (2B Dense)</div>
+        <div class="arch-row">
+          <span class="arch-block ab-embed">Token Embedding</span>
+          <span class="arch-block ab-arrow">→</span>
+          <span class="arch-block ab-embed">Custom Indic Tokenizer (32K vocab)</span>
+        </div>
+        <div class="arch-row" style="margin-top:.75rem;">
+          <span class="arch-block ab-norm">RMSNorm</span>
+          <span class="arch-block ab-arrow">→</span>
+          <span class="arch-block ab-attn">GQA (Grouped Query Attention)</span>
+          <span class="arch-block ab-arrow">→</span>
+          <span class="arch-block ab-norm">RMSNorm</span>
+          <span class="arch-block ab-arrow">→</span>
+          <span class="arch-block ab-ff">SwiGLU FFN</span>
+          <span class="arch-block ab-repeat">× N layers</span>
+        </div>
+        <div class="arch-row" style="margin-top:.75rem;">
+          <span class="arch-block ab-embed">RoPE (θ=10,000)</span>
+          <span class="arch-block ab-arrow">+</span>
+          <span class="arch-block ab-embed">bfloat16 mixed precision</span>
+          <span class="arch-block ab-arrow">+</span>
+          <span class="arch-block ab-embed">Deeper & thinner config</span>
+        </div>
+      </div>
+
+      <div class="feature-box teal">
+        <h4>Key Design Choice: Deeper & Thinner</h4>
+        <p>Sarvam-1 uses more layers with a smaller hidden dimension than similarly-sized models. Research at the time (later reinforced by Qwen3) showed this improves performance for a fixed parameter budget, particularly on multilingual tasks where diverse representations benefit from greater depth.</p>
+      </div>
+
+      <div class="feature-box">
+        <h4>Training Setup</h4>
+        <p>Trained on Yotta's Shakti HGX H100 cluster with 1,024 GPUs over 5 days using NVIDIA NeMo framework. Kernel fusion and mixed-precision optimizations throughout. Note: this is a base completion model — not instruction-tuned, designed to be fine-tuned for downstream tasks.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider" data-num="02 — Sarvam-M"></div>
+
+<!-- MODEL 2: SARVAM-M -->
+<section class="model-section">
+  <div class="container">
+    <div class="model-header">
+      <div class="model-number">02</div>
+      <div class="model-title-group">
+        <div class="model-name">Sarvam-M</div>
+        <div class="model-tagline">The Bridge — Fine-tuned Mistral for Indian reasoning</div>
+        <div class="model-stats">
+          <span class="stat-pill stat-params">24B Parameters</span>
+          <span class="stat-pill stat-active">Dense</span>
+          <span class="stat-pill stat-ctx">32K Context</span>
+          <span class="stat-pill stat-type">May 2025</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="model-body">
+      <p>Released May 2025, Sarvam-M was a significant step up in capability — fine-tuned on <strong>Mistral-Small-3.1-24B-Base</strong> to enhance Indian language performance, reasoning, and coding. While technically built on a foreign base model (which later drew criticism for not qualifying as truly sovereign), it served as a crucial bridge that demonstrated Sarvam's SFT and RL pipeline capabilities at scale.</p>
+
+      <p>Sarvam-M supports <strong>11 Indian languages</strong>, has a 32K token context window with sliding window attention of 4,096 tokens, and includes a thinking mode for extended reasoning. It was Sarvam's first production-deployed model for conversational use cases.</p>
+
+      <div class="feature-box pink">
+        <h4>The Sovereignty Debate</h4>
+        <p>Sarvam-M drew industry criticism because it was fine-tuned from Mistral's architecture — a French AI company's design. While performance on Indic languages improved significantly, critics argued it did not reduce structural dependence on foreign AI infrastructure. This directly motivated Sarvam's decision to train 30B and 105B <em>from scratch</em>.</p>
+      </div>
+
+      <div class="feature-box teal">
+        <h4>Architecture Details (Inherited from Mistral-Small-3.1)</h4>
+        <p>GQA attention with sliding window of 4,096 tokens for local layers and full attention for global layers. 32K context window. SwiGLU FFN. Standard Pre-Norm with RMSNorm. RoPE positional embeddings. The key Sarvam contribution was the post-training pipeline: instruction tuning, safety fine-tuning, and RL on Indian-language-heavy prompts.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider" data-num="03 — Sarvam 30B (Sovereign)"></div>
+
+<!-- MODEL 3: SARVAM 30B -->
+<section id="architecture" class="model-section">
+  <div class="container">
+    <div class="model-header">
+      <div class="model-number">03</div>
+      <div class="model-title-group">
+        <div class="model-name">Sarvam 30B</div>
+        <div class="model-tagline">First fully sovereign foundation model — built for real-time production</div>
+        <div class="model-stats">
+          <span class="stat-pill stat-params">30B Total</span>
+          <span class="stat-pill stat-active">2.4B Active / token</span>
+          <span class="stat-pill stat-ctx">32K Context</span>
+          <span class="stat-pill stat-type">MoE · 128 Experts · Top-6</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="model-body">
+      <p>Sarvam 30B is the first model in the family built entirely from scratch in India — architecture, training data, tokenizer, and training infrastructure. Pre-trained on <strong>16 trillion tokens</strong> spanning code, web data, mathematics, and multilingual content, with a custom data mixture tuned after extensive ablations. Then put through SFT and RL pipelines developed entirely in-house.</p>
+
+      <p>The architecture uses a <strong>Heterogeneous MoE</strong> design: 19 layers total — 1 dense layer followed by 18 MoE layers. Each MoE layer has <strong>128 experts</strong> with <strong>top-6 routing</strong> (6 experts activate per token). A dedicated <strong>shared expert</strong> handles common linguistic patterns, keeping consistent representations across all inputs. Grouped Query Attention (GQA) with 4 KV heads per layer balances memory bandwidth and generation quality.</p>
+
+      <div class="arch-diagram">
+        <div class="arch-diagram-label">Sarvam 30B Architecture (Heterogeneous MoE)</div>
+        <div class="arch-row">
+          <span class="arch-block ab-embed">Token Input</span>
+          <span class="arch-block ab-arrow">→</span>
+          <span class="arch-block ab-embed">Custom Indic Tokenizer (22 langs, 12 scripts)</span>
+        </div>
+        <div class="arch-row" style="margin-top:.75rem;">
+          <span class="arch-block ab-embed">Layer 1 (Dense)</span>
+          <span class="arch-block ab-arrow">→</span>
+          <span class="arch-block ab-attn">GQA (4 KV heads)</span>
+          <span class="arch-block ab-arrow">+</span>
+          <span class="arch-block ab-ff">SwiGLU FFN</span>
+        </div>
+        <div class="arch-row" style="margin-top:.5rem;">
+          <span class="arch-block ab-embed">Layers 2–19 (MoE)</span>
+          <span class="arch-block ab-arrow">→</span>
+          <span class="arch-block ab-attn">GQA (4 KV heads)</span>
+          <span class="arch-block ab-arrow">+</span>
+          <span class="arch-block ab-moe">MoE FFN · 128 experts · top-6 routed + 1 shared</span>
+          <span class="arch-block ab-repeat">× 18</span>
+        </div>
+        <div class="arch-row" style="margin-top:.75rem;">
+          <span class="arch-block ab-norm">RMSNorm</span>
+          <span class="arch-block ab-arrow">+</span>
+          <span class="arch-block ab-embed">RoPE (θ=8,000,000)</span>
+          <span class="arch-block ab-arrow">+</span>
+          <span class="arch-block ab-embed">Sigmoid routing (not softmax)</span>
+        </div>
+      </div>
+
+      <div class="feature-box orange">
+        <h4>Sigmoid Routing — A Key Innovation</h4>
+        <p>Instead of traditional softmax gating over expert logits, Sarvam uses <strong>sigmoid-based routing scores</strong>. Softmax normalizes scores across all experts, creating competition and routing collapse where a few experts dominate over time. Sigmoid scores are independent per expert, improving load balancing and encouraging more uniform expert utilization — critical for training stability over 16 trillion tokens.</p>
+      </div>
+
+      <div class="feature-box teal">
+        <h4>Ultra-High RoPE Theta</h4>
+        <p>Sarvam 30B uses a RoPE theta of <mark>8,000,000</mark> — orders of magnitude higher than Llama's 500,000 or the original 10,000. This allows stable positional encoding at long contexts without needing a separate RoPE scaling mechanism (no YaRN or ABF needed). The model handles 32K context natively without degradation.</p>
+      </div>
+
+      <div class="feature-box">
+        <h4>Production Target: Samvaad</h4>
+        <p>Sarvam 30B is the engine powering <strong>Samvaad</strong>, Sarvam's conversational AI platform. The 2.4B active parameters per token make it fast enough for real-time voice interactions across Indian languages. NVIDIA co-designed inference optimizations delivered 4× speedup over baseline H100 performance via kernel fusion, RadixAttention for KV prefix reuse, and Blackwell NVFP4 quantization.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider" data-num="04 — Sarvam 105B (Flagship)"></div>
+
+<!-- MODEL 4: SARVAM 105B -->
+<section class="model-section">
+  <div class="container">
+    <div class="model-header">
+      <div class="model-number">04</div>
+      <div class="model-title-group">
+        <div class="model-name">Sarvam 105B</div>
+        <div class="model-tagline">The flagship — deep reasoning, long context, agentic workflows</div>
+        <div class="model-stats">
+          <span class="stat-pill stat-params">105B Total</span>
+          <span class="stat-pill stat-active">10.3B Active / token</span>
+          <span class="stat-pill stat-ctx">128K Context</span>
+          <span class="stat-pill stat-type">MoE · 128 Experts · Top-8 · MLA</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="model-body">
+      <p>Sarvam 105B extends the 30B architecture to 32 layers (1 dense + 31 MoE) with larger expert FFN hidden size and <strong>top-8 routing</strong>. The critical architectural addition at this scale is <strong>Multi-Head Latent Attention (MLA)</strong> — the same KV cache compression technique pioneered by DeepSeek V3 — which enables the 128K context window without prohibitive memory requirements.</p>
+
+      <p>Pre-trained on <strong>12 trillion tokens</strong> (fewer than the 30B, but with a heavier emphasis on Indian languages, STEM, and agentic data). Full post-training: SFT on diverse, synthetically augmented prompts including agentic traces and tool-use trajectories, followed by RL using an asynchronous GRPO setup with adaptive rollout allocation.</p>
+
+      <div class="arch-diagram">
+        <div class="arch-diagram-label">Sarvam 105B Architecture (Flagship MoE)</div>
+        <div class="arch-row">
+          <span class="arch-block ab-embed">Token Input</span>
+          <span class="arch-block ab-arrow">→</span>
+          <span class="arch-block ab-embed">Custom Tokenizer (22 langs, 12 scripts)</span>
+        </div>
+        <div class="arch-row" style="margin-top:.75rem;">
+          <span class="arch-block ab-embed">Layer 1 (Dense)</span>
+          <span class="arch-block ab-arrow">→</span>
+          <span class="arch-block ab-mla">MLA (Multi-Head Latent Attention)</span>
+          <span class="arch-block ab-arrow">+</span>
+          <span class="arch-block ab-ff">SwiGLU FFN</span>
+        </div>
+        <div class="arch-row" style="margin-top:.5rem;">
+          <span class="arch-block ab-embed">Layers 2–32 (MoE)</span>
+          <span class="arch-block ab-arrow">→</span>
+          <span class="arch-block ab-mla">MLA (compressed KV latent)</span>
+          <span class="arch-block ab-arrow">+</span>
+          <span class="arch-block ab-moe">MoE FFN · 128 experts · top-8 routed + 1 shared</span>
+          <span class="arch-block ab-repeat">× 31</span>
+        </div>
+        <div class="arch-row" style="margin-top:.75rem;">
+          <span class="arch-block ab-norm">RMSNorm</span>
+          <span class="arch-block ab-arrow">+</span>
+          <span class="arch-block ab-embed">RoPE + Sigmoid routing</span>
+          <span class="arch-block ab-arrow">+</span>
+          <span class="arch-block ab-embed">Expert bias term</span>
+        </div>
+      </div>
+
+      <div class="feature-box teal">
+        <h4>MLA: DeepSeek's Technique, Sarvam's Scale</h4>
+        <p>Multi-Head Latent Attention compresses Key and Value tensors into a low-dimensional latent vector before projecting back out for attention computation. The KV cache stores this compressed latent rather than full K/V tensors — dramatically reducing memory at 128K context lengths. Sarvam adopted MLA (similar to DeepSeek V3) specifically because GQA wasn't sufficient for long-context efficiency at the 105B scale.</p>
+      </div>
+
+      <div class="feature-box">
+        <h4>Adaptive RL Curriculum</h4>
+        <p>The RL stage uses an adaptive knapsack-style rollout allocation: prompts are pre-filtered to remove trivially solvable or unsolvable tasks, then rollouts are dynamically weighted toward tasks near the model's capability frontier — where learning signal is strongest. An asynchronous GRPO setup decouples generation, reward computation, and policy updates to maximize GPU utilization during RL.</p>
+      </div>
+
+      <div class="feature-box pink">
+        <h4>Production Target: Indus</h4>
+        <p>Sarvam 105B powers <strong>Indus</strong>, Sarvam's AI assistant for complex reasoning and agentic workflows. Benchmarked against JEE Main 2026 papers (Math: 25/25 under Pass@1), Codeforces Div3 problems, and the Tau 2 Bench for agentic reasoning — where it outperforms DeepSeek R1, Gemini 2.5 Flash, and o4-mini.</p>
+      </div>
+
+      <div class="callout">
+        <div class="callout-icon">📊</div>
+        <p><strong>Benchmark positioning:</strong> Sarvam 105B competes with GPT-OSS-120B and Qwen3-Next-80B. The 30B targets Gemma 27B and GPT-OSS-20B. Both models achieve state-of-the-art on Indian language benchmarks at their parameter class, outperforming significantly larger general-purpose models on Indic tasks.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARISON TABLE -->
+<section style="padding: 5rem 0; border-top: 1px solid var(--border);">
+  <div class="wide-container">
+    <div class="section-label">Side by Side</div>
+    <h2 style="font-family:'Playfair Display',serif; font-size:2rem; font-weight:700; margin-bottom:2.5rem;">Sarvam Model Family Comparison</h2>
+
+    <div style="overflow-x:auto; border: 1px solid var(--border); border-radius:4px;">
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Params</th>
+            <th>Active</th>
+            <th>Attention</th>
+            <th>Architecture</th>
+            <th>Context</th>
+            <th>Key Feature</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Sarvam-1</td>
+            <td>2B</td>
+            <td>2B (dense)</td>
+            <td><span class="tag pink">GQA</span></td>
+            <td><span class="tag teal">Dense Transformer</span></td>
+            <td>4K</td>
+            <td><span class="tag">Custom Indic tokenizer</span> <span class="tag teal">SwiGLU + RoPE</span></td>
+          </tr>
+          <tr>
+            <td>Sarvam-M</td>
+            <td>24B</td>
+            <td>24B (dense)</td>
+            <td><span class="tag pink">GQA + SWA</span></td>
+            <td><span class="tag teal">Dense (Mistral base)</span></td>
+            <td>32K</td>
+            <td><span class="tag orange">Fine-tune of Mistral 3.1</span> <span class="tag">Thinking mode</span></td>
+          </tr>
+          <tr>
+            <td>Sarvam 30B</td>
+            <td>30B</td>
+            <td>2.4B / token</td>
+            <td><span class="tag pink">GQA (4 KV heads)</span></td>
+            <td><span class="tag">MoE · 128 experts · top-6</span></td>
+            <td>32K</td>
+            <td><span class="tag orange">Sigmoid routing</span> <span class="tag teal">RoPE θ=8M</span> <span class="tag">Shared expert</span></td>
+          </tr>
+          <tr>
+            <td>Sarvam 105B</td>
+            <td>105B</td>
+            <td>10.3B / token</td>
+            <td><span class="tag teal">MLA (DeepSeek-style)</span></td>
+            <td><span class="tag">MoE · 128 experts · top-8</span></td>
+            <td>128K</td>
+            <td><span class="tag teal">MLA + KV compression</span> <span class="tag orange">Async GRPO RL</span> <span class="tag">Expert bias</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- TRENDS -->
+<section class="trends-section">
+  <div class="wide-container">
+    <div class="section-label">What It Tells Us</div>
+    <h2 style="font-family:'Playfair Display',serif; font-size:2rem; font-weight:700;">Key Architectural Insights from Sarvam</h2>
+
+    <div class="trend-grid fade-up">
+      <div class="trend-item">
+        <div class="trend-num">01</div>
+        <div class="trend-text">
+          <h4>Tokenizer is architecture</h4>
+          <p>Sarvam's biggest competitive advantage isn't model size — it's the custom tokenizer. With 1.4–2.1 fertility vs 4–8 for standard models, every layer of the model gets more signal per Indic token. Better tokenization compounds through the entire training process.</p>
+        </div>
+      </div>
+      <div class="trend-item">
+        <div class="trend-num">02</div>
+        <div class="trend-text">
+          <h4>Sigmoid routing beats softmax at scale</h4>
+          <p>Using sigmoid instead of softmax for MoE gating scores is a meaningful deviation from standard practice. Independent per-expert scoring prevents routing collapse and distributes load more uniformly — important for maintaining expert diversity over 16T training tokens.</p>
+        </div>
+      </div>
+      <div class="trend-item">
+        <div class="trend-num">03</div>
+        <div class="trend-text">
+          <h4>MLA adoption validates DeepSeek's design</h4>
+          <p>Sarvam 105B adopting MLA (alongside Kimi K2, GLM-5, Mistral 3 Large) cements it as the emerging standard for long-context efficiency. GQA wasn't sufficient at 128K — MLA's latent KV compression solved what GQA couldn't.</p>
+        </div>
+      </div>
+      <div class="trend-item">
+        <div class="trend-num">04</div>
+        <div class="trend-text">
+          <h4>Fine-grained MoE: depth over breadth</h4>
+          <p>128 small experts with top-6 or top-8 routing follows the DeepSeek V3 fine-grained template rather than Grok 2.5's coarse-grained 8-large-expert approach. More experts, more specialization — especially useful for multilingual models where language-specific routing matters.</p>
+        </div>
+      </div>
+      <div class="trend-item">
+        <div class="trend-num">05</div>
+        <div class="trend-text">
+          <h4>Sovereign = full-stack, not just weights</h4>
+          <p>The Sarvam-M controversy clarified what "sovereign AI" actually requires: not just open weights, but control over architecture design, training data, infrastructure, and post-training pipeline. Sarvam 30B and 105B meet that bar. Sarvam-M did not.</p>
+        </div>
+      </div>
+      <div class="trend-item">
+        <div class="trend-num">06</div>
+        <div class="trend-text">
+          <h4>Adaptive RL curriculum is the new frontier</h4>
+          <p>Sarvam's knapsack-based rollout allocation — concentrating RL compute on tasks near the model's capability frontier — is more sophisticated than standard uniform sampling. Combined with async GRPO and trajectory staleness controls, it squeezes maximum learning signal per GPU hour.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TIMELINE -->
+<section id="timeline" class="timeline-section">
+  <div class="container">
+    <div class="section-label">Chronology</div>
+    <h2 style="font-family:'Playfair Display',serif; font-size:2rem; font-weight:700; margin-bottom:.75rem;">Sarvam AI Release Timeline</h2>
+    <p style="color:var(--text-muted); font-size:.9rem; margin-bottom:0;">From founding to sovereign flagship — a 2.5 year journey</p>
+
+    <div class="timeline fade-up">
+
+      <!-- Aug 2023 -->
+      <div class="tl-item">
+        <div class="tl-date-col"><div class="tl-date">Aug 2023</div></div>
+        <div class="tl-card">
+          <div class="tl-card-header">
+            <div class="tl-title">Sarvam AI Founded</div>
+            <span class="tl-milestone">Inception</span>
+          </div>
+          <p class="tl-desc">Vivek Raghavan and Pratyush Kumar — both formerly of AI4Bharat at IIT Madras — found Sarvam AI in Bengaluru. The mission: build large language models and multimodal AI systems with a focus on Indian languages from the ground up. In December 2023, the company closes a combined seed + Series A of ~$41M led by Lightspeed, with Peak XV Partners and Khosla Ventures participating.</p>
+          <div class="tl-models"><span class="tl-model-chip">Sarvam AI · Bengaluru</span></div>
+          <div class="tl-highlights">
+            <span class="tl-highlight">Founded by ex-AI4Bharat researchers</span>
+            <span class="tl-highlight">$41M seed + Series A in Dec 2023</span>
+            <span class="tl-highlight">Mission: India-first, sovereign AI stack</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Oct 2024 -->
+      <div class="tl-item">
+        <div class="tl-date-col"><div class="tl-date">Oct 2024</div></div>
+        <div class="tl-card">
+          <div class="tl-card-header">
+            <div class="tl-title">Sarvam-1 (2B)</div>
+            <span class="tl-milestone">First Model</span>
+          </div>
+          <p class="tl-desc">The first public model: a 2B dense transformer trained from scratch on 2 trillion tokens across 10 Indic languages. The headline achievement is the custom tokenizer — achieving 1.4–2.1 fertility vs 4–8 for existing multilingual models. Sarvam-1 outperforms Gemma-2-2B and Llama-3.2-3B on Indic benchmarks despite being the same or smaller size. Competitive with Llama-3.1-8B at 4× fewer parameters. Uses GQA, SwiGLU, RoPE (θ=10,000), bfloat16 training.</p>
+          <div class="tl-models"><span class="tl-model-chip">Sarvam-1 · 2B · Dense</span></div>
+          <div class="tl-highlights">
+            <span class="tl-highlight">Custom tokenizer: 1.4–2.1 fertility</span>
+            <span class="tl-highlight">2T tokens, 10 Indic languages</span>
+            <span class="tl-highlight">Deeper & thinner architecture</span>
+            <span class="tl-highlight">GQA + SwiGLU + RoPE</span>
+            <span class="tl-highlight">Trained on Yotta Shakti: 1,024 H100s, 5 days</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Apr + May 2025 -->
+      <div class="tl-item">
+        <div class="tl-date-col"><div class="tl-date">Apr–May 2025</div></div>
+        <div class="tl-card">
+          <div class="tl-card-header">
+            <div class="tl-title">IndiaAI Mission Selection · Sarvam-M (24B)</div>
+            <span class="tl-milestone">Scale + Controversy</span>
+          </div>
+          <p class="tl-desc">In April 2025, India's Ministry of Electronics (MeitY) selects Sarvam AI under the IndiaAI Mission to develop an indigenous foundation model — providing access to government-backed GPU compute. In May, Sarvam releases <strong>Sarvam-M</strong>, a 24B model fine-tuned from Mistral-Small-3.1-24B. It supports 11 Indian languages, includes a thinking mode, and is the first Sarvam model deployed in production (for conversational use). However, it quickly draws criticism for being a foreign-architecture fine-tune rather than a truly sovereign model.</p>
+          <div class="tl-models">
+            <span class="tl-model-chip">Sarvam-M · 24B · Dense</span>
+            <span class="tl-model-chip">IndiaAI Mission GPU Access</span>
+          </div>
+          <div class="tl-highlights">
+            <span class="tl-highlight">Fine-tune of Mistral Small 3.1</span>
+            <span class="tl-highlight">GQA + sliding window 4K</span>
+            <span class="tl-highlight">32K context, thinking mode</span>
+            <span class="tl-highlight">Criticized as non-sovereign base</span>
+            <span class="tl-highlight">Government GPU compute unlocked</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feb 2026 Launch -->
+      <div class="tl-item">
+        <div class="tl-date-col"><div class="tl-date">Feb 2026</div></div>
+        <div class="tl-card">
+          <div class="tl-card-header">
+            <div class="tl-title">Sarvam 30B + 105B Unveiled at India AI Impact Summit</div>
+            <span class="tl-milestone">Sovereign Milestone</span>
+          </div>
+          <p class="tl-desc">At the India AI Impact Summit in New Delhi's Bharat Mandapam, Sarvam unveils two fully sovereign foundation models trained from scratch on Indian government compute under the IndiaAI Mission. Both are MoE architectures with a custom Indic tokenizer supporting all 22 official languages across 12 scripts. The 30B uses GQA and is optimized for real-time deployment. The 105B adds MLA for 128K context and is designed for complex reasoning and agentic tasks. At launch, a demonstration called "Vikram" (named after Vikram Sarabhai) showcases multilingual conversations including Punjabi and Hindi.</p>
+          <div class="tl-models">
+            <span class="tl-model-chip">Sarvam 30B · GQA · 32K</span>
+            <span class="tl-model-chip">Sarvam 105B · MLA · 128K</span>
+          </div>
+          <div class="tl-highlights">
+            <span class="tl-highlight">Both trained from scratch, in India</span>
+            <span class="tl-highlight">128 experts, sigmoid routing</span>
+            <span class="tl-highlight">22 official Indian languages</span>
+            <span class="tl-highlight">105B: MLA for KV compression</span>
+            <span class="tl-highlight">105B: 128K context window</span>
+            <span class="tl-highlight">4× inference speedup on Blackwell (NVIDIA collab)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mar 2026 Open Source -->
+      <div class="tl-item">
+        <div class="tl-date-col"><div class="tl-date">Mar 2026</div></div>
+        <div class="tl-card">
+          <div class="tl-card-header">
+            <div class="tl-title">Open-Sourced Under Apache 2.0</div>
+            <span class="tl-milestone">Open Source</span>
+          </div>
+          <p class="tl-desc">Weights for both Sarvam 30B and 105B are officially released on HuggingFace (<code>sarvamai/sarvam-30b</code>, <code>sarvamai/sarvam-105b</code>) and AIKosh under Apache License 2.0 — the most permissive open-source license, allowing commercial use. Sarvam 30B powers <strong>Samvaad</strong> (conversational agents); 105B powers <strong>Indus</strong> (reasoning and agentic workflows). Both available via the Sarvam API. Future plans: coding-specialized models, multimodal systems, and scaling to significantly larger checkpoints.</p>
+          <div class="tl-models">
+            <span class="tl-model-chip">HuggingFace Release</span>
+            <span class="tl-model-chip">AIKosh Release</span>
+            <span class="tl-model-chip">Sarvam API</span>
+          </div>
+          <div class="tl-highlights">
+            <span class="tl-highlight">Apache 2.0 — commercial use allowed</span>
+            <span class="tl-highlight">30B → Samvaad (conversational AI)</span>
+            <span class="tl-highlight">105B → Indus (reasoning + agentic)</span>
+            <span class="tl-highlight">SGLang, vLLM, Transformers support</span>
+            <span class="tl-highlight">Roadmap: coding, multimodal, larger models</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-left">© 2026 · Prateek Singh · Sarvam AI Deep Dive</div>
+  <div class="footer-right">
+    <a href="blogs.html">← All Blogs</a>
+    <a href="https://huggingface.co/sarvamai" target="_blank">HuggingFace</a>
+    <a href="https://www.sarvam.ai/blogs/sarvam-30b-105b" target="_blank">Official Blog</a>
+  </div>
+</footer>
+
+<script>
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const scrolled = doc.scrollTop / (doc.scrollHeight - doc.clientHeight);
+    document.getElementById('progress').style.width = (scrolled * 100) + '%';
+  });
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+  document.querySelectorAll('.theme-card').forEach((c, i) => {
+    c.style.transitionDelay = (i * 0.1) + 's';
+    c.classList.add('fade-up');
+    observer.observe(c);
+  });
+</script>
+</body>
+</html>
