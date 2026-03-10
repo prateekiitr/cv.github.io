@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>How LLMs Learn — Complete Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+/* ══════════════════════════════════════════════════
+   DESIGN TOKENS  — exact Sarvam palette
+══════════════════════════════════════════════════ */
+:root{
+  --bg:#ffffff;--ink:#1a1a1a;--muted:#888;--faint:#aaa;
+  --border:#e4e4e4;--bg2:#f9f9f9;
+  --teal:#2ec4b6;--purple:#a78bfa;--salmon:#f87171;
+  --amber:#f59e0b;--blue:#60a5fa;--green:#34d399;
+}
+
+/* ══════════════════════════════════════════════════
+   BASE
+══════════════════════════════════════════════════ */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:'DM Sans',sans-serif;font-size:16px;line-height:1.8;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden
+}
+
+/* ══════════════════════════════════════════════════
+   READING PROGRESS BAR
+══════════════════════════════════════════════════ */
+#prog{
+  position:fixed;top:0;left:0;height:2px;width:0%;
+  background:linear-gradient(90deg,var(--teal),var(--purple));
+  z-index:9999;transition:width .08s linear;
+  box-shadow:0 0 6px rgba(46,196,182,.5)
+}
+
+/* ══════════════════════════════════════════════════
+   NAV  — Sarvam sticky with animated underline links
+══════════════════════════════════════════════════ */
+.nav{
+  position:sticky;top:0;
+  background:rgba(255,255,255,.96);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);
+  padding:20px 60px;
+  display:flex;align-items:center;justify-content:space-between;
+  z-index:200;transition:box-shadow .3s
+}
+.nav.scrolled{box-shadow:0 2px 20px rgba(0,0,0,.05)}
+.nav-back{
+  font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--faint);text-decoration:none;
+  transition:color .2s
+}
+.nav-back:hover{color:var(--ink)}
+.nav-links{display:flex;gap:32px;list-style:none}
+.nav-links a{
+  font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--faint);text-decoration:none;
+  position:relative;padding-bottom:4px;transition:color .2s
+}
+.nav-links a::after{
+  content:'';position:absolute;bottom:0;left:0;width:100%;height:1px;
+  background:var(--teal);transform:scaleX(0);transform-origin:left;
+  transition:transform .3s cubic-bezier(.4,0,.2,1)
+}
+.nav-links a:hover{color:var(--ink)}
+.nav-links a:hover::after,.nav-links a.active::after{transform:scaleX(1)}
+.nav-links a.active{color:var(--ink)}
+
+/* ══════════════════════════════════════════════════
+   HERO  — staggered entry animations
+══════════════════════════════════════════════════ */
+.hero{
+  max-width:860px;margin:0 auto;
+  padding:90px 60px 70px;
+  border-bottom:1px solid var(--border)
+}
+.hero-eyebrow{
+  font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--faint);margin-bottom:32px;
+  animation:slideUp .6s .05s both
+}
+.hero h1{
+  font-family:'DM Serif Display',serif;
+  font-size:clamp(3rem,6.5vw,5.2rem);
+  font-weight:400;line-height:1.08;color:var(--ink);margin-bottom:22px;
+  animation:slideUp .7s .15s both
+}
+.hero-sub{
+  font-size:1.05rem;color:var(--faint);line-height:1.75;
+  max-width:580px;margin-bottom:32px;
+  animation:slideUp .7s .25s both
+}
+.hero-meta{
+  font-size:.88rem;color:var(--faint);margin-bottom:32px;
+  animation:slideUp .6s .32s both
+}
+.hero-meta span{font-weight:600;color:var(--ink)}
+.hero-tags{
+  display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+  animation:slideUp .6s .4s both
+}
+
+/* Tags — Sarvam rectangular outline style */
+.tag{
+  font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;padding:5px 12px;
+  border:1px solid var(--border);color:var(--faint);
+  transition:all .25s
+}
+.tag:hover{background:var(--bg2)}
+.tag.teal  {border-color:var(--teal);  color:var(--teal)}
+.tag.purple{border-color:var(--purple);color:var(--purple)}
+.tag.salmon{border-color:var(--salmon);color:var(--salmon)}
+.tag.amber {border-color:var(--amber); color:var(--amber)}
+.tag.green {border-color:var(--green); color:var(--green)}
+.tag.blue  {border-color:var(--blue);  color:var(--blue)}
+.tag.teal:hover  {background:rgba(46,196,182,.07)}
+.tag.purple:hover{background:rgba(167,139,250,.07)}
+.tag.salmon:hover{background:rgba(248,113,113,.07)}
+.tag.amber:hover {background:rgba(245,158,11,.07)}
+.tag.green:hover {background:rgba(52,211,153,.07)}
+
+.scroll-lbl{
+  margin-left:auto;font-family:'DM Mono',monospace;
+  font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#ccc;
+  animation:breathe 3s ease infinite
+}
+@keyframes breathe{0%,100%{opacity:.3}50%{opacity:1}}
+
+/* ══════════════════════════════════════════════════
+   MAIN WRAPPER
+══════════════════════════════════════════════════ */
+.main{max-width:860px;margin:0 auto;padding:0 60px 120px}
+
+/* ══════════════════════════════════════════════════
+   SECTION RULE  — Sarvam line-draw animation
+══════════════════════════════════════════════════ */
+.sec-rule{
+  display:flex;align-items:center;gap:20px;
+  padding:64px 0 44px;overflow:hidden
+}
+.sec-rule-lbl{
+  font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--faint);white-space:nowrap;flex-shrink:0;
+  opacity:0;transform:translateX(-8px);
+  transition:opacity .4s ease,transform .4s ease
+}
+.sec-rule-line{
+  flex:1;height:1px;background:var(--border);
+  transform:scaleX(0);transform-origin:left;
+  transition:transform .9s cubic-bezier(.4,0,.2,1)
+}
+.sec-rule.in .sec-rule-lbl{opacity:1;transform:none}
+.sec-rule.in .sec-rule-line{transform:scaleX(1)}
+
+/* ══════════════════════════════════════════════════
+   OVERVIEW LEAD
+══════════════════════════════════════════════════ */
+.overview-lead{
+  font-family:'DM Serif Display',serif;font-size:1.55rem;
+  font-weight:400;line-height:1.5;color:var(--ink);
+  margin-bottom:22px;max-width:680px
+}
+
+/* ══════════════════════════════════════════════════
+   FEATURE CARDS  — Sarvam grid with hover lift
+══════════════════════════════════════════════════ */
+.feat-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  border:1px solid var(--border);margin:36px 0
+}
+.feat-card{
+  padding:28px 22px;
+  border-right:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  transition:background .2s,transform .25s,box-shadow .25s;
+  opacity:0;transform:translateY(14px)
+}
+.feat-card:nth-child(3n){border-right:none}
+.feat-card:nth-last-child(-n+3){border-bottom:none}
+.feat-card:hover{background:var(--bg2);transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.05)}
+.feat-card.in{opacity:1;transform:none}
+.feat-icon{font-size:1.8rem;margin-bottom:14px;display:block}
+.feat-card h3{font-family:'DM Serif Display',serif;font-size:1rem;font-weight:400;margin-bottom:8px}
+.feat-card p{font-size:.87rem;color:var(--faint);line-height:1.7}
+
+/* ══════════════════════════════════════════════════
+   SECTION MODEL HEADER  — number pop + slide
+══════════════════════════════════════════════════ */
+.model-header{display:flex;gap:32px;align-items:flex-start;margin-bottom:32px}
+.model-num{
+  font-family:'DM Serif Display',serif;font-size:5.5rem;line-height:1;
+  color:#ebebeb;flex-shrink:0;user-select:none;letter-spacing:-3px;
+  opacity:0;transform:scale(.8);
+  transition:opacity .5s ease,transform .5s cubic-bezier(.34,1.56,.64,1)
+}
+.model-num.in{opacity:1;transform:scale(1)}
+.model-title{opacity:0;transform:translateX(-10px);transition:opacity .5s .15s ease,transform .5s .15s ease}
+.model-title.in{opacity:1;transform:none}
+.model-title h2{
+  font-family:'DM Serif Display',serif;font-size:2.5rem;font-weight:400;line-height:1.15;margin-bottom:6px
+}
+.model-sub{font-size:.9rem;color:var(--faint);margin-bottom:16px}
+
+/* Chips — Sarvam pill outline */
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{
+  font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;
+  padding:4px 12px;border-radius:999px;border:1px solid var(--border);color:var(--faint);
+  transition:all .2s;cursor:default
+}
+.chip.teal  {border-color:var(--teal);  color:var(--teal)}
+.chip.purple{border-color:var(--purple);color:var(--purple)}
+.chip.salmon{border-color:var(--salmon);color:var(--salmon)}
+.chip.amber {border-color:var(--amber); color:var(--amber)}
+.chip.blue  {border-color:var(--blue);  color:var(--blue)}
+.chip.green {border-color:var(--green); color:var(--green)}
+.chip:hover{transform:scale(1.05)}
+.chip.teal:hover  {background:rgba(46,196,182,.08)}
+.chip.purple:hover{background:rgba(167,139,250,.08)}
+.chip.amber:hover {background:rgba(245,158,11,.08)}
+
+/* ══════════════════════════════════════════════════
+   BODY TEXT
+══════════════════════════════════════════════════ */
+p.bp{color:var(--faint);font-size:1rem;line-height:1.9;margin-bottom:18px}
+p.bp strong{color:var(--ink);font-weight:600}
+p.bp em{font-style:italic}
+
+/* ══════════════════════════════════════════════════
+   CALLOUT BOXES  — border-grow + bg-fade + left slide
+══════════════════════════════════════════════════ */
+.callout{
+  padding:20px 24px;margin:28px 0;
+  background:var(--bg2);
+  border-left:3px solid transparent;
+  opacity:0;transform:translateX(-8px);
+  transition:opacity .5s ease,transform .5s ease,
+             border-color .5s .2s ease,background .3s ease
+}
+.callout.in{opacity:1;transform:none;border-color:var(--teal)}
+.callout.p2.in{border-color:var(--purple)}
+.callout.p3.in{border-color:var(--amber)}
+.callout.p4.in{border-color:var(--salmon)}
+.callout.p5.in{border-color:var(--green)}
+.callout.p6.in{border-color:var(--blue)}
+.callout:hover{background:#f3fffe}
+.callout.p2:hover{background:#faf5ff}
+.callout.p3:hover{background:#fffbf0}
+.callout.p4:hover{background:#fff5f5}
+.callout.p5:hover{background:#f0fff8}
+.callout.p6:hover{background:#f0f6ff}
+.callout-title{
+  font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--teal);margin-bottom:10px
+}
+.callout.p2 .callout-title{color:var(--purple)}
+.callout.p3 .callout-title{color:var(--amber)}
+.callout.p4 .callout-title{color:var(--salmon)}
+.callout.p5 .callout-title{color:var(--green)}
+.callout.p6 .callout-title{color:var(--blue)}
+.callout p{color:var(--faint);font-size:.93rem;line-height:1.8;margin:0}
+.callout p+p{margin-top:8px}
+.callout p strong{color:var(--ink)}
+
+/* ══════════════════════════════════════════════════
+   ARCHITECTURE BOX  — nodes cascade in L→R
+══════════════════════════════════════════════════ */
+.arch-box{
+  border:1px solid var(--border);padding:28px 24px;margin:28px 0;
+  opacity:0;transform:translateY(12px);
+  transition:opacity .5s ease,transform .5s ease
+}
+.arch-box.in{opacity:1;transform:none}
+.arch-lbl{
+  font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--faint);margin-bottom:22px
+}
+.arch-rows{display:flex;flex-direction:column;gap:12px}
+.arch-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+/* individual nodes */
+.anode{
+  font-family:'DM Mono',monospace;font-size:.77rem;
+  padding:6px 13px;border:1px solid var(--border);color:var(--faint);
+  white-space:nowrap;
+  opacity:0;transform:translateX(-8px);
+  transition:opacity .35s ease,transform .35s ease,
+             background .2s,box-shadow .2s
+}
+.anode:hover{background:var(--bg2);box-shadow:0 0 0 1px var(--border)}
+.anode.c1{border-color:var(--teal);  color:var(--teal);  background:#f0fffd}
+.anode.c2{border-color:var(--purple);color:var(--purple);background:#faf5ff}
+.anode.c3{border-color:var(--amber); color:var(--amber); background:#fffbf0}
+.anode.c4{border-color:var(--blue);  color:var(--blue);  background:#f0f6ff}
+.anode.c5{border-color:var(--salmon);color:var(--salmon);background:#fff5f5}
+.anode.c6{border-color:var(--green); color:var(--green); background:#f0fff8}
+.arch-box.in .anode{opacity:1;transform:none}
+/* cascade delays per row */
+.arch-box.in .arch-row:nth-child(1) .anode:nth-child(1){transition-delay:.08s}
+.arch-box.in .arch-row:nth-child(1) .anode:nth-child(3){transition-delay:.16s}
+.arch-box.in .arch-row:nth-child(1) .anode:nth-child(5){transition-delay:.24s}
+.arch-box.in .arch-row:nth-child(2) .anode:nth-child(1){transition-delay:.32s}
+.arch-box.in .arch-row:nth-child(2) .anode:nth-child(3){transition-delay:.40s}
+.arch-box.in .arch-row:nth-child(2) .anode:nth-child(5){transition-delay:.48s}
+.arch-box.in .arch-row:nth-child(3) .anode:nth-child(1){transition-delay:.56s}
+.arch-box.in .arch-row:nth-child(3) .anode:nth-child(3){transition-delay:.64s}
+.aarr{color:#ccc;font-size:.9rem;flex-shrink:0}
+.aplus{color:#ccc;font-size:.85rem;flex-shrink:0}
+
+/* ══════════════════════════════════════════════════
+   SECTION H4
+══════════════════════════════════════════════════ */
+h4.sh{
+  font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--teal);
+  margin:28px 0 10px;padding-top:24px;border-top:1px solid var(--border)
+}
+h4.sh.p2{color:var(--purple)}h4.sh.p3{color:var(--amber)}
+h4.sh.p4{color:var(--salmon)}h4.sh.p5{color:var(--green)}h4.sh.p6{color:var(--blue)}
+
+/* ══════════════════════════════════════════════════
+   TABLE
+══════════════════════════════════════════════════ */
+.tbl{overflow-x:auto;margin:28px 0}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+thead tr{border-bottom:1px solid var(--border)}
+thead th{
+  font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--faint);padding:12px 14px;
+  text-align:left;font-weight:400
+}
+tbody tr{border-bottom:1px solid #f0f0f0;transition:background .15s}
+tbody tr:hover{background:var(--bg2)}
+td{padding:14px 14px;color:var(--faint);font-size:.88rem;vertical-align:top}
+td:first-child{font-family:'DM Mono',monospace;font-size:.8rem;color:var(--ink);font-weight:500}
+
+/* ══════════════════════════════════════════════════
+   DPO COMPARE CARDS  — hover lift
+══════════════════════════════════════════════════ */
+.dpo-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:28px 0}
+.dpo-card{
+  border:1px solid var(--border);padding:20px 18px;
+  transition:transform .25s,box-shadow .25s;
+  opacity:0;transform:translateY(14px)
+}
+.dpo-card.in{opacity:1;transform:none}
+.dpo-card:hover{transform:translateY(-3px);box-shadow:0 6px 24px rgba(0,0,0,.07)}
+.dpo-card.good{border-color:var(--green)}
+.dpo-card.bad {border-color:var(--salmon)}
+.dpo-card.good:hover{box-shadow:0 6px 24px rgba(52,211,153,.12)}
+.dpo-card.bad:hover {box-shadow:0 6px 24px rgba(248,113,113,.12)}
+.dpo-badge{
+  font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;
+  text-transform:uppercase;margin-bottom:10px;display:block
+}
+.dpo-card.good .dpo-badge{color:var(--green)}
+.dpo-card.bad  .dpo-badge{color:var(--salmon)}
+.dpo-card p{font-size:.9rem;color:var(--faint);line-height:1.75}
+.dpo-card.good p{color:#666}
+
+/* ══════════════════════════════════════════════════
+   INSIGHTS GRID  — border glow on hover
+══════════════════════════════════════════════════ */
+.ins-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:28px 0}
+.ins-card{
+  border:1px solid var(--border);padding:26px 22px;
+  transition:all .28s;
+  opacity:0;transform:translateY(14px)
+}
+.ins-card.in{opacity:1;transform:none}
+.ins-card:hover{border-color:var(--teal);transform:translateY(-3px);box-shadow:0 6px 24px rgba(46,196,182,.1)}
+.ins-num{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;color:var(--faint);margin-bottom:12px}
+.ins-card h4{font-family:'DM Serif Display',serif;font-size:1.05rem;font-weight:400;margin-bottom:10px}
+.ins-card p{font-size:.87rem;color:var(--faint);line-height:1.75}
+
+/* ══════════════════════════════════════════════════
+   GPU GRID
+══════════════════════════════════════════════════ */
+.gpu-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:28px 0}
+.gpu-card{
+  border:1px solid var(--border);padding:20px 14px;text-align:center;
+  transition:all .22s;
+  opacity:0;transform:translateY(12px)
+}
+.gpu-card.in{opacity:1;transform:none}
+.gpu-card:hover{border-color:var(--teal);transform:translateY(-3px);box-shadow:0 4px 16px rgba(46,196,182,.1)}
+.gpu-icon{font-size:1.7rem;margin-bottom:10px;display:block}
+.gpu-name{font-family:'DM Mono',monospace;font-size:.8rem;font-weight:500;color:var(--ink);margin-bottom:6px}
+.gpu-role{font-size:.78rem;color:var(--faint);line-height:1.65}
+
+/* ══════════════════════════════════════════════════
+   INTERACTIVE LR DEMO
+══════════════════════════════════════════════════ */
+.demo-box{border:1px solid var(--border);padding:24px 22px;margin:28px 0}
+.demo-lbl{
+  font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--faint);margin-bottom:18px
+}
+.slider-row{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.slider-row label{font-family:'DM Mono',monospace;font-size:11px;color:var(--faint);white-space:nowrap}
+#lrSlider{
+  flex:1;-webkit-appearance:none;height:2px;
+  background:var(--border);border-radius:2px;cursor:pointer;outline:none
+}
+#lrSlider::-webkit-slider-thumb{
+  -webkit-appearance:none;width:16px;height:16px;
+  border-radius:50%;background:var(--teal);cursor:pointer;
+  transition:transform .2s,box-shadow .2s
+}
+#lrSlider:hover::-webkit-slider-thumb,
+#lrSlider:active::-webkit-slider-thumb{
+  transform:scale(1.25);box-shadow:0 0 0 4px rgba(46,196,182,.2)
+}
+#lrVal{font-family:'DM Mono',monospace;font-size:11px;color:var(--teal);min-width:80px;text-align:right}
+#lrCanvas{width:100%;height:82px;display:block}
+.lr-legend{display:flex;gap:18px;margin-top:12px;flex-wrap:wrap}
+.lr-leg{display:flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:10px;color:var(--faint)}
+.lr-dot{width:8px;height:8px;border-radius:50%}
+#lrVerdict{margin-top:12px;font-family:'DM Mono',monospace;font-size:11px;color:var(--faint);min-height:20px;transition:color .3s}
+#lrVerdict.good{color:var(--green)}
+#lrVerdict.bad{color:var(--salmon)}
+#lrVerdict.warn{color:var(--amber)}
+
+/* ══════════════════════════════════════════════════
+   WARMUP BAR CHART  — bars animate up on entry
+══════════════════════════════════════════════════ */
+.warmup-wrap{border:1px solid var(--border);padding:24px 22px;margin:28px 0}
+.warmup-bars{
+  display:flex;align-items:flex-end;gap:3px;height:64px;
+  border-bottom:1px solid var(--border);margin-bottom:12px
+}
+.wbar{
+  flex:1;border-radius:1px 1px 0 0;
+  transform:scaleY(0);transform-origin:bottom;
+  transition:transform .4s ease,opacity .2s
+}
+.wbar.in{transform:scaleY(1)}
+.wbar:hover{opacity:.65!important}
+.warmup-legend{display:flex;gap:18px;flex-wrap:wrap}
+.wleg{display:flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:10px;color:var(--faint)}
+.wdot{width:8px;height:8px;border-radius:50%}
+
+/* ══════════════════════════════════════════════════
+   TIMELINE  — Sarvam exact + progressive dot pulse
+══════════════════════════════════════════════════ */
+.tl-wrap h2{font-family:'DM Serif Display',serif;font-size:2rem;font-weight:400;margin-bottom:8px}
+.tl-sub{font-size:.9rem;color:var(--faint);margin-bottom:48px}
+.timeline{position:relative}
+.timeline-line{
+  position:absolute;left:88px;top:14px;bottom:0;
+  width:1px;background:var(--border);
+  transform:scaleY(0);transform-origin:top;
+  transition:transform 1.2s cubic-bezier(.4,0,.2,1)
+}
+.timeline-line.in{transform:scaleY(1)}
+.tl-item{
+  display:flex;margin-bottom:48px;position:relative;
+  opacity:0;transform:translateX(-14px);
+  transition:opacity .55s ease,transform .55s ease
+}
+.tl-item.in{opacity:1;transform:none}
+.tl-date{
+  width:88px;flex-shrink:0;font-family:'DM Mono',monospace;
+  font-size:10px;letter-spacing:.1em;color:var(--faint);
+  text-align:right;padding-right:20px;padding-top:3px
+}
+.tl-dot{
+  width:9px;height:9px;border-radius:50%;
+  border:2px solid var(--border);background:#fff;
+  flex-shrink:0;margin-top:4px;margin-left:-4px;margin-right:20px;z-index:1;
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s
+}
+.tl-item.in .tl-dot{animation:dotEntry .5s cubic-bezier(.34,1.56,.64,1) both}
+.tl-item:hover .tl-dot{transform:scale(1.6);box-shadow:0 0 0 3px rgba(46,196,182,.15)}
+@keyframes dotEntry{from{transform:scale(0)}to{transform:scale(1)}}
+.tl-dot.c1{border-color:var(--teal);  background:var(--teal)}
+.tl-dot.c2{border-color:var(--blue);  background:var(--blue)}
+.tl-dot.c3{border-color:var(--purple);background:var(--purple)}
+.tl-dot.c4{border-color:var(--salmon);background:var(--salmon)}
+.tl-dot.c5{border-color:var(--amber); background:var(--amber)}
+.tl-dot.c6{border-color:var(--green); background:var(--green)}
+.tl-body{flex:1}
+.tl-body h4{font-family:'DM Serif Display',serif;font-size:1.2rem;font-weight:400;margin-bottom:4px}
+.tl-phase{
+  font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--faint);margin-bottom:12px;display:block
+}
+.tl-body p{font-size:.9rem;color:var(--faint);line-height:1.8;margin-bottom:14px}
+.tl-body p strong{color:var(--ink)}
+.tl-detail{
+  border:1px solid var(--border);padding:18px;margin-top:14px;
+  max-height:0;overflow:hidden;
+  transition:max-height .5s ease,opacity .4s ease;
+  opacity:0
+}
+.tl-item.in .tl-detail{max-height:300px;opacity:1}
+.tl-detail-title{
+  font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;
+  color:var(--ink);margin-bottom:10px;font-weight:500
+}
+.tl-detail ul{list-style:none}
+.tl-detail ul li{
+  font-family:'DM Mono',monospace;font-size:.78rem;color:var(--faint);
+  padding:4px 0;border-bottom:1px solid #f5f5f5;letter-spacing:.02em
+}
+.tl-detail ul li:last-child{border-bottom:none}
+.tl-detail ul li::before{content:'— ';color:var(--teal)}
+
+/* ══════════════════════════════════════════════════
+   GLOSSARY
+══════════════════════════════════════════════════ */
+.gloss-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  border:1px solid var(--border);margin:28px 0
+}
+.gi{
+  padding:16px 18px;
+  border-bottom:1px solid var(--border);
+  border-right:1px solid var(--border);
+  transition:background .15s;
+  opacity:0;transform:translateY(8px);
+  transition:background .15s,opacity .4s ease,transform .4s ease
+}
+.gi.in{opacity:1;transform:none}
+.gi:hover{background:var(--bg2)}
+.gi:nth-child(even){border-right:none}
+.gi:nth-last-child(-n+2){border-bottom:none}
+.gt{font-family:'DM Mono',monospace;font-size:.8rem;color:var(--teal);margin-bottom:4px;font-weight:500}
+.gd{font-size:.85rem;color:var(--faint);line-height:1.65}
+
+/* ══════════════════════════════════════════════════
+   GENERIC FADE-UP
+══════════════════════════════════════════════════ */
+.fi{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+.fi.in{opacity:1;transform:none}
+
+/* ══════════════════════════════════════════════════
+   FOOTER
+══════════════════════════════════════════════════ */
+footer{
+  border-top:1px solid var(--border);padding:24px 60px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px
+}
+footer span{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;color:var(--faint)}
+.foot-links{display:flex;gap:24px}
+.foot-links a{
+  font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--faint);text-decoration:none;transition:color .2s
+}
+.foot-links a:hover{color:var(--ink)}
+
+/* ══════════════════════════════════════════════════
+   KEYFRAMES
+══════════════════════════════════════════════════ */
+@keyframes slideUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+
+/* ══════════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════════ */
+@media(max-width:680px){
+  .nav,.hero,.main,footer{padding-left:22px;padding-right:22px}
+  .nav-links{display:none}
+  .model-header{flex-direction:column;gap:4px}
+  .model-num{font-size:4rem}
+  .feat-grid,.dpo-grid,.ins-grid,.gloss-grid{grid-template-columns:1fr}
+  .gpu-grid{grid-template-columns:1fr 1fr}
+  .timeline-line{left:68px}
+  .tl-date{width:68px;font-size:9px}
+  .tl-item{padding-left:0}
+  .gi:nth-child(even){border-right:none}
+  .gi{border-right:none}
+}
+</style>
+</head>
+<body>
+
+<div id="prog"></div>
+
+<!-- ═══════ NAV ═══════ -->
+<nav class="nav" id="nav">
+  <a class="nav-back" href="#">← Back to Blogs</a>
+  <ul class="nav-links">
+    <li><a href="#overview" data-sec="overview">Overview</a></li>
+    <li><a href="#concepts" data-sec="concepts">Concepts</a></li>
+    <li><a href="#techniques" data-sec="techniques">Techniques</a></li>
+    <li><a href="#pipeline" data-sec="pipeline">Pipeline</a></li>
+  </ul>
+</nav>
+
+<!-- ═══════ HERO ═══════ -->
+<header class="hero">
+  <div class="hero-eyebrow">Machine Learning · Plain English · Complete Guide</div>
+  <h1>How LLMs Actually Learn</h1>
+  <p class="hero-sub">From a blank model to production AI — a plain-English deep dive into every concept, technique, and piece of hardware behind the models reshaping the world.</p>
+  <p class="hero-meta">Published March 2026 · <span>Prateek Singh,PhD</span> · ~18 min read</p>
+  <div class="hero-tags">
+    <span class="tag">What is an LLM</span>
+    <span class="tag teal">Learning Rate</span>
+    <span class="tag purple">Warmup</span>
+    <span class="tag salmon">DPO</span>
+    <span class="tag amber">LoRA</span>
+    <span class="tag green">GPUs</span>
+    <span class="scroll-lbl">Scroll</span>
+  </div>
+</header>
+
+<!-- ═══════ MAIN ═══════ -->
+<main class="main">
+
+<!-- ────── OVERVIEW ────── -->
+<div id="overview" class="sec-rule"><span class="sec-rule-lbl">Overview</span><div class="sec-rule-line"></div></div>
+
+<p class="overview-lead fi">Why does any of this matter?</p>
+<p class="bp fi">ChatGPT, Claude, Gemini — these aren't programs with rules. They <em>learned</em> everything they know from data. Understanding how that learning works helps you build with AI more intelligently, evaluate it more honestly, and predict what it can and can't do.</p>
+<p class="bp fi">This guide walks through every major concept in plain English — from what a "parameter" actually is, to why training needs a GPU cluster, to the specific technique (DPO) that makes a raw model safe and helpful.</p>
+
+<div class="feat-grid">
+  <div class="feat-card"><span class="feat-icon">🧠</span><h3>Billions of Dials</h3><p>An LLM is a machine with billions of adjustable numbers called parameters. Training means turning those dials until predictions get very, very good.</p></div>
+  <div class="feat-card"><span class="feat-icon">📚</span><h3>Learned from Data</h3><p>No rules were written. The model reads trillions of words and discovers language, facts, and reasoning entirely on its own through prediction.</p></div>
+  <div class="feat-card"><span class="feat-icon">🔁</span><h3>Gradient Descent</h3><p>The core loop — predict, measure error, adjust. Repeat billions of times. Every technique in this guide builds on this one single idea.</p></div>
+  <div class="feat-card"><span class="feat-icon">🎯</span><h3>Three Stages</h3><p>Pre-training builds raw intelligence. Fine-tuning shapes it into an assistant. Alignment makes it genuinely helpful and safe for real users.</p></div>
+  <div class="feat-card"><span class="feat-icon">⚡</span><h3>GPU-Powered</h3><p>Training needs parallel math at massive scale. GPUs run thousands of operations simultaneously — making them 100× faster than CPUs for AI workloads.</p></div>
+  <div class="feat-card"><span class="feat-icon">🔓</span><h3>Efficient Fine-tuning</h3><p>LoRA lets anyone fine-tune a 70B model on a single consumer GPU — by training only 0.1% of the parameters while freezing the rest.</p></div>
+</div>
+
+<!-- ────── 01 WHAT IS AN LLM ────── -->
+<div id="concepts" class="sec-rule"><span class="sec-rule-lbl">01 — The Basics</span><div class="sec-rule-line"></div></div>
+
+<div class="model-header">
+  <div class="model-num">01</div>
+  <div class="model-title">
+    <h2>What is an LLM?</h2>
+    <div class="model-sub">Large Language Model — the technology inside ChatGPT, Claude, and Gemini</div>
+    <div class="chips"><span class="chip">Parameters</span><span class="chip teal">Weights</span><span class="chip">Next-token Prediction</span></div>
+  </div>
+</div>
+
+<p class="bp fi">LLM stands for <strong>Large Language Model</strong>. At its core, it's a massive mathematical system — billions of numbers called <strong>parameters</strong> or <strong>weights</strong> — that learned to predict and generate text one word at a time. These aren't rules someone wrote. They're values the model discovered on its own by reading enormous amounts of text.</p>
+
+<div class="callout">
+  <div class="callout-title">🍳 Analogy — The Chef</div>
+  <p>Imagine a chef who has read every cookbook ever written — millions of recipes. When you say "warm, Italian, comforting, pasta…" they complete the dish from memory. They don't look it up. They just <em>know</em> from patterns absorbed over a lifetime of reading.</p>
+  <p>An LLM is that chef, but for words, code, and ideas. It has read practically the entire internet.</p>
+</div>
+
+<div class="arch-box">
+  <div class="arch-lbl">What happens when you type to an AI</div>
+  <div class="arch-rows">
+    <div class="arch-row"><div class="anode">You type: "The sky is ___"</div><div class="aarr">→</div><div class="anode c1">Split into tokens</div><div class="aarr">→</div><div class="anode c4">Pass through billions of weights</div></div>
+    <div class="arch-row"><div class="anode c4">Processed signal</div><div class="aarr">→</div><div class="anode c6">Score every possible next word</div><div class="aarr">→</div><div class="anode c3">"blue" wins at 82% → Output</div></div>
+  </div>
+</div>
+
+<!-- ────── 02 THREE STAGES ────── -->
+<div class="sec-rule"><span class="sec-rule-lbl">02 — The Three Stages</span><div class="sec-rule-line"></div></div>
+
+<div class="model-header">
+  <div class="model-num">02</div>
+  <div class="model-title">
+    <h2>Pre-training → Fine-tuning → Alignment</h2>
+    <div class="model-sub">Every modern AI assistant has been through all three of these phases</div>
+    <div class="chips"><span class="chip teal">Pre-training</span><span class="chip purple">Fine-tuning</span><span class="chip salmon">Alignment</span></div>
+  </div>
+</div>
+
+<p class="bp fi">A raw LLM doesn't start as an assistant. It goes through three distinct training phases — each building on the last — before it's ready to talk to users.</p>
+
+<div class="tbl fi">
+  <table>
+    <thead><tr><th>Stage</th><th>What happens</th><th>Cost / Time</th><th>Result</th></tr></thead>
+    <tbody>
+      <tr><td>Pre-training</td><td>Read trillions of words. Predict next token. Learn language, facts, reasoning from scratch.</td><td>$10M–$100M · Months</td><td>Smart but raw — generates text, doesn't behave helpfully</td></tr>
+      <tr><td>Fine-tuning (SFT)</td><td>Train on expert-written (question, great answer) pairs. Model learns to be an assistant.</td><td>Cheap · Days</td><td>Conversational assistant that follows instructions</td></tr>
+      <tr><td>Alignment (DPO)</td><td>Show (better response, worse response) pairs. Train model to consistently prefer the better one.</td><td>Cheap · Days</td><td>Helpful, honest, safe — ready for production</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="callout p3">
+  <div class="callout-title">🏊 Analogy — The Athlete</div>
+  <p><strong>Pre-training</strong> = years of general fitness. You become physically capable of anything.</p>
+  <p><strong>Fine-tuning</strong> = sport-specific training. The swimmer trains for swimming, not everything.</p>
+  <p><strong>Alignment</strong> = learning the rules and sportsmanship. Same body, now competing in one specific game.</p>
+</div>
+
+<!-- ────── 03 GRADIENT DESCENT ────── -->
+<div class="sec-rule"><span class="sec-rule-lbl">03 — The Core Engine</span><div class="sec-rule-line"></div></div>
+
+<div class="model-header">
+  <div class="model-num">03</div>
+  <div class="model-title">
+    <h2>Gradient Descent</h2>
+    <div class="model-sub">The single idea underneath every AI training technique in the world</div>
+    <div class="chips"><span class="chip teal">Forward Pass</span><span class="chip">Loss</span><span class="chip purple">Backpropagation</span><span class="chip amber">Weight Update</span></div>
+  </div>
+</div>
+
+<p class="bp fi">Every time the model makes a prediction during training, something watches and asks: <em>"How wrong were you?"</em> That measurement is called the <strong>loss</strong>. The entire goal of training is to make the loss as small as possible — across billions of predictions.</p>
+
+<div class="arch-box">
+  <div class="arch-lbl">The Training Loop — runs billions of times</div>
+  <div class="arch-rows">
+    <div class="arch-row"><div class="anode c1">① Feed text in</div><div class="aarr">→</div><div class="anode">② Model predicts next word</div><div class="aarr">→</div><div class="anode c5">③ Compare → Loss</div></div>
+    <div class="arch-row"><div class="anode c2">④ Backpropagate — trace blame</div><div class="aarr">→</div><div class="anode c6">⑤ Nudge weights to reduce loss</div><div class="aarr">→</div><div class="anode c3">Repeat ↺</div></div>
+  </div>
+</div>
+
+<div class="callout p2">
+  <div class="callout-title">🏔️ Analogy — The Blindfolded Hiker</div>
+  <p>You're blindfolded in a hilly landscape, trying to reach the lowest valley (lowest loss). You can only feel the slope under your feet. Each step, you move in whichever direction feels downhill.</p>
+  <p>That's gradient descent. Follow the slope, one step at a time, until you reach the bottom. The billions of training steps are the billions of footsteps toward the valley.</p>
+</div>
+
+<!-- ────── 04 LEARNING RATE ────── -->
+<div class="sec-rule"><span class="sec-rule-lbl">04 — Most Important Hyperparameter</span><div class="sec-rule-line"></div></div>
+
+<div class="model-header">
+  <div class="model-num">04</div>
+  <div class="model-title">
+    <h2>Learning Rate</h2>
+    <div class="model-sub">Controls how big each training step is — the most impactful single knob</div>
+    <div class="chips"><span class="chip teal">Hyperparameter</span><span class="chip salmon">Too high → Divergence</span><span class="chip">Too low → Stagnation</span><span class="chip amber">Typical: 3e-5</span></div>
+  </div>
+</div>
+
+<p class="bp fi">After backpropagation tells the model <em>which direction</em> to nudge each weight, the <strong>learning rate</strong> decides <em>how far</em> to nudge it. It's a tiny number — often 0.00003 — but it has an outsized effect on whether training succeeds or collapses entirely.</p>
+
+<div class="demo-box fi">
+  <div class="demo-lbl">Interactive — drag to see what different learning rates do to training</div>
+  <div class="slider-row">
+    <label>Learning Rate</label>
+    <input type="range" id="lrSlider" min="1" max="100" value="30"/>
+    <span id="lrVal">0.00003</span>
+  </div>
+  <canvas id="lrCanvas" width="760" height="82"></canvas>
+  <div class="lr-legend">
+    <span class="lr-leg"><span class="lr-dot" style="background:var(--amber)"></span>Too low</span>
+    <span class="lr-leg"><span class="lr-dot" style="background:var(--teal)"></span>Just right</span>
+    <span class="lr-leg"><span class="lr-dot" style="background:var(--salmon)"></span>Too high</span>
+  </div>
+  <div id="lrVerdict"></div>
+</div>
+
+<div class="callout">
+  <div class="callout-title">🎸 Analogy — Guitar Tuning</div>
+  <p>The learning rate is how much you turn the tuning peg. <strong>Too little</strong> — you'll be there all day, barely changing the pitch. <strong>Too much</strong> — you overshoot sharp, then flat, then snap the string entirely. The right amount gets the string perfectly in tune, smoothly and quickly.</p>
+</div>
+
+<!-- ────── 05 WARMUP ────── -->
+<div class="sec-rule"><span class="sec-rule-lbl">05 — Warmup</span><div class="sec-rule-line"></div></div>
+
+<div class="model-header">
+  <div class="model-num">05</div>
+  <div class="model-title">
+    <h2>Learning Rate Warmup</h2>
+    <div class="model-sub">Why you can't start training at full speed from step one</div>
+    <div class="chips"><span class="chip green">Gradual ramp-up</span><span class="chip">1–5% of total steps</span><span class="chip purple">Then cosine decay</span></div>
+  </div>
+</div>
+
+<p class="bp fi">At the very start of training, the model's internal signals (gradients) are large and chaotic. A high learning rate during this fragile phase can destroy the model before it learns anything useful. <strong>Warmup</strong> solves this by starting the learning rate near zero and gradually raising it over the first few hundred steps.</p>
+
+<div class="warmup-wrap fi">
+  <div class="demo-lbl">Learning Rate Schedule — 3 Phases</div>
+  <div class="warmup-bars" id="warmupBars"></div>
+  <div class="warmup-legend">
+    <span class="wleg"><span class="wdot" style="background:var(--green)"></span>Warmup — LR rises slowly</span>
+    <span class="wleg"><span class="wdot" style="background:var(--blue)"></span>Stable — full-speed training</span>
+    <span class="wleg"><span class="wdot" style="background:var(--amber)"></span>Cosine Decay — smooth slow-down</span>
+  </div>
+</div>
+
+<div class="callout p3">
+  <div class="callout-title">🚗 Analogy — Cold Car Engine</div>
+  <p>On a cold morning, you don't floor the accelerator the moment you turn the key. The engine needs a minute to reach operating temperature before you can push it hard.</p>
+  <p>Neural networks are the same. The training signals need a moment to stabilize before the full learning rate kicks in.</p>
+</div>
+
+<!-- ────── 06 DPO ────── -->
+<div id="techniques" class="sec-rule"><span class="sec-rule-lbl">06 — Alignment</span><div class="sec-rule-line"></div></div>
+
+<div class="model-header">
+  <div class="model-num">06</div>
+  <div class="model-title">
+    <h2>DPO — Direct Preference Optimization</h2>
+    <div class="model-sub">How models learn to give answers humans actually want, not just technically correct ones</div>
+    <div class="chips"><span class="chip salmon">DPO</span><span class="chip">RLHF</span><span class="chip purple">Chosen vs Rejected</span><span class="chip teal">Preference Data</span></div>
+  </div>
+</div>
+
+<p class="bp fi">After pre-training, a model is smart but cold. Ask it "I'm feeling sad" and it might output a Wikipedia entry on clinical depression. Technically relevant. Not what you wanted. <strong>Alignment</strong> fixes this — instead of writing rules, we show the model thousands of (better response, worse response) pairs and train it to prefer the better ones.</p>
+
+<div class="dpo-grid">
+  <div class="dpo-card good">
+    <span class="dpo-badge">✓ Chosen — the better response</span>
+    <p><strong>Prompt:</strong> "I'm feeling really sad today."<br/><br/>"I'm sorry to hear that. Do you want to talk about what's going on? Sometimes just putting it into words helps."</p>
+  </div>
+  <div class="dpo-card bad">
+    <span class="dpo-badge">✗ Rejected — the worse response</span>
+    <p><strong>Prompt:</strong> "I'm feeling really sad today."<br/><br/>"Sadness is a normal human emotion caused by neurotransmitter imbalances and situational stressors."</p>
+  </div>
+</div>
+
+<div class="callout">
+  <div class="callout-title">✍️ Analogy — The Writing Teacher</div>
+  <p>A great teacher shows you two essays — one excellent, one mediocre — and says "this one is better." After hundreds of examples, you develop taste. DPO is that process at scale: thousands of preference pairs, training the model's judgment directly.</p>
+</div>
+
+<h4 class="sh p2 fi">DPO vs RLHF — What Changed</h4>
+<div class="tbl fi">
+  <table>
+    <thead><tr><th>Feature</th><th>RLHF (old way)</th><th>DPO (new way)</th></tr></thead>
+    <tbody>
+      <tr><td>Mechanism</td><td>Train a separate reward model, then optimize against it</td><td>Directly train on preference pairs — no judge model needed</td></tr>
+      <tr><td>Complexity</td><td>Two stages, two models</td><td>One stage, one model</td></tr>
+      <tr><td>Stability</td><td>Prone to instability</td><td>Stable and predictable</td></tr>
+      <tr><td>Used by</td><td>Early OpenAI, early Anthropic</td><td>Most labs since 2023</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ────── 07 LoRA ────── -->
+<div class="sec-rule"><span class="sec-rule-lbl">07 — Efficient Fine-tuning</span><div class="sec-rule-line"></div></div>
+
+<div class="model-header">
+  <div class="model-num">07</div>
+  <div class="model-title">
+    <h2>LoRA & QLoRA</h2>
+    <div class="model-sub">Fine-tuning a 70B model on a laptop — without losing quality</div>
+    <div class="chips"><span class="chip amber">LoRA</span><span class="chip teal">QLoRA</span><span class="chip">0.1% of params</span><span class="chip purple">PEFT</span></div>
+  </div>
+</div>
+
+<p class="bp fi">Full fine-tuning a 70B model updates all 70 billion weights — requiring ~140 GB of GPU memory. <strong>LoRA</strong> cuts this to ~6 GB by adding tiny adapter matrices (0.1% the size) and only training those, keeping the original weights frozen. <strong>QLoRA</strong> adds 4-bit compression of the base model, enabling 70B fine-tuning on a single consumer RTX 4090.</p>
+
+<div class="callout p3">
+  <div class="callout-title">📌 Analogy — Post-It Notes in a Textbook</div>
+  <p>Instead of rewriting an entire textbook, you add tiny Post-It notes in the margins. The original pages stay untouched. LoRA works the same way — tiny adapters modify the model's behavior without touching the base weights.</p>
+  <p>At the end, the notes merge back in seamlessly. Nobody can tell the difference.</p>
+</div>
+
+<div class="arch-box">
+  <div class="arch-lbl">LoRA vs Full Fine-tuning — what actually gets updated</div>
+  <div class="arch-rows">
+    <div class="arch-row"><div class="anode c5">Full fine-tuning</div><div class="aarr">→</div><div class="anode">Update all 70B weights · ~140GB VRAM · Very slow · $$$</div></div>
+    <div class="arch-row"><div class="anode c1">LoRA</div><div class="aarr">→</div><div class="anode">Freeze 70B weights · Add 70M adapter params · Train only those</div></div>
+    <div class="arch-row"><div class="anode c3">QLoRA</div><div class="aarr">→</div><div class="anode">LoRA + compress base to 4-bit · Fits single consumer GPU · ~6GB</div></div>
+  </div>
+</div>
+
+<!-- ────── 08 SUPPORTING ────── -->
+<div class="sec-rule"><span class="sec-rule-lbl">08 — Supporting Techniques</span><div class="sec-rule-line"></div></div>
+
+<div class="model-header">
+  <div class="model-num">08</div>
+  <div class="model-title">
+    <h2>The Supporting Cast</h2>
+    <div class="model-sub">Techniques running silently in the background of every single training run</div>
+    <div class="chips"><span class="chip amber">AdamW</span><span class="chip teal">Dropout</span><span class="chip purple">BF16</span><span class="chip">Batch Size</span></div>
+  </div>
+</div>
+
+<h4 class="sh fi">AdamW — The Smart Optimizer</h4>
+<p class="bp fi">Gradient descent says "move this way." <strong>AdamW</strong> gives each individual weight its own adaptive step size — weights that barely change get bigger nudges; fast-changing ones get smaller nudges. The "W" means weight decay: gentle pressure keeping weights small and preventing overfitting. Like a personal trainer adjusting each athlete's load individually instead of giving everyone the same workout.</p>
+
+<h4 class="sh p2 fi">Dropout — Preventing Memorization</h4>
+<p class="bp fi"><strong>Dropout</strong> randomly switches off 10% of neurons each training step, so the model can't over-rely on any single path. It's forced to learn general, robust patterns instead of memorizing specific examples. Like a student who can't use memorized sentences on the exam and has to actually understand the material.</p>
+
+<h4 class="sh p3 fi">BF16 — Free Speed</h4>
+<p class="bp fi"><strong>BF16</strong> stores weights as 16-bit numbers instead of 32-bit — halving memory and speeding training 2–4× on modern GPUs with almost no quality loss. Nearly all LLM training today uses BF16. It's preferred over FP16 because it handles the extreme values that neural networks produce more gracefully.</p>
+
+<h4 class="sh p6 fi">Batch Size & Gradient Accumulation</h4>
+<p class="bp fi">Instead of updating weights after every single example, the model processes a <strong>batch</strong> of 32–256 at once and averages their gradients. When GPU memory is limited, <strong>gradient accumulation</strong> simulates a large batch: run 8 small passes, accumulate the gradients, then update once — same result, no extra memory required.</p>
+
+<!-- ────── 09 GPUs ────── -->
+<div class="sec-rule"><span class="sec-rule-lbl">09 — Hardware</span><div class="sec-rule-line"></div></div>
+
+<div class="model-header">
+  <div class="model-num">09</div>
+  <div class="model-title">
+    <h2>GPUs — Why Training Needs Special Hardware</h2>
+    <div class="model-sub">A regular computer simply cannot do this — and here's exactly why</div>
+    <div class="chips"><span class="chip teal">Parallel Computing</span><span class="chip">VRAM</span><span class="chip purple">H100 · A100 · 4090</span></div>
+  </div>
+</div>
+
+<p class="bp fi">Training involves multiplying enormous grids of numbers together, over and over. A <strong>CPU</strong> does this one at a time — very fast. A <strong>GPU</strong> has thousands of smaller cores that do it all simultaneously — making it 100× faster for this specific type of work.</p>
+
+<div class="callout">
+  <div class="callout-title">🏟️ Analogy — Stadium vs Genius</div>
+  <p>A CPU is a single brilliant mathematician solving complex problems one at a time. A GPU is a stadium of school kids, each doing one simple multiplication at the exact same moment.</p>
+  <p>For AI math — multiplying millions of numbers in parallel — the stadium wins by 100×.</p>
+</div>
+
+<div class="gpu-grid">
+  <div class="gpu-card"><span class="gpu-icon">🖥️</span><div class="gpu-name">NVIDIA H100</div><div class="gpu-role">Gold standard. Used by OpenAI, Google, Anthropic. ~$30K each.</div></div>
+  <div class="gpu-card"><span class="gpu-icon">⚡</span><div class="gpu-name">NVIDIA A100</div><div class="gpu-role">Previous generation workhorse. Still widely used for fine-tuning.</div></div>
+  <div class="gpu-card"><span class="gpu-icon">💻</span><div class="gpu-name">RTX 4090</div><div class="gpu-role">Consumer GPU. Good for LoRA fine-tuning of 7B–13B models. 24GB VRAM.</div></div>
+  <div class="gpu-card"><span class="gpu-icon">🌐</span><div class="gpu-name">GPU Clusters</div><div class="gpu-role">Large models use 1,000–10,000 GPUs in distributed training setups.</div></div>
+</div>
+
+<h4 class="sh p2 fi">VRAM — The Real Bottleneck</h4>
+<p class="bp fi"><strong>VRAM</strong> is the on-chip memory of the GPU. A 7B model in BF16 needs ~14GB just to load — before training overhead. A 70B model needs ~140GB. When people say "my GPU ran out of memory," they mean VRAM. This is exactly why LoRA and quantization exist — to squeeze models into the VRAM you actually have.</p>
+
+<!-- ────── 10 INSIGHTS ────── -->
+<div class="sec-rule"><span class="sec-rule-lbl">What It Tells Us</span><div class="sec-rule-line"></div></div>
+
+<div class="model-header">
+  <div class="model-num">10</div>
+  <div class="model-title">
+    <h2>Key Insights from LLM Training</h2>
+    <div class="model-sub">What the field has learned — and what it tells us about how AI actually works</div>
+    <div class="chips"><span class="chip teal">Design Principles</span><span class="chip">Lessons</span></div>
+  </div>
+</div>
+
+<div class="ins-grid">
+  <div class="ins-card"><div class="ins-num">01</div><h4>Data quality beats quantity</h4><p>A model trained on 2T clean tokens often outperforms one trained on 10T noisy tokens. Curation and filtering matter more than raw scale.</p></div>
+  <div class="ins-card"><div class="ins-num">02</div><h4>The tokenizer is architecture</h4><p>A well-designed tokenizer (1–2 tokens per word vs 4–8) gives the model more signal per parameter and dramatically improves training efficiency.</p></div>
+  <div class="ins-card"><div class="ins-num">03</div><h4>Alignment is learnable taste</h4><p>Safety and helpfulness aren't rules you write. They're preferences the model learns from examples — and DPO has made this process remarkably stable.</p></div>
+  <div class="ins-card"><div class="ins-num">04</div><h4>LoRA democratizes fine-tuning</h4><p>A developer with one consumer GPU can now fine-tune a 70B model. The power gap between labs and individuals has never been smaller.</p></div>
+  <div class="ins-card"><div class="ins-num">05</div><h4>Warmup shape beats LR value</h4><p>A well-shaped warmup + cosine decay schedule is more robust than a precisely-tuned static learning rate. The schedule is the real knob.</p></div>
+  <div class="ins-card"><div class="ins-num">06</div><h4>RL is the new frontier</h4><p>Reinforcement learning during post-training — GRPO and variants — is where the biggest capability gains are happening right now.</p></div>
+</div>
+
+<!-- ────── PIPELINE TIMELINE ────── -->
+<div id="pipeline" class="sec-rule"><span class="sec-rule-lbl">Chronology</span><div class="sec-rule-line"></div></div>
+
+<div class="tl-wrap fi">
+  <h2>The Modern Training Pipeline</h2>
+  <p class="tl-sub">From raw data to production deployment — step by step</p>
+  <div class="timeline">
+    <div class="timeline-line"></div>
+
+    <div class="tl-item">
+      <div class="tl-date">Step 1</div><div class="tl-dot c1"></div>
+      <div class="tl-body">
+        <h4>Collect &amp; Clean Data</h4><span class="tl-phase">Data Engineering</span>
+        <p>Scrape the web, books, code, and papers. Filter garbage. Deduplicate aggressively. <strong>Data quality matters more than almost anything else.</strong></p>
+        <div class="tl-detail"><div class="tl-detail-title">What this involves</div><ul>
+          <li>Web scraping and Common Crawl processing</li>
+          <li>Language detection and quality filtering</li>
+          <li>Deduplication using MinHash or exact matching</li>
+          <li>Toxic content filtering and removal</li>
+          <li>Custom data mixtures tuned via ablations</li>
+        </ul></div>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-date">Step 2</div><div class="tl-dot c2"></div>
+      <div class="tl-body">
+        <h4>Pre-train on a GPU Cluster</h4><span class="tl-phase">Pre-training · Weeks to Months</span>
+        <p>Predict the next word, billions of times, across thousands of GPUs. The model reads everything and learns language, reasoning, and world knowledge from prediction alone.</p>
+        <div class="tl-detail"><div class="tl-detail-title">Training setup</div><ul>
+          <li>AdamW optimizer with β1=0.9, β2=0.95</li>
+          <li>BF16 mixed precision throughout</li>
+          <li>LR warmup (1–5%) → stable → cosine decay</li>
+          <li>Gradient clipping to prevent explosion</li>
+          <li>Distributed across 1,000–10,000 H100s</li>
+        </ul></div>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-date">Step 3</div><div class="tl-dot c3"></div>
+      <div class="tl-body">
+        <h4>Supervised Fine-Tuning (SFT)</h4><span class="tl-phase">Fine-tuning · Days</span>
+        <p>Train on thousands of high-quality (prompt, ideal response) pairs. The model learns to follow instructions. Usually uses <strong>LoRA</strong> to save compute.</p>
+        <div class="tl-detail"><div class="tl-detail-title">SFT details</div><ul>
+          <li>Human-written (instruction, response) pairs</li>
+          <li>Diverse tasks: summarization, coding, reasoning</li>
+          <li>LoRA adapters trained at rank 16–64</li>
+          <li>Lower learning rate than pre-training</li>
+          <li>1–3 epochs maximum to avoid overfitting</li>
+        </ul></div>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-date">Step 4</div><div class="tl-dot c4"></div>
+      <div class="tl-body">
+        <h4>Alignment via DPO or RLHF</h4><span class="tl-phase">Alignment · Days</span>
+        <p>Collect human preference data. Apply DPO to make the model lean toward genuinely helpful, honest, safe answers. Multiple rounds targeting different failure modes.</p>
+        <div class="tl-detail"><div class="tl-detail-title">Alignment pipeline</div><ul>
+          <li>Human annotators rank response pairs</li>
+          <li>DPO loss applied on preference data directly</li>
+          <li>Multiple rounds targeting different failure modes</li>
+          <li>Safety evaluations between each round</li>
+          <li>Some labs use GRPO/PPO for reasoning models</li>
+        </ul></div>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-date">Step 5</div><div class="tl-dot c5"></div>
+      <div class="tl-body">
+        <h4>Evaluate &amp; Red-Team</h4><span class="tl-phase">Evaluation · Ongoing</span>
+        <p>Run through thousands of benchmarks and adversarial prompts. Find failure modes. Fix with targeted fine-tuning. Repeat until ready.</p>
+        <div class="tl-detail"><div class="tl-detail-title">Evaluation suite</div><ul>
+          <li>MMLU, HellaSwag, TruthfulQA, HumanEval</li>
+          <li>Adversarial red-teaming for safety failures</li>
+          <li>Human preference A/B tests</li>
+          <li>Domain evals: medical, legal, code</li>
+          <li>Regression testing vs previous checkpoints</li>
+        </ul></div>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-date">Step 6</div><div class="tl-dot c6"></div>
+      <div class="tl-body">
+        <h4>Quantize &amp; Deploy</h4><span class="tl-phase">Inference · Production</span>
+        <p>Compress weights to 4-bit or 8-bit for fast, cheap inference. The model millions of users interact with is almost always quantized — often to INT8 or NVFP4 on modern hardware.</p>
+        <div class="tl-detail"><div class="tl-detail-title">Deployment stack</div><ul>
+          <li>INT8 / INT4 quantization for inference speed</li>
+          <li>vLLM or SGLang for efficient batched serving</li>
+          <li>KV cache management for long contexts</li>
+          <li>Speculative decoding for latency reduction</li>
+          <li>Served via REST API at scale</li>
+        </ul></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ────── GLOSSARY ────── -->
+<div class="sec-rule"><span class="sec-rule-lbl">Glossary</span><div class="sec-rule-line"></div></div>
+<p class="overview-lead fi">Every term in one place.</p>
+
+<div class="gloss-grid">
+  <div class="gi"><div class="gt">Parameters / Weights</div><div class="gd">The billions of numbers that define what the model knows. Learned, not hand-coded.</div></div>
+  <div class="gi"><div class="gt">Token</div><div class="gd">A word or word-chunk the model processes at once. "Hello world" = 2 tokens.</div></div>
+  <div class="gi"><div class="gt">Loss</div><div class="gd">A number measuring how wrong the model was. All training = making this go down.</div></div>
+  <div class="gi"><div class="gt">Gradient</div><div class="gd">Direction to nudge each weight to reduce loss. Calculated by backpropagation.</div></div>
+  <div class="gi"><div class="gt">Epoch</div><div class="gd">One full pass through the training data. Most LLM pre-training is under 1 epoch.</div></div>
+  <div class="gi"><div class="gt">Batch</div><div class="gd">Group of examples processed together before one weight update. Larger = more stable.</div></div>
+  <div class="gi"><div class="gt">Overfitting</div><div class="gd">Memorizing training data instead of learning patterns. Fails on new inputs.</div></div>
+  <div class="gi"><div class="gt">Checkpoint</div><div class="gd">Saved snapshot of model weights at a specific training step.</div></div>
+  <div class="gi"><div class="gt">Inference</div><div class="gd">Running the trained model to generate outputs. Not training — this is production.</div></div>
+  <div class="gi"><div class="gt">Quantization</div><div class="gd">Compressing weights to fewer bits (INT4/INT8) for faster, cheaper inference.</div></div>
+  <div class="gi"><div class="gt">Context Window</div><div class="gd">Maximum tokens the model can see at once. Claude 3: 200K. GPT-4: 128K.</div></div>
+  <div class="gi"><div class="gt">SFT</div><div class="gd">Supervised Fine-Tuning — training on human-written (prompt, answer) pairs post pre-training.</div></div>
+  <div class="gi"><div class="gt">VRAM</div><div class="gd">On-chip GPU memory. Determines maximum model size you can load and train.</div></div>
+  <div class="gi"><div class="gt">PEFT</div><div class="gd">Parameter Efficient Fine-Tuning. Umbrella term covering LoRA and similar methods.</div></div>
+</div>
+
+</main>
+
+<footer>
+  <span>© 2026 · Machine Learning · Plain English Deep Dive</span>
+  <div class="foot-links">
+    <a href="#">← All Blogs</a>
+    <a href="#" onclick="scrollTo({top:0,behavior:'smooth'});return false;">Top ↑</a>
+  </div>
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════
+   READING PROGRESS
+═══════════════════════════════════════════ */
+const prog=document.getElementById('prog');
+const nav=document.getElementById('nav');
+window.addEventListener('scroll',()=>{
+  const h=document.documentElement;
+  prog.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';
+  nav.classList.toggle('scrolled',h.scrollTop>30);
+});
+
+/* ═══════════════════════════════════════════
+   ACTIVE NAV
+═══════════════════════════════════════════ */
+const secIds=['overview','concepts','techniques','pipeline'];
+const navAs=document.querySelectorAll('.nav-links a[data-sec]');
+new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting)
+      navAs.forEach(a=>a.classList.toggle('active',a.dataset.sec===e.target.id));
+  });
+},{threshold:.3}).observe;
+// observe each section
+secIds.forEach(id=>{
+  const el=document.getElementById(id);
+  if(el) new IntersectionObserver(entries=>{
+    if(entries[0].isIntersecting)
+      navAs.forEach(a=>a.classList.toggle('active',a.dataset.sec===id));
+  },{threshold:.25}).observe(el);
+});
+
+/* ═══════════════════════════════════════════
+   WARMUP BARS
+═══════════════════════════════════════════ */
+(function(){
+  const wrap=document.getElementById('warmupBars');
+  const N=72,wu=12,st=32;
+  for(let i=0;i<N;i++){
+    let h,c,delay;
+    if(i<wu){h=Math.round((i/wu)*60);c='var(--green)';delay=i*18;}
+    else if(i<wu+st){h=60;c='var(--blue)';delay=(wu*18)+(i-wu)*12;}
+    else{
+      const t=(i-wu-st)/(N-wu-st);
+      h=Math.max(2,Math.round(60*(0.5+0.5*Math.cos(Math.PI*t))));
+      c='var(--amber)';delay=(wu*18)+(st*12)+(i-wu-st)*14;
+    }
+    const b=document.createElement('div');
+    b.className='wbar';
+    b.style.cssText=`height:${h}px;background:${c};opacity:.82;transition-delay:${delay}ms`;
+    wrap.appendChild(b);
+  }
+})();
+
+/* ═══════════════════════════════════════════
+   LR CANVAS
+═══════════════════════════════════════════ */
+const slider=document.getElementById('lrSlider');
+const valEl=document.getElementById('lrVal');
+const verdict=document.getElementById('lrVerdict');
+const canvas=document.getElementById('lrCanvas');
+const ctx=canvas.getContext('2d');
+
+function drawLR(v){
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.offsetWidth*dpr;
+  canvas.width=W;canvas.height=82;
+  ctx.clearRect(0,0,W,82);
+  const steps=80;let loss=5.2;const pts=[];
+  for(let i=0;i<steps;i++){
+    pts.push({x:(i/(steps-1))*W,y:loss});
+    const lr=v/500;
+    loss=loss-lr*(loss-0.2)*2*8+(Math.random()-.5)*lr*6;
+    if(loss<0.1)loss=0.1+Math.random()*.04;
+    if(loss>10)loss=10;
+  }
+  const maxY=6;
+  const ty=val=>82-4-((Math.min(val,maxY))/maxY)*(82-8);
+  ctx.strokeStyle='#f2f2f2';ctx.lineWidth=1;
+  [2,4].forEach(g=>{ctx.beginPath();ctx.moveTo(0,ty(g));ctx.lineTo(W,ty(g));ctx.stroke();});
+  const lc=v<15?'#f59e0b':v<55?'#2ec4b6':'#f87171';
+  ctx.beginPath();ctx.strokeStyle=lc;ctx.lineWidth=2.4*dpr;
+  ctx.lineJoin='round';ctx.lineCap='round';
+  pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,ty(p.y)):ctx.lineTo(p.x,ty(p.y)));
+  ctx.stroke();
+}
+function updateLR(){
+  const v=parseInt(slider.value);
+  const map={
+    low: {dv:'0.000003',msg:'🐢 Too low — barely learning, training stalls for days',cls:'warn'},
+    ok:  {dv:'0.00003', msg:'✅ Just right — smooth, steady convergence toward minimum',cls:'good'},
+    risk:{dv:'0.0003',  msg:'⚠️ Getting risky — noisy updates, may diverge soon',cls:'warn'},
+    high:{dv:'0.003',   msg:'💥 Too high — model exploding, training will fail',cls:'bad'}
+  };
+  const k=v<15?'low':v<55?'ok':v<78?'risk':'high';
+  valEl.textContent=map[k].dv;
+  verdict.textContent=map[k].msg;
+  verdict.className=map[k].cls;
+  drawLR(v);
+}
+slider.addEventListener('input',updateLR);
+window.addEventListener('resize',()=>setTimeout(updateLR,50));
+setTimeout(updateLR,120);
+
+/* ═══════════════════════════════════════════
+   INTERSECTION OBSERVER  — unified + staggered
+═══════════════════════════════════════════ */
+const io=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(!e.isIntersecting)return;
+    const el=e.target;
+
+    /* Section rules — line draw */
+    if(el.classList.contains('sec-rule')){
+      el.classList.add('in');io.unobserve(el);return;
+    }
+    /* Model headers */
+    if(el.classList.contains('model-header')){
+      el.querySelector('.model-num')?.classList.add('in');
+      setTimeout(()=>el.querySelector('.model-title')?.classList.add('in'),80);
+      io.unobserve(el);return;
+    }
+    /* Feature grid — stagger cards */
+    if(el.classList.contains('feat-grid')){
+      el.querySelectorAll('.feat-card').forEach((c,i)=>
+        setTimeout(()=>c.classList.add('in'),i*70));
+      io.unobserve(el);return;
+    }
+    /* Arch boxes — cascade nodes */
+    if(el.classList.contains('arch-box')){
+      el.classList.add('in');io.unobserve(el);return;
+    }
+    /* DPO cards */
+    if(el.classList.contains('dpo-grid')){
+      el.querySelectorAll('.dpo-card').forEach((c,i)=>
+        setTimeout(()=>c.classList.add('in'),i*100));
+      io.unobserve(el);return;
+    }
+    /* Insights grid */
+    if(el.classList.contains('ins-grid')){
+      el.querySelectorAll('.ins-card').forEach((c,i)=>
+        setTimeout(()=>c.classList.add('in'),i*80));
+      io.unobserve(el);return;
+    }
+    /* GPU grid */
+    if(el.classList.contains('gpu-grid')){
+      el.querySelectorAll('.gpu-card').forEach((c,i)=>
+        setTimeout(()=>c.classList.add('in'),i*70));
+      io.unobserve(el);return;
+    }
+    /* Callout boxes */
+    if(el.classList.contains('callout')){
+      el.classList.add('in');io.unobserve(el);return;
+    }
+    /* Timeline line */
+    if(el.classList.contains('timeline-line')){
+      el.classList.add('in');io.unobserve(el);return;
+    }
+    /* Timeline items */
+    if(el.classList.contains('tl-item')){
+      el.classList.add('in');io.unobserve(el);return;
+    }
+    /* Warmup bars */
+    if(el.classList.contains('warmup-wrap')){
+      el.classList.add('in');
+      setTimeout(()=>el.querySelectorAll('.wbar').forEach(b=>b.classList.add('in')),100);
+      io.unobserve(el);return;
+    }
+    /* Glossary items */
+    if(el.classList.contains('gloss-grid')){
+      el.querySelectorAll('.gi').forEach((g,i)=>
+        setTimeout(()=>g.classList.add('in'),i*30));
+      io.unobserve(el);return;
+    }
+    /* Generic */
+    el.classList.add('in');
+    io.unobserve(el);
+  });
+},{threshold:.1,rootMargin:'0px 0px -40px 0px'});
+
+document.querySelectorAll(
+  '.sec-rule,.model-header,.feat-grid,.arch-box,.dpo-grid,'+
+  '.ins-grid,.gpu-grid,.callout,.timeline-line,.tl-item,'+
+  '.warmup-wrap,.gloss-grid,.fi,.tbl,.demo-box'
+).forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
