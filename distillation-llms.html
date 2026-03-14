@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Knowledge Distillation in LLMs — Prateek Singh</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0f; --surface:#12121a; --surface2:#1a1a26; --border:#2a2a3f;
+  --accent:#7c6bff; --accent2:#ff6b9d; --accent3:#00d9b4; --accent4:#ffb347;
+  --text:#e8e8f0; --text-muted:#7878a0; --text-dim:#4a4a6a; --code-bg:#0f0f1a;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;line-height:1.75;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.5}
+#progress{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent3));z-index:1000;width:0%;transition:width .1s}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:1rem 3rem;background:rgba(10,10,15,.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);z-index:100}
+.nav-logo{font-family:'JetBrains Mono',monospace;font-size:.75rem;letter-spacing:.2em;color:var(--accent3);text-transform:uppercase}
+.nav-links{display:flex;gap:2rem;list-style:none}
+.nav-links a{font-size:.8rem;letter-spacing:.08em;color:var(--text-muted);text-decoration:none;text-transform:uppercase;transition:color .2s}
+.nav-links a:hover{color:var(--accent3)}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:8rem 3rem 5rem;position:relative;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:
+  radial-gradient(ellipse 80% 60% at 60% 40%, rgba(0,217,180,.10) 0%, transparent 70%),
+  radial-gradient(ellipse 50% 45% at 15% 75%, rgba(124,107,255,.10) 0%, transparent 60%),
+  radial-gradient(ellipse 40% 50% at 85% 65%, rgba(255,107,157,.06) 0%, transparent 60%)}
+.hero-grid{position:absolute;inset:0;opacity:.035;background-image:linear-gradient(var(--accent3) 1px,transparent 1px),linear-gradient(90deg,var(--accent3) 1px,transparent 1px);background-size:60px 60px}
+.hero-label{font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:.3em;color:var(--accent3);text-transform:uppercase;margin-bottom:1.5rem;display:flex;align-items:center;gap:.75rem}
+.hero-label::before{content:'';display:inline-block;width:40px;height:1px;background:var(--accent3)}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(3rem,8vw,7rem);font-weight:900;line-height:1;max-width:960px;background:linear-gradient(135deg,#fff 0%,#a0f0e0 40%,#c0b8ff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:1.5rem}
+.hero-sub{font-size:1.1rem;color:var(--text-muted);max-width:580px;margin-bottom:2.5rem}
+.hero-meta{display:flex;gap:2rem;align-items:center;flex-wrap:wrap}
+.hero-author{font-size:.85rem;color:var(--text-muted)}
+.hero-author span{color:var(--accent3);font-weight:500;letter-spacing:.01em}
+.hero-badges{display:flex;gap:.5rem;flex-wrap:wrap}
+.badge{font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.1em;padding:.3rem .75rem;border-radius:2px;text-transform:uppercase;font-weight:600}
+.badge-purple{background:rgba(124,107,255,.15);color:var(--accent);border:1px solid rgba(124,107,255,.3)}
+.badge-teal{background:rgba(0,217,180,.1);color:var(--accent3);border:1px solid rgba(0,217,180,.25)}
+.badge-pink{background:rgba(255,107,157,.1);color:var(--accent2);border:1px solid rgba(255,107,157,.25)}
+.badge-orange{background:rgba(255,179,71,.1);color:var(--accent4);border:1px solid rgba(255,179,71,.25)}
+.scroll-hint{position:absolute;bottom:2.5rem;right:3rem;display:flex;flex-direction:column;align-items:center;gap:.5rem;font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:.2em;color:var(--text-dim);text-transform:uppercase;animation:float 2.5s ease-in-out infinite}
+.scroll-line{width:1px;height:50px;background:linear-gradient(to bottom,var(--accent3),transparent)}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+
+/* LAYOUT */
+.container{max-width:860px;margin:0 auto;padding:0 2rem}
+.wide-container{max-width:1200px;margin:0 auto;padding:0 2rem}
+
+/* LABELS */
+.section-label{font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.3em;color:var(--accent3);text-transform:uppercase;margin-bottom:1.25rem;display:flex;align-items:center;gap:.6rem}
+.section-label::before{content:'';width:20px;height:1px;background:var(--accent3)}
+.section-label.purple{color:var(--accent)}.section-label.purple::before{background:var(--accent)}
+.section-label.teal{color:var(--accent3)}.section-label.teal::before{background:var(--accent3)}
+.section-label.pink{color:var(--accent2)}.section-label.pink::before{background:var(--accent2)}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:0;position:relative}
+.divider::after{content:attr(data-num);position:absolute;left:0;top:-11px;font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.15em;color:var(--text-dim);background:var(--bg);padding-right:1rem}
+
+/* MODEL SECTION */
+.model-section{padding:5rem 0;border-bottom:1px solid var(--border)}
+.model-header{display:flex;align-items:flex-start;gap:2rem;margin-bottom:3rem;flex-wrap:wrap}
+.model-number{font-family:'Playfair Display',serif;font-size:5rem;font-weight:900;line-height:1;color:var(--border);flex-shrink:0;user-select:none}
+.model-title-group{flex:1}
+.model-name{font-family:'Playfair Display',serif;font-size:clamp(1.8rem,4vw,2.8rem);font-weight:700;line-height:1.1;margin-bottom:.5rem}
+.model-tagline{font-size:.85rem;color:var(--text-muted);margin-bottom:1rem}
+.model-stats{display:flex;gap:.5rem;flex-wrap:wrap}
+.stat-pill{font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:.25rem .7rem;border-radius:100px;letter-spacing:.05em;border:1px solid;white-space:nowrap}
+.stat-params{color:var(--accent);border-color:rgba(124,107,255,.35);background:rgba(124,107,255,.08)}
+.stat-active{color:var(--accent3);border-color:rgba(0,217,180,.3);background:rgba(0,217,180,.06)}
+.stat-ctx{color:var(--accent4);border-color:rgba(255,179,71,.3);background:rgba(255,179,71,.06)}
+.stat-type{color:var(--accent2);border-color:rgba(255,107,157,.3);background:rgba(255,107,157,.06)}
+.model-body p{font-size:1rem;color:var(--text-muted);margin-bottom:1.25rem;max-width:720px}
+.model-body p strong{color:var(--text);font-weight:500}
+
+/* THEME CARDS */
+.themes-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);margin:3rem 0}
+.theme-card{background:var(--surface);padding:2rem 1.75rem;transition:background .2s;position:relative;overflow:hidden}
+.theme-card:hover{background:var(--surface2)}
+.theme-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.theme-card:nth-child(1)::before{background:var(--accent3)}
+.theme-card:nth-child(2)::before{background:var(--accent)}
+.theme-card:nth-child(3)::before{background:var(--accent2)}
+.theme-card:nth-child(4)::before{background:var(--accent3)}
+.theme-icon{font-size:1.5rem;margin-bottom:1rem}
+.theme-card h3{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;margin-bottom:.5rem;color:var(--text)}
+.theme-card p{font-size:.85rem;color:var(--text-muted);line-height:1.6}
+
+/* FEATURE BOXES */
+.feature-box{margin:2rem 0;border:1px solid var(--border);border-left:3px solid var(--accent3);background:var(--surface);padding:1.5rem 2rem}
+.feature-box.purple{border-left-color:var(--accent)}
+.feature-box.teal{border-left-color:var(--accent3)}
+.feature-box.pink{border-left-color:var(--accent2)}
+.feature-box h4{font-family:'JetBrains Mono',monospace;font-size:.75rem;letter-spacing:.2em;color:var(--accent3);text-transform:uppercase;margin-bottom:.75rem}
+.feature-box.purple h4{color:var(--accent)}
+.feature-box.teal h4{color:var(--accent3)}
+.feature-box.pink h4{color:var(--accent2)}
+.feature-box p{font-size:.9rem;color:var(--text-muted);margin:0}
+
+/* CALLOUT */
+.callout{display:flex;gap:1.25rem;padding:1.5rem 1.75rem;background:var(--surface);border:1px solid var(--border);margin:2rem 0}
+.callout-icon{font-size:1.25rem;flex-shrink:0;margin-top:.1rem}
+.callout p{font-size:.9rem;color:var(--text-muted);margin:0!important;line-height:1.65}
+.callout p strong{color:var(--text)}
+
+/* FORMULA */
+.formula-block{margin:2rem 0;background:var(--code-bg);border:1px solid var(--border);padding:1.75rem 2rem;overflow-x:auto}
+.formula-label{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--text-dim);letter-spacing:.2em;text-transform:uppercase;margin-bottom:1rem}
+.formula{font-family:'JetBrains Mono',monospace;font-size:.95rem;color:var(--accent3);letter-spacing:.03em;line-height:2}
+.formula .comment{color:var(--text-dim);font-size:.78rem}
+.formula .hi{color:var(--accent4)}
+.formula .hi2{color:var(--accent2)}
+.formula .hi3{color:var(--accent)}
+
+/* ARCH DIAGRAM */
+.arch-diagram{margin:2.5rem 0;background:var(--code-bg);border:1px solid var(--border);padding:2rem;overflow-x:auto}
+.arch-diagram-label{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--text-dim);letter-spacing:.2em;text-transform:uppercase;margin-bottom:1.25rem}
+.arch-row{display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem;flex-wrap:wrap}
+.arch-block{padding:.4rem 1rem;border-radius:2px;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:600;white-space:nowrap}
+.ab-t{background:rgba(255,179,71,.15);color:var(--accent4);border:1px solid rgba(255,179,71,.35)}
+.ab-s{background:rgba(0,217,180,.12);color:var(--accent3);border:1px solid rgba(0,217,180,.3)}
+.ab-loss{background:rgba(255,107,157,.12);color:var(--accent2);border:1px solid rgba(255,107,157,.3)}
+.ab-kl{background:rgba(124,107,255,.15);color:var(--accent);border:1px solid rgba(124,107,255,.35)}
+.ab-feat{background:rgba(255,179,71,.10);color:var(--accent4);border:1px solid rgba(255,179,71,.25)}
+.ab-norm{background:rgba(40,40,60,.8);color:var(--text-muted);border:1px solid var(--border)}
+.ab-arrow{color:var(--text-dim);font-size:.9rem}
+.ab-repeat{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--accent4);margin-left:auto}
+
+/* TAGS */
+.tag{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:.6rem;padding:.15rem .5rem;border-radius:2px;margin:2px;background:rgba(0,217,180,.08);color:var(--accent3);border:1px solid rgba(0,217,180,.20)}
+.tag.purple{background:rgba(124,107,255,.12);color:var(--accent);border-color:rgba(124,107,255,.25)}
+.tag.teal{background:rgba(0,217,180,.08);color:var(--accent3);border-color:rgba(0,217,180,.2)}
+.tag.pink{background:rgba(255,107,157,.08);color:var(--accent2);border-color:rgba(255,107,157,.2)}
+
+/* COMPARISON TABLE */
+.comparison-table{width:100%;border-collapse:collapse;margin:2.5rem 0;font-size:.85rem}
+.comparison-table th{font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);padding:.75rem 1rem;text-align:left;background:var(--surface);border-bottom:1px solid var(--border)}
+.comparison-table td{padding:.75rem 1rem;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text-muted);vertical-align:middle}
+.comparison-table tr:hover td{background:var(--surface)}
+.comparison-table td:first-child{color:var(--text);font-weight:500}
+
+/* VIZ */
+.viz-container{margin:3rem 0;background:var(--code-bg);border:1px solid var(--border);padding:2rem;overflow:hidden}
+.viz-label{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--text-dim);letter-spacing:.2em;text-transform:uppercase;margin-bottom:1.5rem;display:flex;justify-content:space-between;align-items:center}
+.viz-caption{font-size:.8rem;color:var(--text-muted);margin-top:1rem;text-align:center;font-style:italic}
+.btn{font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:.35rem .85rem;cursor:pointer;border-radius:2px}
+.btn-orange{background:rgba(255,179,71,.1);border:1px solid rgba(255,179,71,.3);color:var(--accent4)}
+.btn-teal{background:rgba(0,217,180,.08);border:1px solid rgba(0,217,180,.25);color:var(--accent3)}
+.btn-muted{background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text-muted)}
+
+/* TREND GRID */
+.trend-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:2rem;margin-top:3rem}
+.trend-item{display:flex;gap:1.25rem;align-items:flex-start}
+.trend-num{font-family:'Playfair Display',serif;font-size:3rem;font-weight:900;line-height:1;color:var(--border);flex-shrink:0}
+.trend-text h4{font-size:.95rem;font-weight:500;color:var(--text);margin-bottom:.4rem}
+.trend-text p{font-size:.82rem;color:var(--text-muted);line-height:1.65}
+
+/* TIMELINE */
+.timeline{position:relative;margin-top:3rem;padding-left:140px}
+.timeline::before{content:'';position:absolute;left:110px;top:0;bottom:0;width:1px;background:var(--border)}
+.tl-item{position:relative;margin-bottom:2.5rem}
+.tl-item::before{content:'';position:absolute;left:-30px;top:.45rem;width:8px;height:8px;border-radius:50%;border:1px solid;background:var(--bg)}
+.tl-item:nth-child(1)::before{border-color:var(--accent4);box-shadow:0 0 8px var(--accent4)}
+.tl-item:nth-child(2)::before{border-color:var(--accent);box-shadow:0 0 8px var(--accent)}
+.tl-item:nth-child(3)::before{border-color:var(--accent2);box-shadow:0 0 8px var(--accent2)}
+.tl-item:nth-child(4)::before{border-color:var(--accent3);box-shadow:0 0 8px var(--accent3)}
+.tl-item:nth-child(5)::before{border-color:var(--accent4);box-shadow:0 0 8px var(--accent4)}
+.tl-item:nth-child(6)::before{border-color:var(--accent);box-shadow:0 0 8px var(--accent)}
+.tl-item:nth-child(7)::before{border-color:var(--accent2);box-shadow:0 0 8px var(--accent2)}
+.tl-item:nth-child(8)::before{border-color:var(--accent3)}
+.tl-item:nth-child(9)::before{border-color:var(--accent4)}
+.tl-date{position:absolute;left:-140px;top:.25rem;font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.12em;color:var(--text-dim);text-transform:uppercase;width:110px;text-align:right}
+.tl-title{font-size:.95rem;font-weight:500;color:var(--text);margin-bottom:.3rem}
+.tl-desc{font-size:.82rem;color:var(--text-muted);margin-bottom:.4rem}
+.tl-models{display:flex;flex-wrap:wrap;gap:.3rem}
+
+mark{background:rgba(255,179,71,.15);color:#ffd090;padding:0 .2em;border-radius:2px}
+
+/* ANIMATIONS */
+.fade-up{opacity:0;transform:translateY(28px);transition:opacity .65s ease,transform .65s ease}
+.fade-up.visible{opacity:1;transform:translateY(0)}
+
+/* TRENDS SECTION */
+.trends-section{padding:5rem 0;background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+
+/* FOOTER */
+footer{padding:4rem 3rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1.5rem}
+.footer-left{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--text-dim);letter-spacing:.1em}
+.footer-right{display:flex;gap:1.5rem}
+.footer-right a{font-size:.8rem;color:var(--text-muted);text-decoration:none;transition:color .2s}
+.footer-right a:hover{color:var(--accent3)}
+
+/* RESPONSIVE */
+@media(max-width:640px){
+  nav{padding:1rem 1.25rem}.nav-links{display:none}
+  .hero{padding:7rem 1.25rem 4rem}
+  .container,.wide-container{padding:0 1.25rem}
+  footer{padding:2.5rem 1.25rem;flex-direction:column}
+  .model-number{font-size:3rem}
+  .comparison-table{font-size:.75rem}
+  .comparison-table th,.comparison-table td{padding:.5rem .6rem}
+  .timeline{padding-left:0}.timeline::before{display:none}
+  .tl-date{position:static;text-align:left;width:auto;margin-bottom:.3rem}
+}
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<nav>
+  <div class="nav-logo">Knowledge Distillation · 2025</div>
+  <ul class="nav-links">
+    <li><a href="blogs.html" style="color:var(--accent3);border:1px solid rgba(0,217,180,.25);padding:.2rem .6rem;border-radius:2px;">← Blogs</a></li>
+    <li><a href="#core">Core Idea</a></li>
+    <li><a href="#temperature">Temperature</a></li>
+    <li><a href="#types">Types</a></li>
+    <li><a href="#llm-era">LLM Era</a></li>
+    <li><a href="#models">Models</a></li>
+    <li><a href="#verdict">Verdict</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <canvas id="hero-canvas" style="position:absolute;inset:0;pointer-events:none;z-index:0;"></canvas>
+
+  <div style="position:relative;z-index:1;">
+    <div class="hero-label">Deep Dive · Model Compression</div>
+    <h1>Knowledge<br>Distillation<br>in LLMs</h1>
+    <p class="hero-sub">
+      How do you fit a trillion-parameter mind into a phone? The answer involves temperature, soft labels, and one of the most elegant ideas in modern machine learning — teaching a small model to think like a large one.
+    </p>
+    <div class="hero-meta">
+      <div class="hero-author">March 2025 · <span>Prateek Singh, PhD</span></div>
+      <div class="hero-badges">
+        <span class="badge badge-teal">Distillation</span>
+        <span class="badge badge-purple">Model Compression</span>
+        <span class="badge badge-pink">LLM</span>
+        <span class="badge badge-orange">On-Device AI</span>
+      </div>
+    </div>
+  </div>
+  <div class="scroll-hint"><div class="scroll-line"></div>scroll</div>
+</section>
+
+<!-- ══ OVERVIEW ══ -->
+<div style="padding:5rem 0;border-bottom:1px solid var(--border);" id="core">
+<div class="container">
+  <div class="section-label">The Big Picture</div>
+  <h2 style="font-family:'Playfair Display',serif;font-size:clamp(1.8rem,4vw,2.6rem);font-weight:700;margin-bottom:1.5rem;">A large model contains more knowledge<br>than its outputs reveal</h2>
+  <p style="font-size:1.05rem;color:var(--text-muted);max-width:700px;margin-bottom:1.25rem;">
+    When GPT-4 predicts the next token, it doesn't just output the single most probable word. It outputs a <strong>probability distribution over the entire vocabulary</strong> — 100,000+ numbers, each one reflecting some learned relationship about language. A small model trained only on labels ("the correct answer is cat") misses all of that richness. Distillation is how you transfer it.
+  </p>
+  <p style="font-size:1rem;color:var(--text-muted);max-width:700px;">
+    Geoffrey Hinton coined the term in 2015. The insight was deceptively simple: <mark>train the student on the teacher's soft probability outputs, not just the hard correct labels</mark>. Those soft probabilities encode the teacher's internal beliefs about similarity, ambiguity, and structure — far richer than a binary right/wrong signal.
+  </p>
+
+  <div class="themes-grid fade-up">
+    <div class="theme-card">
+      <div class="theme-icon">🌡️</div>
+      <h3>Temperature Scaling</h3>
+      <p>Softening the teacher's output distribution with a temperature parameter T reveals probability mass placed on "wrong but similar" answers — the hidden knowledge.</p>
+    </div>
+    <div class="theme-card">
+      <div class="theme-icon">🎓</div>
+      <h3>Response Distillation</h3>
+      <p>Student learns from the teacher's final output probabilities (logits). The most common form. Works black-box — you only need teacher inference, not internals.</p>
+    </div>
+    <div class="theme-card">
+      <div class="theme-icon">🧠</div>
+      <h3>Feature Distillation</h3>
+      <p>Student mimics the teacher's intermediate hidden representations, not just the output. Richer signal but requires white-box access to the teacher's architecture.</p>
+    </div>
+    <div class="theme-card">
+      <div class="theme-icon">🔗</div>
+      <h3>Relation Distillation</h3>
+      <p>Student learns relationships between examples — the structure of the teacher's embedding space. Useful for metric learning and cross-modal transfer.</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ §01 THE CORE IDEA ══ -->
+<div class="divider" data-num="01 — THE CORE IDEA"></div>
+<div class="model-section">
+<div class="container">
+  <div class="model-header">
+    <div class="model-number">01</div>
+    <div class="model-title-group">
+      <div class="model-name">Hinton's Original Insight</div>
+      <div class="model-tagline">Distilling the Knowledge in a Neural Network, 2015</div>
+      <div class="model-stats">
+        <span class="stat-pill stat-ctx">Hinton, Vinyals, Dean</span>
+        <span class="stat-pill stat-params">NeurIPS 2015</span>
+        <span class="stat-pill stat-type">Foundational paper</span>
+      </div>
+    </div>
+  </div>
+  <div class="model-body">
+    <p>Before Hinton, model compression was largely about pruning, quantization, and architectural redesign — mechanical shrinkage. The distillation paper proposed something different: <strong>the large model itself is the curriculum</strong>. Instead of discarding the teacher's knowledge, you use it as a richer training signal for the student.</p>
+
+    <p>The key observation: when a well-trained model predicts a cat image, it doesn't just say "cat: 99%". It says something like "cat: 99%, leopard: 0.7%, dog: 0.2%, tiger: 0.05%". Those tiny probabilities on "wrong" labels encode the model's understanding that cats are more similar to leopards than to cars. That structure is gold — and a hard label "cat: 1, everything else: 0" throws it all away.</p>
+
+    <div class="callout fade-up">
+      <div class="callout-icon">💡</div>
+      <p><strong>The "dark knowledge" concept:</strong> Hinton called the information encoded in near-zero probabilities <em>dark knowledge</em>. A model trained on MNIST might assign 10⁻⁶ probability to "2" when the input is clearly a "3" — but that tiny value still encodes the fact that 2 and 3 are more similar than 2 and 7. Over millions of examples, this structure teaches the student far more than binary labels ever could.</p>
+    </div>
+
+    <div class="section-label" style="margin-top:2.5rem;">The Distillation Loss</div>
+
+    <div class="formula-block fade-up">
+      <div class="formula-label">Distillation Objective — Combined Loss</div>
+      <div class="formula">
+        <span class="comment">Hard loss — student vs ground truth labels:</span><br>
+        L<sub>hard</sub> = CrossEntropy( <span class="hi">student_logits</span>, <span class="hi2">true_labels</span> )<br>
+        <br>
+        <span class="comment">Soft loss — student vs teacher soft targets (at temperature T):</span><br>
+        L<sub>soft</sub> = T² · KL( <span class="hi">σ(z_s/T)</span> ‖ <span class="hi3">σ(z_t/T)</span> )<br>
+        <br>
+        <span class="comment">Combined objective (α controls the balance):</span><br>
+        L = (1−<span class="hi2">α</span>) · L<sub>hard</sub>  +  <span class="hi2">α</span> · L<sub>soft</sub><br>
+        <br>
+        where  <span class="hi">z_s</span>  = student logits<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="hi3">z_t</span>  = teacher logits  <span class="comment">(frozen, no gradient)</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; σ(z/T) = softmax with temperature T<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; T² factor restores gradient magnitude lost by softening
+      </div>
+    </div>
+
+    <p>The <strong>T² factor</strong> is subtle but important. When you divide logits by T before softmax, the gradient of the soft loss is scaled down by 1/T². Multiplying by T² cancels this out — ensuring the soft and hard losses contribute at comparable magnitudes regardless of temperature. Hinton specifically calls this out and it's often missed in implementations.</p>
+
+    <div class="arch-diagram fade-up">
+      <div class="arch-diagram-label">Standard Distillation Setup</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-bottom:1.5rem;">
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--accent4);letter-spacing:.2em;text-transform:uppercase;margin-bottom:.75rem;">TEACHER  (frozen)</div>
+          <div class="arch-row"><div class="arch-block ab-t">Large Model (e.g. GPT-4-70B)</div></div>
+          <div class="arch-row"><div class="ab-arrow">↓</div></div>
+          <div class="arch-row"><div class="arch-block ab-t">Logits z_t  (÷ T)</div></div>
+          <div class="arch-row"><div class="ab-arrow">↓</div></div>
+          <div class="arch-row"><div class="arch-block ab-t">Soft probabilities p_t</div></div>
+        </div>
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--accent3);letter-spacing:.2em;text-transform:uppercase;margin-bottom:.75rem;">STUDENT  (training)</div>
+          <div class="arch-row"><div class="arch-block ab-s">Small Model (e.g. 1.7B)</div></div>
+          <div class="arch-row"><div class="ab-arrow">↓</div></div>
+          <div class="arch-row"><div class="arch-block ab-s">Logits z_s  (÷ T)</div></div>
+          <div class="arch-row"><div class="ab-arrow">↓</div></div>
+          <div class="arch-row"><div class="arch-block ab-s">Soft probabilities p_s</div></div>
+        </div>
+      </div>
+      <div class="arch-row" style="justify-content:center;">
+        <div class="arch-block ab-kl">KL(p_s ‖ p_t) · T²</div>
+        <div class="ab-arrow">+</div>
+        <div class="arch-block ab-loss">CrossEntropy(z_s, y_true)</div>
+        <div class="ab-arrow">=</div>
+        <div class="arch-block ab-loss">L_distill  →  backprop into student only</div>
+      </div>
+    </div>
+
+    <div class="feature-box pink fade-up">
+      <h4>Why KL Divergence, Not MSE?</h4>
+      <p>You could minimize MSE between teacher and student logits directly. But KL divergence treats the teacher's distribution as a probability distribution and measures how much information the student loses. It asymmetrically penalizes the student for assigning low probability where the teacher assigned high probability — which is exactly what you want. MSE treats all errors equally regardless of probability mass, making it a worse fit for this task.</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ §02 TEMPERATURE ══ -->
+<div class="divider" data-num="02 — TEMPERATURE SCALING"></div>
+<div class="model-section" id="temperature">
+<div class="container">
+  <div class="model-header">
+    <div class="model-number">02</div>
+    <div class="model-title-group">
+      <div class="model-name">The Temperature Trick</div>
+      <div class="model-tagline">How to make a model reveal what it almost said</div>
+      <div class="model-stats">
+        <span class="stat-pill stat-ctx">T = 1.0</span>
+        <span class="stat-pill stat-active">T → ∞ : uniform</span>
+        <span class="stat-pill stat-type">T → 0 : one-hot</span>
+      </div>
+    </div>
+  </div>
+  <div class="model-body">
+    <p>The softmax function converts raw logits into probabilities. Normally you just compute exp(z_i) / Σ exp(z_j). Temperature scaling adds one parameter T that controls how "peaked" or "flat" the resulting distribution is:</p>
+
+    <div class="formula-block fade-up">
+      <div class="formula-label">Temperature-Scaled Softmax</div>
+      <div class="formula">
+        p<sub>i</sub>(T) = exp(<span class="hi">z_i</span> / T) / Σ<sub>j</sub> exp(<span class="hi">z_j</span> / T)<br>
+        <br>
+        T = 1.0 <span class="comment">→ standard softmax (peaked distribution)</span><br>
+        T → ∞  <span class="comment">→ uniform distribution (maximum entropy)</span><br>
+        T → 0  <span class="comment">→ one-hot argmax (hard labels)</span><br>
+        T = 4–8 <span class="comment">→ typical distillation range (soft but informative)</span>
+      </div>
+    </div>
+
+    <!-- TEMPERATURE INTERACTIVE VIZ -->
+    <div class="viz-container fade-up">
+      <div class="viz-label">
+        <span>Temperature Effect on Soft Labels</span>
+        <span id="temp-display" style="color:var(--accent3);">T = 1.0</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;flex-wrap:wrap;">
+        <div>
+          <p style="font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--text-dim);letter-spacing:.15em;text-transform:uppercase;margin-bottom:1rem;">Teacher's logit distribution</p>
+          <div id="logit-bars" style="display:flex;flex-direction:column;gap:.4rem;"></div>
+        </div>
+        <div>
+          <p style="font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--text-dim);letter-spacing:.15em;text-transform:uppercase;margin-bottom:1rem;">Softmax output at temperature T</p>
+          <div id="softmax-bars" style="display:flex;flex-direction:column;gap:.4rem;"></div>
+        </div>
+      </div>
+      <div style="margin-top:1.5rem;">
+        <input type="range" id="temp-slider" min="0.2" max="10" value="1" step="0.1" style="width:100%;accent-color:var(--accent3);cursor:pointer;">
+        <p style="font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--text-dim);margin-top:.4rem;">← T=0.2 (near hard) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; T=10 (near uniform) →</p>
+      </div>
+      <p class="viz-caption">Notice how at high T, the model reveals its beliefs about "cat vs leopard" similarity. At T=1, that information is almost entirely hidden in near-zero probability mass.</p>
+    </div>
+
+    <p>In practice, the teacher and student both use the same temperature T during distillation training. At inference time, you set T = 1.0 for the deployed student model — the temperature was only a training tool to enrich the supervision signal.</p>
+
+    <div class="feature-box fade-up">
+      <h4>Choosing Temperature in Practice</h4>
+      <p>Too low (T < 1): barely different from hard labels. The soft distribution is still very peaked around the argmax. Too high (T > 20): the distribution becomes so uniform it's nearly random noise — no useful signal. <strong>T = 3–5 is the standard starting point for most LLM distillation tasks.</strong> For tasks with high semantic overlap between classes (like token-level language modeling where many tokens are nearly equivalent), higher T (6–10) often works better.</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ §03 TYPES OF DISTILLATION ══ -->
+<div class="divider" data-num="03 — TYPES OF DISTILLATION"></div>
+<div class="model-section" id="types">
+<div class="container">
+  <div class="model-header">
+    <div class="model-number">03</div>
+    <div class="model-title-group">
+      <div class="model-name">Three Flavors of Knowledge</div>
+      <div class="model-tagline">Response, Feature, and Relation — what exactly gets transferred</div>
+    </div>
+  </div>
+  <div class="model-body">
+
+    <div class="section-label" style="margin-top:1rem;">Response-Based Distillation</div>
+    <p>The student is trained to match the teacher's <strong>output layer predictions</strong> — logits or probabilities. This is the original Hinton formulation and remains the most common form, especially for LLMs where "output" means the full vocabulary distribution at each position.</p>
+
+    <div class="arch-diagram fade-up">
+      <div class="arch-diagram-label">Response-Based — Output Matching</div>
+      <div style="display:flex;gap:3rem;flex-wrap:wrap;align-items:flex-start;">
+        <div style="flex:1;min-width:200px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--accent4);margin-bottom:.5rem;">TEACHER</div>
+          <div class="arch-row"><div class="arch-block ab-t">Layer N (output)</div></div>
+          <div class="arch-row"><div class="arch-block ab-t">…</div></div>
+          <div class="arch-row"><div class="arch-block ab-t">Layer 2</div></div>
+          <div class="arch-row"><div class="arch-block ab-t">Layer 1</div></div>
+          <div class="arch-row"><div class="arch-block ab-norm">Input tokens</div></div>
+        </div>
+        <div style="display:flex;align-items:center;padding-top:2rem;">
+          <div style="text-align:center;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--accent2);">KL Divergence</div>
+            <div style="font-size:1.5rem;color:var(--text-dim);">⟵⟶</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--text-dim);">output only</div>
+          </div>
+        </div>
+        <div style="flex:1;min-width:200px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--accent3);margin-bottom:.5rem;">STUDENT</div>
+          <div class="arch-row"><div class="arch-block ab-s">Layer M (output)</div></div>
+          <div class="arch-row"><div class="arch-block ab-s">…</div></div>
+          <div class="arch-row"><div class="arch-block ab-s">Layer 2</div></div>
+          <div class="arch-row"><div class="arch-block ab-s">Layer 1</div></div>
+          <div class="arch-row"><div class="arch-block ab-norm">Input tokens</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label teal" style="margin-top:2.5rem;">Feature-Based Distillation</div>
+    <p>Instead of just matching the final output, the student is trained to match the teacher's <strong>intermediate hidden representations</strong>. Each transformer layer produces a hidden state tensor. Feature distillation adds auxiliary losses that penalize differences between corresponding hidden states in teacher and student.</p>
+
+    <p>This requires a <strong>white-box teacher</strong> — you need access to internal activations. For GPT-4 or Claude, this is impossible. For open models like Llama or Mistral, it's entirely feasible. The tradeoff: richer signal at the cost of requiring teacher internals and often needing projection layers (since teacher and student hidden dimensions differ).</p>
+
+    <div class="formula-block fade-up">
+      <div class="formula-label">Feature Distillation Loss — FitNets / PKD Style</div>
+      <div class="formula">
+        L<sub>feat</sub> = Σ<sub>l ∈ mapped_layers</sub> ‖ <span class="hi">h_s^l</span> − W · <span class="hi3">h_t^l</span> ‖²<br>
+        <br>
+        where  <span class="hi">h_s^l</span>  = student hidden state at layer l  (dim d_s)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="hi3">h_t^l</span>  = teacher hidden state at mapped layer  (dim d_t)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; W       = learned linear projection  (d_s → d_t)<br>
+        <br>
+        <span class="comment">Common layer mappings (24-layer teacher → 6-layer student):</span><br>
+        t_layer 4  ↔  s_layer 1<br>
+        t_layer 8  ↔  s_layer 2<br>
+        t_layer 12 ↔  s_layer 3   <span class="comment">← DistilBERT uses this pattern</span>
+      </div>
+    </div>
+
+    <div class="feature-box teal fade-up">
+      <h4>Attention Map Distillation</h4>
+      <p>A variant of feature distillation: instead of matching hidden state activations, match the <strong>attention weight matrices</strong> across layers. The teacher's attention patterns encode which tokens it decided mattered for each prediction. Transferring these patterns teaches the student where to look, not just what to output. Used in TinyBERT and PKD-BERT — often more effective than hidden state matching for downstream task performance.</p>
+    </div>
+
+    <div class="section-label pink" style="margin-top:2.5rem;">Relation-Based Distillation</div>
+    <p>Instead of matching individual outputs or activations, relation-based distillation matches <strong>relationships between examples</strong>. For a batch of N examples, you compute an N×N similarity matrix from both teacher and student embeddings and train the student to reproduce the teacher's similarity structure.</p>
+
+    <p>This is especially powerful for embedding models and retrieval tasks — it teaches the student to place similar concepts near each other in representation space, even if the absolute coordinates differ. Used extensively in contrastive learning and cross-modal distillation (e.g. distilling CLIP into smaller vision encoders).</p>
+  </div>
+</div>
+</div>
+
+<!-- ══ §04 LLM ERA DISTILLATION ══ -->
+<div class="divider" data-num="04 — DISTILLATION IN THE LLM ERA"></div>
+<div class="model-section" id="llm-era">
+<div class="container">
+  <div class="model-header">
+    <div class="model-number">04</div>
+    <div class="model-title-group">
+      <div class="model-name">Distillation at Scale</div>
+      <div class="model-tagline">New problems that emerge when the teacher has 100B+ parameters</div>
+      <div class="model-stats">
+        <span class="stat-pill stat-params">Black-box teachers</span>
+        <span class="stat-pill stat-active">Autoregressive KD</span>
+        <span class="stat-pill stat-type">Chain-of-thought</span>
+      </div>
+    </div>
+  </div>
+  <div class="model-body">
+    <p>Classic Hinton distillation was designed for classification — a fixed-size logit vector. LLMs generate sequences — the output grows token by token, and there's no natural "final output" to match. This creates new challenges, new loss formulations, and new techniques specific to the LLM regime.</p>
+
+    <div class="section-label" style="margin-top:1rem;">Problem 1 — Sequence-Level vs Token-Level KD</div>
+
+    <p><strong>Token-level KD</strong> (the straightforward extension): for each position in the sequence, compute KL divergence between teacher and student token distributions. This is efficient and directly analogous to Hinton's original method. It's what most open-source distillation implementations do.</p>
+
+    <p><strong>Sequence-level KD</strong> (SeqKD, Kim & Rush 2016): instead of matching token distributions at each step, first generate complete sequences from the teacher, then train the student on those generated sequences using standard cross-entropy. Simpler — no need to run teacher and student simultaneously — but loses the soft distribution signal, only transferring the teacher's greedy decodes.</p>
+
+    <div class="formula-block fade-up">
+      <div class="formula-label">Token-Level vs Sequence-Level KD</div>
+      <div class="formula">
+        <span class="comment">Token-level KD (forward KL at each position t):</span><br>
+        L<sub>TKD</sub> = Σ<sub>t=1</sub><sup>T</sup> KL( <span class="hi3">p_teacher</span>(·|x, y<sub>&lt;t</sub>)  ‖  <span class="hi">p_student</span>(·|x, y<sub>&lt;t</sub>) )<br>
+        <br>
+        <span class="comment">Sequence-level KD (train on teacher outputs directly):</span><br>
+        L<sub>SKD</sub> = −Σ<sub>t=1</sub><sup>T</sup> log <span class="hi">p_student</span>( <span class="hi2">ŷ_t</span> | x, ŷ<sub>&lt;t</sub> )<br>
+        where  <span class="hi2">ŷ</span> = sequences sampled from teacher
+      </div>
+    </div>
+
+    <div class="section-label teal" style="margin-top:2.5rem;">Problem 2 — Exposure Bias & the Forward/Reverse KL Gap</div>
+
+    <p>There's a subtle but important asymmetry. Forward KL (teacher ‖ student) forces the student to cover all modes the teacher places probability on — even if the student can't model them well. Reverse KL (student ‖ teacher) makes the student seek the sharpest mode-matching fit, often collapsing to covering only the most probable mode.</p>
+
+    <p><strong>MiniLLM</strong> (Gu et al., 2023) showed that minimizing reverse KL for text generation produces better quality than forward KL, because reverse KL avoids the problem of the student assigning high probability to long-tail sequences the teacher would never produce. The student learns to be sharp and precise rather than trying (and failing) to be comprehensive.</p>
+
+    <div class="callout fade-up">
+      <div class="callout-icon">📐</div>
+      <p><strong>Forward vs Reverse KL Intuition:</strong> Imagine the teacher distribution has two modes — "The cat sat" and "A feline rested". Forward KL forces the student to cover both modes, splitting probability mass and producing blurry, averaged outputs. Reverse KL lets the student pick one mode and be very confident about it. For text generation quality, concentrated confidence beats diluted coverage. MiniLLM showed 2–10 point win rates over standard forward-KL distillation across benchmarks.</p>
+    </div>
+
+    <div class="section-label pink" style="margin-top:2.5rem;">Problem 3 — Chain-of-Thought Distillation</div>
+
+    <p>The most powerful capability of large models isn't their one-shot answers — it's their ability to reason through problems step by step. <strong>Chain-of-thought (CoT) distillation</strong> transfers this reasoning ability to smaller models by including the teacher's reasoning chains in the training data.</p>
+
+    <p>The pipeline: run the teacher (GPT-4, Claude Opus) on reasoning tasks with CoT prompting. Collect the full reasoning traces — not just final answers. Fine-tune the student on (problem, reasoning trace + answer) pairs. The student learns not just what the answer is, but how to get there.</p>
+
+    <div class="feature-box pink fade-up">
+      <h4>DeepSeek-R1 — The Landmark CoT Distillation</h4>
+      <p>DeepSeek-R1 (2025) is the most dramatic demonstration of CoT distillation to date. The full R1 model uses GRPO reinforcement learning to develop long chain-of-thought reasoning. Then, 800K high-quality CoT examples from R1 are used to fine-tune smaller open-source models (Llama-3.1-8B, Qwen-2.5-7B, etc.). The resulting distilled models <strong>match or beat GPT-4o on math and coding benchmarks at 8B parameters</strong> — a compression ratio that would have seemed impossible two years ago. The key: the teacher's reasoning chains are so rich that the student doesn't need to rediscover how to reason from scratch.</p>
+    </div>
+
+    <div class="section-label" style="margin-top:2.5rem;">Problem 4 — Black-Box vs White-Box Teachers</div>
+
+    <table class="comparison-table fade-up">
+      <thead>
+        <tr><th>Approach</th><th>Teacher Access Needed</th><th>Signal Quality</th><th>Examples</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>SeqKD / Data Augmentation</td>
+          <td>Outputs (API access)</td>
+          <td>Low — hard labels only</td>
+          <td>Alpaca, WizardLM, Orca</td>
+        </tr>
+        <tr>
+          <td>Token-Level KD</td>
+          <td>Output logits</td>
+          <td>Medium — soft labels</td>
+          <td>DistilBERT, TinyLLaMA</td>
+        </tr>
+        <tr>
+          <td>Feature KD</td>
+          <td>Internal activations</td>
+          <td>High — representations</td>
+          <td>TinyBERT, PKD-BERT</td>
+        </tr>
+        <tr>
+          <td>CoT Distillation</td>
+          <td>Outputs (API access)</td>
+          <td>Very High — reasoning traces</td>
+          <td>DeepSeek-R1-Distill, Phi-3</td>
+        </tr>
+        <tr>
+          <td>Online KD</td>
+          <td>Both models active simultaneously</td>
+          <td>Highest — dynamic alignment</td>
+          <td>Research setting</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<!-- ══ §05 LOSS FUNCTIONS ══ -->
+<div class="divider" data-num="05 — LOSS LANDSCAPE"></div>
+<div class="model-section">
+<div class="container">
+  <div class="model-header">
+    <div class="model-number">05</div>
+    <div class="model-title-group">
+      <div class="model-name">The Loss Cookbook</div>
+      <div class="model-tagline">Every distillation method boils down to what you're minimizing</div>
+    </div>
+  </div>
+  <div class="model-body">
+
+    <!-- LOSS BALANCE VISUALIZER -->
+    <div class="viz-container fade-up">
+      <div class="viz-label">
+        <span>Hard vs Soft Loss Balance (α)</span>
+        <span id="alpha-display" style="color:var(--accent3);">α = 0.7</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:1.5rem;">
+        <div>
+          <div style="display:flex;height:48px;border-radius:3px;overflow:hidden;border:1px solid var(--border);">
+            <div id="soft-bar" style="background:linear-gradient(90deg,rgba(0,217,180,.7),rgba(0,217,180,.9));transition:width .4s cubic-bezier(.16,1,.3,1);display:flex;align-items:center;justify-content:center;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:.65rem;color:rgba(0,0,0,.7);font-weight:600;">Soft Loss (α·L_KD)</span>
+            </div>
+            <div id="hard-bar" style="background:linear-gradient(90deg,rgba(0,217,180,.5),rgba(0,217,180,.7));transition:width .4s cubic-bezier(.16,1,.3,1);display:flex;align-items:center;justify-content:center;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:.65rem;color:rgba(0,0,0,.7);font-weight:600;">Hard Loss ((1−α)·CE)</span>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:.5rem;">
+            <span id="soft-pct" style="font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--accent3);">70% soft</span>
+            <span id="hard-pct" style="font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--accent3);">30% hard</span>
+          </div>
+        </div>
+        <input type="range" id="alpha-slider" min="0" max="1" value="0.7" step="0.05" style="width:100%;accent-color:var(--accent3);cursor:pointer;">
+        <div id="alpha-advice" style="font-size:.85rem;color:var(--text-muted);line-height:1.6;padding:.75rem 1rem;background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent3);"></div>
+      </div>
+      <p class="viz-caption">α = 0 → standard supervised training (no distillation). α = 1 → pure teacher imitation (no ground truth). α = 0.5–0.9 → typical distillation range.</p>
+    </div>
+
+    <div class="section-label" style="margin-top:2.5rem;">DistiLLM — Generalized Distillation for LLMs</div>
+    <p><strong>DistiLLM</strong> (Ko et al., 2024) unifies multiple loss functions under one framework and proposes a novel "skew" KL divergence that sits between forward and reverse KL, combining their strengths:</p>
+
+    <div class="formula-block fade-up">
+      <div class="formula-label">DistiLLM — Skew KL Divergence</div>
+      <div class="formula">
+        L<sub>skewKL</sub>(β) = KL( <span class="hi">β·p_s + (1-β)·p_t</span>  ‖  <span class="hi3">p_t</span> )<br>
+        <br>
+        β = 0 → <span class="comment">forward KL (covers all teacher modes)</span><br>
+        β = 1 → <span class="comment">reverse KL (seeks sharpest mode)</span><br>
+        β = 0.1 → <span class="comment">DistiLLM default (best empirical performance)</span><br>
+        <br>
+        <span class="comment">At β=0.1, the mixture distribution is mostly teacher — so the</span><br>
+        <span class="comment">loss is a mild variant of forward KL, but with reduced mode-covering</span><br>
+        <span class="comment">pressure that avoids blurry outputs.</span>
+      </div>
+    </div>
+
+    <div class="section-label teal" style="margin-top:2.5rem;">Speculative Decoding as Implicit Distillation</div>
+    <p>This connection is underappreciated. In <strong>speculative decoding</strong>, a small draft model proposes tokens, and a large verification model accepts or rejects them. Over training time, if you train the draft model to maximize acceptance rate from the verifier, you're essentially doing reverse-KL distillation — the draft learns to match the distribution the verifier would accept.</p>
+
+    <p>Models like <strong>Medusa</strong> and <strong>Eagle</strong> make this explicit: they train draft heads using the large model's hidden states as supervision. The boundary between "distillation" and "speculative decoding training" is almost nonexistent once you look at the loss functions.</p>
+
+    <div class="feature-box teal fade-up">
+      <h4>The Self-Distillation Loop</h4>
+      <p>An emerging technique: have a model distill from <em>itself</em>. Take a model's high-temperature samples (exploratory, diverse outputs) and use them as training signal for the same model at low temperature (more deterministic). This iterative self-improvement tightens the model's distribution without any external teacher. Used in LLM constitutional AI pipelines and increasingly in RLHF alternatives.</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ §06 NOTABLE MODELS ══ -->
+<div class="divider" data-num="06 — LANDMARK DISTILLED MODELS"></div>
+<div class="model-section" id="models">
+<div class="container">
+  <div class="section-label teal">Model Gallery</div>
+  <h2 style="font-family:'Playfair Display',serif;font-size:clamp(1.8rem,4vw,2.5rem);font-weight:700;margin-bottom:2rem;">
+    From DistilBERT to DeepSeek-R1
+  </h2>
+
+  <!-- COMPRESSION SCATTER -->
+  <div class="viz-container fade-up">
+    <div class="viz-label"><span>Compression Ratio vs Performance Retention</span></div>
+    <div id="scatter-viz" style="position:relative;height:300px;border-left:1px solid var(--border);border-bottom:1px solid var(--border);margin:0 2rem 2rem 2rem;overflow:visible;"></div>
+    <div style="display:flex;gap:2rem;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:.5rem;"><div style="width:10px;height:10px;background:var(--accent4);border-radius:50%;"></div><span style="font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--text-muted);">Encoder (BERT-family)</span></div>
+      <div style="display:flex;align-items:center;gap:.5rem;"><div style="width:10px;height:10px;background:var(--accent3);border-radius:50%;"></div><span style="font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--text-muted);">Decoder / LLM</span></div>
+      <div style="display:flex;align-items:center;gap:.5rem;"><div style="width:10px;height:10px;background:var(--accent2);border-radius:50%;"></div><span style="font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--text-muted);">CoT Distilled</span></div>
+    </div>
+    <p class="viz-caption">X-axis: compression ratio (teacher size / student size). Y-axis: % of teacher benchmark score retained. Bubble size = student parameter count.</p>
+  </div>
+
+  <table class="comparison-table fade-up">
+    <thead>
+      <tr><th>Model</th><th>Teacher</th><th>Student Size</th><th>Compression</th><th>Distillation Type</th><th>Key Result</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>DistilBERT</td>
+        <td>BERT-Base (110M)</td>
+        <td><span class="tag teal">66M</span></td>
+        <td>1.67×</td>
+        <td><span class="tag">Response + Feature</span></td>
+        <td>97% of BERT on GLUE, 60% faster</td>
+      </tr>
+      <tr>
+        <td>TinyBERT</td>
+        <td>BERT-Base (110M)</td>
+        <td><span class="tag teal">14.5M</span></td>
+        <td>7.5×</td>
+        <td><span class="tag">Attention + Feature</span></td>
+        <td>96.8% of BERT-Base, 9.4× faster</td>
+      </tr>
+      <tr>
+        <td>MiniLM</td>
+        <td>BERT-Large</td>
+        <td><span class="tag teal">22M</span></td>
+        <td>16×</td>
+        <td><span class="tag">Attention relation</span></td>
+        <td>99%+ on MNLI, SQUAD</td>
+      </tr>
+      <tr>
+        <td>TinyLLaMA</td>
+        <td>Llama-2 (7B)</td>
+        <td><span class="tag">1.1B</span></td>
+        <td>6.4×</td>
+        <td><span class="tag">SeqKD + token-KD</span></td>
+        <td>Competitive on commonsense benchmarks</td>
+      </tr>
+      <tr>
+        <td>Phi-1</td>
+        <td>GPT-3.5 (API)</td>
+        <td><span class="tag">1.3B</span></td>
+        <td>~100×</td>
+        <td><span class="tag pink">CoT / Data Distillation</span></td>
+        <td>50.6% HumanEval — matches Codex</td>
+      </tr>
+      <tr>
+        <td>Phi-2</td>
+        <td>Multiple (API)</td>
+        <td><span class="tag">2.7B</span></td>
+        <td>~25×</td>
+        <td><span class="tag pink">Curated synthetic data</span></td>
+        <td>Beats Llama-2-13B on most benchmarks</td>
+      </tr>
+      <tr>
+        <td>DeepSeek-R1-Distill-8B</td>
+        <td>DeepSeek-R1 (671B)</td>
+        <td><span class="tag teal">8B</span></td>
+        <td>84×</td>
+        <td><span class="tag pink">CoT reasoning traces</span></td>
+        <td>Matches o1-mini on MATH-500</td>
+      </tr>
+      <tr>
+        <td>DeepSeek-R1-Distill-70B</td>
+        <td>DeepSeek-R1 (671B)</td>
+        <td><span class="tag">70B</span></td>
+        <td>9.6×</td>
+        <td><span class="tag pink">CoT reasoning traces</span></td>
+        <td>85.0% MATH-500, beats GPT-4o</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="section-label pink" style="margin-top:3rem;">DeepSeek-R1 Distillation — A Close Read</div>
+  <p>DeepSeek-R1 deserves special attention because it represents a qualitative jump in what distillation can achieve. The recipe:</p>
+
+  <div class="arch-diagram fade-up">
+    <div class="arch-diagram-label">DeepSeek-R1 Distillation Pipeline</div>
+    <div class="arch-row"><div class="arch-block ab-t" style="font-size:.75rem;">DeepSeek-R1 (671B MoE) — GRPO-trained reasoning model</div></div>
+    <div class="arch-row"><div class="ab-arrow">↓</div><div style="font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--text-dim);">Generate 800K CoT examples across math, code, science, logic</div></div>
+    <div class="arch-row"><div class="arch-block ab-norm">Filter: remove incorrect answers, too-short chains, format violations</div></div>
+    <div class="arch-row"><div class="ab-arrow">↓</div><div style="font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--text-dim);">~600K high-quality (problem, thinking_process, answer) triplets</div></div>
+    <div class="arch-row"><div class="arch-block ab-loss">SFT fine-tuning on Qwen-2.5-7B / Llama-3.1-8B / Llama-3.3-70B</div></div>
+    <div class="arch-row"><div class="ab-arrow">↓</div></div>
+    <div class="arch-row">
+      <div class="arch-block ab-s">R1-Distill-7B</div>
+      <div class="arch-block ab-s">R1-Distill-8B</div>
+      <div class="arch-block ab-s">R1-Distill-14B</div>
+      <div class="arch-block ab-s">R1-Distill-70B</div>
+    </div>
+  </div>
+
+  <div class="callout fade-up" style="border-color:rgba(255,107,157,.3);">
+    <div class="callout-icon">🔬</div>
+    <p><strong>Why these numbers are extraordinary:</strong> DeepSeek-R1-Distill-8B achieves 72.6% on AIME 2024 and 89.5% on MATH-500. OpenAI's o1-mini achieves 70% on AIME and 90% on MATH-500. A 671B teacher just transferred near-frontier reasoning ability into an 8B model — an 84× compression — via <strong>pure supervised fine-tuning on CoT data, no RL required</strong>. This is the most significant distillation result in the history of the field.</p>
+  </div>
+
+  <p>The key insight: reasoning ability is <strong>highly transferable via examples</strong> once you have a teacher that can demonstrate it. The student doesn't need to rediscover how to do chain-of-thought — it learns the pattern from examples the same way humans learn proof techniques from worked examples. The bottleneck was never the student's capacity; it was never having a teacher good enough to demonstrate reasoning in the first place.</p>
+</div>
+</div>
+
+<!-- ══ §07 TRENDS ══ -->
+<div class="divider" data-num="07 — KEY PATTERNS"></div>
+<div class="trends-section">
+<div class="container">
+  <div class="section-label">Patterns That Keep Appearing</div>
+  <h2 style="font-family:'Playfair Display',serif;font-size:clamp(1.8rem,4vw,2.5rem);font-weight:700;margin-bottom:.5rem;">What the literature tells us</h2>
+
+  <div class="trend-grid fade-up">
+    <div class="trend-item">
+      <div class="trend-num">01</div>
+      <div class="trend-text">
+        <h4>Data Quality > Data Quantity</h4>
+        <p>Phi-1 (1.3B) showed that 7B of textbook-quality synthetic data beats 1T tokens of web scrapes for coding. Distillation that curates 100K excellent teacher examples consistently beats distillation on 10M mediocre ones. The teacher's quality is the ceiling; curation determines how close you get to it.</p>
+      </div>
+    </div>
+    <div class="trend-item">
+      <div class="trend-num">02</div>
+      <div class="trend-text">
+        <h4>CoT Traces Transfer Reasoning</h4>
+        <p>Giving the student a finished answer is far less valuable than giving it the reasoning path. Models trained on reasoning traces show strong generalization to novel problems in the same domain — they've learned a process, not just an answer bank. This doesn't work with black-box label distillation.</p>
+      </div>
+    </div>
+    <div class="trend-item">
+      <div class="trend-num">03</div>
+      <div class="trend-text">
+        <h4>The 4× Rule of Thumb</h4>
+        <p>Empirically, a well-distilled student at N parameters tends to match a non-distilled model at 4N parameters. This varies widely by task and distillation quality, but is a useful starting point when deciding whether distillation is worth the engineering investment vs just training a larger student from scratch.</p>
+      </div>
+    </div>
+    <div class="trend-item">
+      <div class="trend-num">04</div>
+      <div class="trend-text">
+        <h4>Task Gap Kills Distillation</h4>
+        <p>Distillation works best when teacher and student see the same or very similar training distribution. Using GPT-4 as a math teacher for a student trained on general web text transfers poorly — the student lacks the base representations to absorb the teacher's reasoning signals. Domain alignment first, distillation second.</p>
+      </div>
+    </div>
+    <div class="trend-item">
+      <div class="trend-num">05</div>
+      <div class="trend-text">
+        <h4>Capacity Gap Matters</h4>
+        <p>Too large a teacher-student gap hurts. A student at 0.1× the teacher's capacity struggles to absorb the full distribution — the KL divergence loss becomes dominated by inexpressible probability mass. 0.1×–0.3× capacity ratio is the empirical sweet spot for feature distillation; CoT distillation tolerates larger gaps.</p>
+      </div>
+    </div>
+    <div class="trend-item">
+      <div class="trend-num">06</div>
+      <div class="trend-text">
+        <h4>Combine with Quantization</h4>
+        <p>Distillation → quantization is a natural pipeline. Distillation gives you a small model. Quantization makes it fast. Distillation after quantization (QAT-KD) — training the quantized student to recover quality from the full-precision teacher — often recovers most of the accuracy lost from int8/int4 quantization.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ §08 TIMELINE ══ -->
+<div class="divider" data-num="08 — TIMELINE"></div>
+<div class="model-section">
+<div class="container">
+  <div class="section-label teal">History</div>
+  <h2 style="font-family:'Playfair Display',serif;font-size:clamp(1.8rem,4vw,2.5rem);font-weight:700;margin-bottom:1rem;">How Distillation Evolved</h2>
+
+  <div class="timeline fade-up">
+    <div class="tl-item">
+      <div class="tl-date">2006</div>
+      <div class="tl-title">Model Compression — Bucilua et al.</div>
+      <div class="tl-desc">First paper on training a small model on soft outputs of a large ensemble. The precursor idea — but without temperature scaling or the modern formulation.</div>
+      <div class="tl-models"><span class="tag">Ensemble Compression</span></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-date">Mar 2015</div>
+      <div class="tl-title">Distilling the Knowledge in a Neural Network</div>
+      <div class="tl-desc">Hinton, Vinyals, Dean formalize distillation with temperature scaling, the T² correction, and the combined hard/soft loss. The foundational paper. Still the starting point for every practitioner.</div>
+      <div class="tl-models"><span class="tag">KD</span><span class="tag">Temperature</span><span class="tag">Dark Knowledge</span></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-date">Oct 2016</div>
+      <div class="tl-title">FitNets — Feature-Based Distillation</div>
+      <div class="tl-desc">Romero et al. show students can be trained to mimic intermediate hidden representations (hints), enabling deeper/thinner students to outperform shallower/wider ones.</div>
+      <div class="tl-models"><span class="tag">FitNets</span><span class="tag">Feature KD</span></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-date">Oct 2019</div>
+      <div class="tl-title">DistilBERT & TinyBERT</div>
+      <div class="tl-desc">First successful application to BERT-scale transformers. DistilBERT uses response + feature KD. TinyBERT adds attention matrix distillation. Both become production standards.</div>
+      <div class="tl-models"><span class="tag teal">DistilBERT</span><span class="tag teal">TinyBERT</span></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-date">Jun 2023</div>
+      <div class="tl-title">MiniLLM — Reverse KL for Generation</div>
+      <div class="tl-desc">Shows that minimizing reverse KL (student ‖ teacher) outperforms forward KL for autoregressive generation. Reframes the loss function design space for the LLM era.</div>
+      <div class="tl-models"><span class="tag">MiniLLM</span><span class="tag">Reverse KL</span></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-date">Dec 2023</div>
+      <div class="tl-title">Phi-2 — Textbook-Quality Data Wins</div>
+      <div class="tl-desc">Microsoft shows 2.7B model matches 7B+ models via curated synthetic training data from GPT-4. Redefines what "distillation" means — it's not just about loss functions but data curation.</div>
+      <div class="tl-models"><span class="tag pink">Phi-2</span><span class="tag pink">Synthetic Data</span></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-date">Apr 2024</div>
+      <div class="tl-title">DistiLLM — Skew KL Unification</div>
+      <div class="tl-desc">Proposes skew KL divergence as a unified objective that interpolates between forward and reverse KL. Achieves consistent wins across model sizes and tasks.</div>
+      <div class="tl-models"><span class="tag">DistiLLM</span><span class="tag">Skew KL</span></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-date">Jan 2025</div>
+      <div class="tl-title">DeepSeek-R1 Distillation</div>
+      <div class="tl-desc">800K reasoning traces from R1 fine-tune Llama and Qwen base models. R1-Distill-8B matches o1-mini. Proves CoT distillation can transfer frontier reasoning at 84× compression.</div>
+      <div class="tl-models"><span class="tag pink">DeepSeek-R1</span><span class="tag pink">CoT KD</span><span class="tag pink">Reasoning</span></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-date">2025+</div>
+      <div class="tl-title">The Reasoning Distillation Era</div>
+      <div class="tl-desc">Every frontier lab now has distilled reasoning variants. The question shifts from "can we distill reasoning?" to "how much reasoning can we pack into 1B parameters?"</div>
+      <div class="tl-models"><span class="tag">Qwen-Distill</span><span class="tag">Gemma-3-4B</span><span class="tag">Phi-4-mini</span></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ §09 VERDICT ══ -->
+<div class="divider" data-num="09 — VERDICT"></div>
+<div class="model-section" id="verdict">
+<div class="container">
+  <div class="section-label pink">Final Word</div>
+  <h2 style="font-family:'Playfair Display',serif;font-size:clamp(1.8rem,4vw,2.5rem);font-weight:700;margin-bottom:1.5rem;">
+    A Practical Decision Tree
+  </h2>
+
+  <div class="themes-grid fade-up">
+    <div class="theme-card">
+      <div class="theme-icon">🔑</div>
+      <h3>No teacher access?</h3>
+      <p>Train on API-generated outputs (SeqKD). Get GPT-4 or Claude to generate high-quality responses for your task. Fine-tune your student on those. Not distillation in the strict sense — but often the most practical option.</p>
+    </div>
+    <div class="theme-card">
+      <div class="theme-icon">🧮</div>
+      <h3>Need reasoning?</h3>
+      <p>CoT distillation is the current answer. Use a frontier model (R1, Claude 3.7, Gemini 2.5 Pro) with extended thinking to generate reasoning traces on your task domain. Fine-tune on (problem, trace, answer) triplets. Expect +10–30% on reasoning benchmarks vs standard fine-tuning.</p>
+    </div>
+    <div class="theme-card">
+      <div class="theme-icon">⚡</div>
+      <h3>Open-weight teacher?</h3>
+      <p>Use token-level KD — log-probability matching at each position. Combine with feature distillation if you can afford the memory. Run teacher and student on the same GPU with mixed precision and gradient checkpointing.</p>
+    </div>
+    <div class="theme-card">
+      <div class="theme-icon">📱</div>
+      <h3>Targeting edge/mobile?</h3>
+      <p>Distillation + quantization pipeline. Distill to 1–3B first. Then QLoRA + QAT-KD to recover accuracy after int4 quantization. Export to GGUF Q4_K_M for llama.cpp. Target 500MB–1GB total model size.</p>
+    </div>
+  </div>
+
+  <div class="callout fade-up" style="margin-top:3rem;border-color:rgba(255,179,71,.35);">
+    <div class="callout-icon">🔬</div>
+    <p><strong>My take:</strong> Distillation has moved from a compression technique to a <strong>capability transfer technique</strong>. The DeepSeek-R1 result changes the calculus entirely — you don't need to train a reasoning model from scratch with expensive RL. You need a frontier teacher that can reason, and enough high-quality examples of that reasoning to fine-tune a small model that mimics it. The next five years will be about systematically mapping what capabilities transfer efficiently and what requires the student to have genuine independent capacity. My bet: factual recall transfers poorly (the student needs its own parametric memory). Reasoning patterns transfer extremely well (the student learns algorithms, not facts).</p>
+  </div>
+</div>
+</div>
+
+<footer>
+  <div class="footer-left">© 2025 Prateek Singh, PhD · prateeksinghphd.com</div>
+  <div class="footer-right">
+    <a href="blogs.html">← All Posts</a>
+    <a href="https://github.com/prateekiitr">GitHub</a>
+  </div>
+</footer>
+
+<script>
+// PROGRESS
+window.addEventListener('scroll',()=>{
+  const s=document.documentElement;
+  document.getElementById('progress').style.width=(s.scrollTop/(s.scrollHeight-s.clientHeight)*100)+'%';
+});
+
+// FADE UP
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target);}});
+},{threshold:.1});
+document.querySelectorAll('.fade-up').forEach(el=>obs.observe(el));
+
+// HERO PARTICLES
+(function(){
+  const c=document.getElementById('hero-canvas'),ctx=c.getContext('2d');
+  let W,H; const pts=[];
+  function resize(){W=c.width=c.offsetWidth;H=c.height=c.offsetHeight;}
+  resize(); window.addEventListener('resize',resize);
+  for(let i=0;i<50;i++) pts.push({x:Math.random()*1600,y:Math.random()*900,vx:(Math.random()-.5)*.2,vy:(Math.random()-.5)*.2,r:Math.random()*1.5+.4,a:Math.random()*Math.PI*2});
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    pts.forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;p.a+=.004;
+      if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(0,217,180,${(.3+.3*Math.sin(p.a))*.5})`;ctx.fill();
+    });
+    pts.forEach((a,i)=>pts.slice(i+1).forEach(b=>{
+      const d=Math.hypot(a.x-b.x,a.y-b.y);
+      if(d<100){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);
+        ctx.strokeStyle=`rgba(255,107,157,${.08*(1-d/100)})`;ctx.lineWidth=.5;ctx.stroke();}
+    }));
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// TEMPERATURE VIZ
+(function(){
+  const logits=[4.5,2.1,0.8,0.3,-0.5,-1.2,-2.0,-3.1];
+  const labels=['cat','leopard','tiger','lion','dog','car','table','cloud'];
+  const colors=['rgba(255,179,71,.8)','rgba(255,179,71,.65)','rgba(255,179,71,.5)','rgba(255,107,157,.5)','rgba(0,217,180,.4)','rgba(124,107,255,.35)','rgba(124,107,255,.25)','rgba(124,107,255,.2)'];
+
+  function softmax(logits,T){
+    const scaled=logits.map(l=>l/T);
+    const maxV=Math.max(...scaled);
+    const exp=scaled.map(l=>Math.exp(l-maxV));
+    const sum=exp.reduce((a,b)=>a+b,0);
+    return exp.map(e=>e/sum);
+  }
+
+  function render(T){
+    const probs=softmax(logits,T);
+    const logitHtml=logits.map((l,i)=>`<div style="display:flex;align-items:center;gap:.5rem;height:22px;">
+      <div style="width:60px;font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--text-muted);text-align:right;">${labels[i]}</div>
+      <div style="flex:1;height:16px;background:rgba(255,255,255,.04);border-radius:2px;overflow:hidden;"><div style="height:100%;background:${colors[i]};width:${Math.max(2,((l+3.5)/8)*100)}%;border-radius:2px;"></div></div>
+      <div style="width:32px;font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--text-dim);">${l.toFixed(1)}</div>
+    </div>`).join('');
+
+    const probHtml=probs.map((p,i)=>`<div style="display:flex;align-items:center;gap:.5rem;height:22px;">
+      <div style="width:60px;font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--text-muted);text-align:right;">${labels[i]}</div>
+      <div style="flex:1;height:16px;background:rgba(255,255,255,.04);border-radius:2px;overflow:hidden;"><div style="height:100%;background:${colors[i]};width:${Math.max(1,p*100)}%;border-radius:2px;transition:width .3s ease;"></div></div>
+      <div style="width:38px;font-family:'JetBrains Mono',monospace;font-size:.58rem;color:${p>0.05?'var(--accent3)':'var(--text-dim)'};">${(p*100).toFixed(1)}%</div>
+    </div>`).join('');
+
+    document.getElementById('logit-bars').innerHTML=logitHtml;
+    document.getElementById('softmax-bars').innerHTML=probHtml;
+    document.getElementById('temp-display').textContent=`T = ${parseFloat(T).toFixed(1)}`;
+  }
+
+  render(1.0);
+  document.getElementById('temp-slider').addEventListener('input',function(){render(parseFloat(this.value));});
+})();
+
+// ALPHA SLIDER
+(function(){
+  const adviceMap=[
+    [0,.1,'No distillation. Pure supervised learning on ground truth labels. Equivalent to standard fine-tuning.'],
+    [.1,.3,'Light distillation. Hard labels dominate. Useful when you trust the ground truth labels more than the teacher.'],
+    [.3,.6,'Balanced distillation. Good starting point. The soft labels provide regularization while ground truth anchors training.'],
+    [.6,.85,'Teacher-dominant. Recommended range for most distillation tasks. The soft distribution guides optimization.'],
+    [.85,1.0,'Near-pure imitation. Only use when ground truth labels are noisy or absent. Student fully imitates teacher distribution.'],
+  ];
+
+  function update(val){
+    const a=parseFloat(val);
+    document.getElementById('soft-bar').style.width=(a*100)+'%';
+    document.getElementById('hard-bar').style.width=((1-a)*100)+'%';
+    document.getElementById('alpha-display').textContent=`α = ${a.toFixed(2)}`;
+    document.getElementById('soft-pct').textContent=`${(a*100).toFixed(0)}% soft`;
+    document.getElementById('hard-pct').textContent=`${((1-a)*100).toFixed(0)}% hard`;
+    const entry=adviceMap.find(([lo,hi])=>a>=lo&&a<hi)||adviceMap[adviceMap.length-1];
+    document.getElementById('alpha-advice').textContent=entry[2];
+  }
+  update(0.7);
+  document.getElementById('alpha-slider').addEventListener('input',function(){update(this.value);});
+})();
+
+// SCATTER VIZ
+(function(){
+  const svg_w=500,svg_h=260;
+  const models=[
+    {name:'DistilBERT',x:1.67,y:97,r:8,col:'rgba(255,179,71,.8)'},
+    {name:'TinyBERT',x:7.5,y:96.8,r:5,col:'rgba(255,179,71,.7)'},
+    {name:'MiniLM',x:16,y:99,r:5,col:'rgba(255,179,71,.6)'},
+    {name:'TinyLLaMA-1.1B',x:6.4,y:74,r:6,col:'rgba(0,217,180,.8)'},
+    {name:'Phi-1 (1.3B)',x:100,y:85,r:6,col:'rgba(255,107,157,.9)'},
+    {name:'Phi-2 (2.7B)',x:25,y:91,r:7,col:'rgba(255,107,157,.8)'},
+    {name:'R1-Distill-8B',x:84,y:94,r:8,col:'rgba(255,107,157,1)'},
+    {name:'R1-Distill-70B',x:9.6,y:98,r:10,col:'rgba(255,107,157,.7)'},
+  ];
+  const maxX=110,minY=60;
+  const pad={l:40,r:10,t:15,b:40};
+  const W=svg_w-pad.l-pad.r,H=svg_h-pad.t-pad.b;
+
+  function toSvgX(x){return pad.l+Math.log(x)/Math.log(maxX)*W;}
+  function toSvgY(y){return pad.t+H-((y-minY)/(100-minY))*H;}
+
+  let svg=`<svg width="100%" viewBox="0 0 ${svg_w} ${svg_h}" style="overflow:visible;">`;
+  // gridlines
+  [70,80,90,100].forEach(y=>{
+    const sy=toSvgY(y);
+    svg+=`<line x1="${pad.l}" y1="${sy}" x2="${pad.l+W}" y2="${sy}" stroke="rgba(255,255,255,.04)" stroke-dasharray="3,4"/>`;
+    svg+=`<text x="${pad.l-4}" y="${sy+4}" text-anchor="end" fill="#4a4a6a" font-family="JetBrains Mono" font-size="9">${y}%</text>`;
+  });
+  [2,5,10,25,100].forEach(x=>{
+    const sx=toSvgX(x);
+    svg+=`<line x1="${sx}" y1="${pad.t}" x2="${sx}" y2="${pad.t+H}" stroke="rgba(255,255,255,.04)" stroke-dasharray="3,4"/>`;
+    svg+=`<text x="${sx}" y="${pad.t+H+14}" text-anchor="middle" fill="#4a4a6a" font-family="JetBrains Mono" font-size="9">${x}×</text>`;
+  });
+  // axis labels
+  svg+=`<text x="${pad.l+W/2}" y="${svg_h-2}" text-anchor="middle" fill="#4a4a6a" font-family="JetBrains Mono" font-size="9">Compression ratio</text>`;
+  svg+=`<text x="8" y="${pad.t+H/2}" text-anchor="middle" fill="#4a4a6a" font-family="JetBrains Mono" font-size="9" transform="rotate(-90,8,${pad.t+H/2})">Performance %</text>`;
+  // points
+  models.forEach(m=>{
+    const cx=toSvgX(m.x),cy=toSvgY(m.y);
+    svg+=`<circle cx="${cx}" cy="${cy}" r="${m.r}" fill="${m.col}" opacity=".9"/>`;
+    const labelX=cx+(m.x>60?-m.r-3:m.r+3);
+    const anchor=m.x>60?'end':'start';
+    svg+=`<text x="${labelX}" y="${cy-m.r-3}" fill="#a0a0c0" font-family="JetBrains Mono" font-size="8" text-anchor="${anchor}">${m.name}</text>`;
+  });
+  svg+=`</svg>`;
+  document.getElementById('scatter-viz').innerHTML=svg;
+})();
+</script>
+</body>
+</html>
