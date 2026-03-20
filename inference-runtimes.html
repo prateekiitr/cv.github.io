@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LLM Inference Runtimes — Prateek Singh</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+<style>
+  /* ── Design Tokens ───────────────────────────────────────────── */
+  :root {
+    --bg:        #0d0d14;
+    --bg2:       #12121e;
+    --bg3:       #1a1a2e;
+    --surface:   #1e1e32;
+    --border:    #2a2a45;
+    --teal:      #2dd4bf;
+    --teal-dim:  #1a8a7e;
+    --purple:    #a78bfa;
+    --purple-dim:#6d4fc0;
+    --salmon:    #f87171;
+    --amber:     #fbbf24;
+    --green:     #4ade80;
+    --text:      #e2e8f0;
+    --text-dim:  #94a3b8;
+    --text-faint:#4a5568;
+    --mono:      'DM Mono', monospace;
+    --serif:     'DM Serif Display', serif;
+    --sans:      'DM Sans', sans-serif;
+  }
+
+  /* ── Reset & Base ────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; font-size: 16px; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+  ::selection { background: var(--teal); color: #000; }
+
+  /* ── Scrollbar ───────────────────────────────────────────────── */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg2); }
+  ::-webkit-scrollbar-thumb { background: var(--teal-dim); border-radius: 3px; }
+
+  /* ── Nav ─────────────────────────────────────────────────────── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 2.5rem;
+    background: rgba(13,13,20,0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-links { display: flex; gap: 2rem; list-style: none; }
+  .nav-links a {
+    font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.06em;
+    color: var(--text-dim); text-decoration: none; text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--teal); }
+  .nav-home { font-family: var(--mono); font-size: 0.75rem; color: var(--teal); text-decoration: none; }
+
+  /* ── Hero ────────────────────────────────────────────────────── */
+  .hero {
+    min-height: 100vh;
+    display: grid; place-items: center;
+    padding: 8rem 2rem 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 70% 50% at 20% 40%, rgba(167,139,250,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 60%, rgba(45,212,191,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 30% at 50% 90%, rgba(248,113,113,0.05) 0%, transparent 60%);
+  }
+  .hero-grid {
+    position: absolute; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent);
+    opacity: 0.3;
+  }
+  .hero-content { position: relative; z-index: 1; text-align: center; max-width: 860px; }
+  .hero-eyebrow {
+    font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--teal); margin-bottom: 1.5rem;
+    opacity: 0; animation: fadeUp 0.8s 0.2s forwards;
+  }
+  .hero h1 {
+    font-family: var(--serif); font-size: clamp(2.8rem, 6vw, 5rem);
+    line-height: 1.1; color: var(--text); margin-bottom: 1.5rem;
+    opacity: 0; animation: fadeUp 0.8s 0.4s forwards;
+  }
+  .hero h1 em { font-style: italic; color: var(--teal); }
+  .hero-sub {
+    font-size: 1.1rem; color: var(--text-dim); max-width: 640px; margin: 0 auto 2.5rem;
+    opacity: 0; animation: fadeUp 0.8s 0.6s forwards;
+  }
+  .hero-meta {
+    font-family: var(--mono); font-size: 0.75rem; color: var(--text-faint); letter-spacing: 0.05em;
+    opacity: 0; animation: fadeUp 0.8s 0.8s forwards;
+  }
+  .hero-tags {
+    display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center;
+    margin-top: 2rem; opacity: 0; animation: fadeUp 0.8s 1s forwards;
+  }
+  .tag {
+    font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.1em;
+    text-transform: uppercase; padding: 0.3rem 0.8rem; border-radius: 100px;
+    border: 1px solid; background: transparent;
+  }
+  .tag-teal  { border-color: var(--teal);   color: var(--teal);   }
+  .tag-purple{ border-color: var(--purple); color: var(--purple); }
+  .tag-salmon{ border-color: var(--salmon); color: var(--salmon); }
+  .tag-amber { border-color: var(--amber);  color: var(--amber);  }
+  .tag-green { border-color: var(--green);  color: var(--green);  }
+
+  .scroll-hint {
+    position: absolute; bottom: 2.5rem; left: 50%; transform: translateX(-50%);
+    font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--text-faint);
+    display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    animation: pulse 2s infinite;
+  }
+  .scroll-hint::after {
+    content: ''; width: 1px; height: 40px;
+    background: linear-gradient(to bottom, var(--teal), transparent);
+    animation: lineGrow 2s infinite;
+  }
+
+  /* ── Layout ──────────────────────────────────────────────────── */
+  .article { max-width: 820px; margin: 0 auto; padding: 0 2rem; }
+
+  /* ── Section ─────────────────────────────────────────────────── */
+  .section { padding: 5rem 0; border-top: 1px solid var(--border); }
+  .section-num {
+    font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.15em;
+    color: var(--teal); text-transform: uppercase; margin-bottom: 0.5rem;
+    display: flex; align-items: center; gap: 0.75rem;
+  }
+  .section-num::after { content: ''; flex: 1; max-width: 60px; height: 1px; background: var(--teal-dim); }
+  .section-title {
+    font-family: var(--serif); font-size: clamp(1.8rem, 4vw, 2.6rem);
+    color: var(--text); margin-bottom: 0.5rem; line-height: 1.15;
+  }
+  .section-subtitle { font-size: 0.95rem; color: var(--text-dim); margin-bottom: 2.5rem; }
+
+  h3 { font-family: var(--serif); font-size: 1.4rem; color: var(--text); margin: 2.5rem 0 0.75rem; }
+  h4 { font-family: var(--sans); font-size: 0.95rem; font-weight: 600; color: var(--purple); margin: 1.5rem 0 0.5rem; letter-spacing: 0.02em; }
+  p  { color: var(--text-dim); margin-bottom: 1.25rem; }
+  strong { color: var(--text); font-weight: 600; }
+
+  /* ── Code blocks ─────────────────────────────────────────────── */
+  pre {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-left: 3px solid var(--teal);
+    border-radius: 6px; padding: 1.4rem 1.6rem; margin: 1.5rem 0;
+    overflow-x: auto; font-family: var(--mono); font-size: 0.78rem;
+    line-height: 1.7; color: var(--text-dim);
+    white-space: pre;
+  }
+  code:not(pre code) {
+    font-family: var(--mono); font-size: 0.82em;
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 0.15em 0.45em; border-radius: 3px; color: var(--teal);
+  }
+  .kw  { color: var(--purple); }
+  .cm  { color: var(--text-faint); font-style: italic; }
+  .str { color: var(--teal); }
+  .num { color: var(--amber); }
+  .fn  { color: var(--green); }
+
+  /* ── Cards ───────────────────────────────────────────────────── */
+  .cards { display: grid; gap: 1rem; margin: 2rem 0; }
+  .cards-2 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .cards-3 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 1.4rem;
+    transition: border-color 0.2s, transform 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  }
+  .card-teal::before   { background: var(--teal); }
+  .card-purple::before { background: var(--purple); }
+  .card-salmon::before { background: var(--salmon); }
+  .card-amber::before  { background: var(--amber); }
+  .card-green::before  { background: var(--green); }
+  .card:hover { border-color: var(--teal-dim); transform: translateY(-2px); }
+  .card-icon { font-size: 1.5rem; margin-bottom: 0.75rem; }
+  .card-title { font-family: var(--sans); font-weight: 600; font-size: 0.95rem; color: var(--text); margin-bottom: 0.4rem; }
+  .card-desc  { font-size: 0.82rem; color: var(--text-dim); line-height: 1.5; }
+  .card-badge {
+    display: inline-block; margin-top: 0.75rem;
+    font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.1em;
+    text-transform: uppercase; padding: 0.2rem 0.6rem; border-radius: 100px;
+    background: rgba(45,212,191,0.1); color: var(--teal); border: 1px solid rgba(45,212,191,0.3);
+  }
+
+  /* ── Runtime Profile ─────────────────────────────────────────── */
+  .runtime-block {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 12px; margin: 2.5rem 0; overflow: hidden;
+  }
+  .runtime-header {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 1.4rem 1.8rem; border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .runtime-logo {
+    width: 42px; height: 42px; border-radius: 8px;
+    display: grid; place-items: center; font-size: 1.2rem; flex-shrink: 0;
+  }
+  .runtime-name { font-family: var(--serif); font-size: 1.3rem; color: var(--text); }
+  .runtime-maker{ font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); }
+  .runtime-body { padding: 1.6rem 1.8rem; }
+  .runtime-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin: 1.25rem 0; }
+  .runtime-stat { }
+  .runtime-stat-label { font-family: var(--mono); font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-faint); margin-bottom: 0.25rem; }
+  .runtime-stat-val   { font-family: var(--mono); font-size: 0.85rem; color: var(--teal); }
+  .pros-cons { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.25rem; }
+  .pros, .cons { background: var(--bg3); border-radius: 8px; padding: 1rem 1.1rem; }
+  .pros-title, .cons-title { font-family: var(--mono); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.75rem; }
+  .pros-title { color: var(--green); }
+  .cons-title { color: var(--salmon); }
+  .pros ul, .cons ul { list-style: none; }
+  .pros li, .cons li { font-size: 0.82rem; color: var(--text-dim); margin-bottom: 0.4rem; display: flex; gap: 0.5rem; }
+  .pros li::before { content: '+'; color: var(--green); flex-shrink: 0; font-weight: 700; }
+  .cons li::before { content: '−'; color: var(--salmon); flex-shrink: 0; font-weight: 700; }
+
+  /* ── Comparison Table ────────────────────────────────────────── */
+  .table-wrap { overflow-x: auto; margin: 2rem 0; border-radius: 10px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  thead { background: var(--surface); }
+  thead th {
+    font-family: var(--mono); font-size: 0.65rem; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--text-faint); padding: 0.9rem 1rem; text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  tbody tr { border-bottom: 1px solid rgba(42,42,69,0.6); transition: background 0.15s; }
+  tbody tr:hover { background: rgba(45,212,191,0.03); }
+  tbody td { padding: 0.8rem 1rem; color: var(--text-dim); vertical-align: middle; }
+  tbody td:first-child { color: var(--text); font-weight: 600; font-family: var(--mono); font-size: 0.8rem; }
+  .check { color: var(--green); }
+  .cross { color: var(--salmon); }
+  .partial { color: var(--amber); }
+
+  /* ── Decision Tree ────────────────────────────────────────────── */
+  .decision-tree {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+    padding: 2rem; margin: 2rem 0;
+  }
+  .dt-title { font-family: var(--mono); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--teal); margin-bottom: 1.5rem; }
+  .dt-node {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 0.9rem 1.2rem; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 1rem;
+    cursor: pointer; transition: border-color 0.2s;
+  }
+  .dt-node:hover { border-color: var(--teal-dim); }
+  .dt-q { font-size: 0.88rem; color: var(--text); flex: 1; }
+  .dt-arrow { font-size: 0.75rem; color: var(--text-faint); }
+  .dt-children { padding-left: 1.5rem; border-left: 1px dashed var(--border); margin-left: 0.75rem; margin-bottom: 0.75rem; }
+  .dt-answer {
+    display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 1rem; border-radius: 6px;
+    margin-bottom: 0.5rem; font-size: 0.82rem;
+  }
+  .dt-cond { font-family: var(--mono); font-size: 0.7rem; color: var(--text-faint); min-width: 55px; }
+  .dt-rec  { font-weight: 600; }
+  .rec-gguf   { color: var(--teal);   }
+  .rec-trt    { color: var(--purple); }
+  .rec-qnn    { color: var(--amber);  }
+  .rec-ort    { color: var(--green);  }
+  .rec-cml    { color: var(--salmon); }
+  .rec-et     { color: #f9a8d4; }
+  .rec-openvino { color: #7dd3fc; }
+
+  /* ── Benchmark Bar ───────────────────────────────────────────── */
+  .bench { margin: 2rem 0; }
+  .bench-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.8rem; }
+  .bench-label { font-family: var(--mono); font-size: 0.72rem; width: 110px; flex-shrink: 0; color: var(--text-dim); }
+  .bench-bar-wrap { flex: 1; background: var(--bg3); border-radius: 100px; height: 8px; overflow: hidden; }
+  .bench-bar { height: 100%; border-radius: 100px; transition: width 1.5s cubic-bezier(0.23,1,0.32,1); width: 0; }
+  .bench-val { font-family: var(--mono); font-size: 0.7rem; color: var(--text-dim); min-width: 70px; text-align: right; }
+
+  /* ── Callout ─────────────────────────────────────────────────── */
+  .callout {
+    display: flex; gap: 1rem; padding: 1.1rem 1.4rem;
+    border-radius: 8px; margin: 1.5rem 0;
+    border-left: 3px solid;
+  }
+  .callout-teal   { background: rgba(45,212,191,0.06); border-color: var(--teal); }
+  .callout-purple { background: rgba(167,139,250,0.06); border-color: var(--purple); }
+  .callout-salmon { background: rgba(248,113,113,0.06); border-color: var(--salmon); }
+  .callout-amber  { background: rgba(251,191,36,0.06);  border-color: var(--amber); }
+  .callout-icon { font-size: 1rem; flex-shrink: 0; margin-top: 0.1rem; }
+  .callout-text { font-size: 0.88rem; color: var(--text-dim); }
+  .callout-text strong { color: var(--text); }
+
+  /* ── Format Anatomy ──────────────────────────────────────────── */
+  .anatomy {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 10px;
+    overflow: hidden; margin: 1.75rem 0;
+  }
+  .anatomy-header { background: var(--surface); padding: 0.8rem 1.2rem; font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border); }
+  .anatomy-body   { padding: 1.2rem; display: flex; gap: 0; overflow-x: auto; }
+  .anatomy-block  {
+    display: flex; flex-direction: column; align-items: center;
+    border-right: 1px solid var(--border); padding: 0.6rem 1.2rem; min-width: 90px;
+  }
+  .anatomy-block:last-child { border-right: none; }
+  .anatomy-sz  { font-family: var(--mono); font-size: 0.65rem; color: var(--text-faint); margin-bottom: 0.3rem; }
+  .anatomy-name{ font-family: var(--mono); font-size: 0.75rem; color: var(--text); margin-bottom: 0.3rem; }
+  .anatomy-desc{ font-size: 0.65rem; color: var(--text-faint); text-align: center; }
+  .anatomy-block.teal  { border-top: 3px solid var(--teal); }
+  .anatomy-block.purple{ border-top: 3px solid var(--purple); }
+  .anatomy-block.salmon{ border-top: 3px solid var(--salmon); }
+  .anatomy-block.amber { border-top: 3px solid var(--amber); }
+  .anatomy-block.green { border-top: 3px solid var(--green); }
+  .anatomy-block.dim   { border-top: 3px solid var(--text-faint); }
+
+  /* ── Pipeline Diagram ────────────────────────────────────────── */
+  .pipeline { display: flex; align-items: center; gap: 0; margin: 1.75rem 0; flex-wrap: wrap; }
+  .pipe-step {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 0.8rem 1rem; font-family: var(--mono); font-size: 0.72rem;
+    color: var(--text); display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
+    flex: 1; min-width: 90px;
+  }
+  .pipe-step-sub { font-size: 0.62rem; color: var(--text-faint); }
+  .pipe-arrow { color: var(--text-faint); padding: 0 0.3rem; font-size: 0.9rem; flex-shrink: 0; }
+
+  /* ── Footer ──────────────────────────────────────────────────── */
+  footer {
+    border-top: 1px solid var(--border); padding: 3rem 2rem;
+    text-align: center; font-family: var(--mono); font-size: 0.7rem;
+    color: var(--text-faint); letter-spacing: 0.05em;
+  }
+  footer a { color: var(--teal); text-decoration: none; }
+
+  /* ── Animations ──────────────────────────────────────────────── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+  @keyframes lineGrow { 0%,100% { transform: scaleY(0); opacity: 0; } 50% { transform: scaleY(1); opacity: 1; } }
+
+  .reveal {
+    opacity: 0; transform: translateY(28px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible { opacity: 1; transform: none; }
+  .reveal-delay-1 { transition-delay: 0.1s; }
+  .reveal-delay-2 { transition-delay: 0.2s; }
+  .reveal-delay-3 { transition-delay: 0.3s; }
+
+  @media (max-width: 640px) {
+    nav { padding: 1rem 1.25rem; }
+    .nav-links { gap: 1rem; }
+    .pros-cons { grid-template-columns: 1fr; }
+    .pipeline  { gap: 0.3rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Nav ────────────────────────────────────────────────────── -->
+<nav>
+  <a class="nav-home" href="https://prateekiitr.github.io/cv.github.io/blogs.html">← Blogs</a>
+  <ul class="nav-links">
+    <li><a href="#runtimes">Runtimes</a></li>
+    <li><a href="#formats">Formats</a></li>
+    <li><a href="#bench">Benchmarks</a></li>
+    <li><a href="#choose">When to Use</a></li>
+  </ul>
+</nav>
+
+<!-- ── Hero ───────────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">Deep Dive · Inference Runtimes</div>
+    <h1>GGUF, TensorRT, QNN<br><em>&amp; everything in between</em></h1>
+    <p class="hero-sub">
+      You quantized your model. Now where does it run? GGUF, TensorRT-LLM, QNN SDK, ONNX Runtime, Core ML, ExecuTorch, OpenVINO — the landscape is fragmented by design. Here's the full map, with the decision logic to match.
+    </p>
+    <div class="hero-meta">March 2026 · Prateek Singh, PhD</div>
+    <div class="hero-tags">
+      <span class="tag tag-teal">GGUF</span>
+      <span class="tag tag-purple">TensorRT-LLM</span>
+      <span class="tag tag-amber">QNN SDK</span>
+      <span class="tag tag-green">ONNX Runtime</span>
+      <span class="tag tag-salmon">Core ML</span>
+      <span class="tag tag-teal">ExecuTorch</span>
+      <span class="tag tag-purple">OpenVINO</span>
+    </div>
+  </div>
+  <div class="scroll-hint">scroll</div>
+</section>
+
+<article class="article">
+
+<!-- ══ 00 · The Fragmented Landscape ════════════════════════════ -->
+<section class="section" id="landscape">
+  <div class="section-num reveal">00</div>
+  <h2 class="section-title reveal reveal-delay-1">Why so many runtimes?</h2>
+  <p class="section-subtitle reveal reveal-delay-2">Hardware diversity created this — and you have to live with it</p>
+
+  <p class="reveal">When you quantize a model to INT4 or NF4, you've answered "how small?" — but not "where does it run?" That second question is where things fragment. NVIDIA GPUs speak TensorRT. Qualcomm NPUs speak QNN. Apple Silicon speaks Core ML. CPUs speak GGUF and ONNX. Each vendor built its own inference engine, optimized for its own memory hierarchy, instruction set, and tensor core design. There is no universal runtime — and there won't be for a while.</p>
+
+  <p class="reveal">The good news: once you understand what each runtime actually optimizes for, the choice becomes mechanical. This post maps the full landscape and gives you the decision logic at the end.</p>
+
+  <div class="cards cards-3 reveal">
+    <div class="card card-teal">
+      <div class="card-icon">🖥️</div>
+      <div class="card-title">CPU / Edge Inference</div>
+      <div class="card-desc">GGUF + llama.cpp leads here. ONNX Runtime is the universal fallback. These runtimes prioritize portability and low-memory footprints.</div>
+      <span class="card-badge">GGUF · ONNX RT</span>
+    </div>
+    <div class="card card-purple">
+      <div class="card-icon">⚡</div>
+      <div class="card-title">NVIDIA GPU Inference</div>
+      <div class="card-desc">TensorRT-LLM for production throughput. vLLM on top for serving. FP8 on H100. Paged attention. Maximum tokens/sec at the highest hardware tier.</div>
+      <span class="card-badge">TensorRT-LLM · vLLM</span>
+    </div>
+    <div class="card card-amber">
+      <div class="card-icon">📱</div>
+      <div class="card-title">Mobile / On-Device</div>
+      <div class="card-desc">QNN SDK for Snapdragon NPU. Core ML for Apple chips. ExecuTorch for cross-platform mobile. Battery life and thermal budget define the constraints.</div>
+      <span class="card-badge">QNN · Core ML · ET</span>
+    </div>
+  </div>
+
+  <div class="callout callout-teal reveal">
+    <div class="callout-icon">🗺️</div>
+    <div class="callout-text"><strong>What this post covers:</strong> GGUF/llama.cpp · TensorRT-LLM · QNN SDK · ONNX Runtime · Core ML · ExecuTorch · OpenVINO — their internals, what they're optimizing, when each wins, and a decision tree at the end.</div>
+  </div>
+</section>
+
+<!-- ══ 01 · GGUF & llama.cpp ════════════════════════════════════ -->
+<section class="section" id="runtimes">
+  <div class="section-num reveal">01</div>
+  <h2 class="section-title reveal reveal-delay-1">GGUF &amp; llama.cpp</h2>
+  <p class="section-subtitle reveal reveal-delay-2">The file format that made local LLMs real</p>
+
+  <div class="runtime-block reveal">
+    <div class="runtime-header">
+      <div class="runtime-logo" style="background:rgba(45,212,191,0.1)">🦙</div>
+      <div>
+        <div class="runtime-name">GGUF / llama.cpp</div>
+        <div class="runtime-maker">Georgi Gerganov · 2023–present · C/C++ · Apache 2.0</div>
+      </div>
+    </div>
+    <div class="runtime-body">
+      <p>GGUF (GPT-Generated Unified Format) replaced the older GGML format in August 2023. It's a binary container format designed for self-contained, portable LLM weights — everything the runtime needs (tokenizer, metadata, quantized tensors) lives in a single <code>.gguf</code> file. llama.cpp is the inference engine that reads it.</p>
+
+      <h4>The File Format Anatomy</h4>
+      <div class="anatomy">
+        <div class="anatomy-header">GGUF Binary Layout</div>
+        <div class="anatomy-body">
+          <div class="anatomy-block teal">
+            <div class="anatomy-sz">4 bytes</div>
+            <div class="anatomy-name">Magic</div>
+            <div class="anatomy-desc">GGUF signature</div>
+          </div>
+          <div class="anatomy-block purple">
+            <div class="anatomy-sz">4 bytes</div>
+            <div class="anatomy-name">Version</div>
+            <div class="anatomy-desc">Format version (v3)</div>
+          </div>
+          <div class="anatomy-block salmon">
+            <div class="anatomy-sz">variable</div>
+            <div class="anatomy-name">Metadata KV</div>
+            <div class="anatomy-desc">model name, arch, context len, tokenizer vocab, special tokens</div>
+          </div>
+          <div class="anatomy-block amber">
+            <div class="anatomy-sz">variable</div>
+            <div class="anatomy-name">Tensor Index</div>
+            <div class="anatomy-desc">name, shape, dtype, byte offset per tensor</div>
+          </div>
+          <div class="anatomy-block green">
+            <div class="anatomy-sz">majority</div>
+            <div class="anatomy-name">Tensor Data</div>
+            <div class="anatomy-desc">Quantized weights (Q4_K_M, Q5_K_S, Q8_0 …)</div>
+          </div>
+          <div class="anatomy-block dim">
+            <div class="anatomy-sz">align</div>
+            <div class="anatomy-name">Padding</div>
+            <div class="anatomy-desc">Alignment to 32-byte boundary</div>
+          </div>
+        </div>
+      </div>
+
+      <h4>K-Quants: What Q4_K_M Actually Means</h4>
+      <p>The naming scheme is <code>Q{bits}_K_{size}</code>. The <strong>K</strong> stands for "k-means inspired super-block quantization" — a major upgrade over naïve uniform INT4.</p>
+      <pre><span class="cm">// Super-block structure for Q4_K_M
+// 256 weights → 1 super-block → 8 sub-blocks of 32</span>
+
+<span class="kw">struct</span> <span class="fn">block_q4_K</span> {
+  <span class="cm">// Scales for all 8 sub-blocks (6-bit each, packed)</span>
+  uint8_t scales[<span class="num">12</span>];   <span class="cm">// 6 bits × 8 + 4 bits × 8 packed</span>
+  uint8_t d[<span class="num">2</span>];          <span class="cm">// FP16 super-block scale</span>
+  uint8_t dmin[<span class="num">2</span>];       <span class="cm">// FP16 super-block min</span>
+  uint8_t qs[<span class="num">128</span>];       <span class="cm">// 4-bit quants, 2 per byte → 256 weights</span>
+};
+
+<span class="cm">// Size = 12 + 2 + 2 + 128 = 144 bytes for 256 weights
+// Effective bits/weight = 144×8/256 = 4.5 bpw
+// vs naive INT4 = exactly 4.0 bpw
+// The 0.5 extra bits buys dramatically better accuracy</span>
+
+<span class="cm">// Q4_K_M: "M" = mixed — attention layers get K_M, FF layers get K_S
+// Q4_K_S: "S" = small — all layers use smaller super-block format
+// Q5_K_M: same super-block idea with 5-bit quants (5.5 bpw)</span></pre>
+
+      <div class="callout callout-teal">
+        <div class="callout-icon">💡</div>
+        <div class="callout-text"><strong>Q4_K_M is the sweet spot</strong> for most use cases: 4.5 bpw, fits a 7B model in ~4 GB, scores within 0.5–1 perplexity points of FP16 on most benchmarks. Q5_K_M trades ~25% more memory for another 0.3–0.5 PPL improvement.</div>
+      </div>
+
+      <h4>llama.cpp: The Engine</h4>
+      <p>llama.cpp does four things most people don't realize: <strong>(1)</strong> it memory-maps the GGUF file — no copy, just virtual address space. <strong>(2)</strong> It implements its own GPU offloading via CUDA/Metal — you decide how many layers go to GPU vs RAM. <strong>(3)</strong> It runs mixed CPU+GPU inference for models that don't fit entirely on-device. <strong>(4)</strong> The KV-cache can be quantized separately (Q8_0 by default).</p>
+      <pre><span class="cm"># Run Llama-3-8B-Instruct with 30 GPU layers, rest on CPU RAM</span>
+./llama-cli \
+  -m Meta-Llama-3-8B-Instruct.Q4_K_M.gguf \
+  -ngl <span class="num">30</span> \                         <span class="cm"># GPU layer count</span>
+  -c <span class="num">8192</span> \                        <span class="cm"># context length</span>
+  --temp <span class="num">0.7</span> --top-p <span class="num">0.9</span> \
+  -p <span class="str">"Explain transformer attention:"</span>
+
+<span class="cm"># JNI / Android — the llama.cpp Android library path</span>
+<span class="cm"># Build: cmake -DLLAMA_ANDROID=ON -DCMAKE_TOOLCHAIN_FILE=$NDK/build/cmake/android.toolchain.cmake</span>
+<span class="cm"># Architecture: NDK JNI → libllama.so → GPU offload via OpenCL/Vulkan</span></pre>
+
+      <div class="runtime-grid">
+        <div class="runtime-stat"><div class="runtime-stat-label">Best for</div><div class="runtime-stat-val">CPU / Apple Silicon / edge Android</div></div>
+        <div class="runtime-stat"><div class="runtime-stat-label">Quant support</div><div class="runtime-stat-val">Q2 – Q8, K-quants, IQ-quants</div></div>
+        <div class="runtime-stat"><div class="runtime-stat-label">GPU offload</div><div class="runtime-stat-val">CUDA, Metal, OpenCL, Vulkan</div></div>
+        <div class="runtime-stat"><div class="runtime-stat-label">License</div><div class="runtime-stat-val">MIT</div></div>
+      </div>
+
+      <div class="pros-cons">
+        <div class="pros">
+          <div class="pros-title">Strengths</div>
+          <ul>
+            <li>Single portable file, self-contained</li>
+            <li>Zero-copy mmap — huge models need no RAM copy</li>
+            <li>Works on CPU-only machines</li>
+            <li>Excellent macOS Metal integration</li>
+            <li>Active community, daily updates</li>
+            <li>Android via JNI (your KindKeyboard context!)</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <div class="cons-title">Limitations</div>
+          <ul>
+            <li>Not a production server at scale (use llama-server + load balancer)</li>
+            <li>No INT4 tensor core utilization on NVIDIA (dequants to FP16)</li>
+            <li>Mixed CPU+GPU path has memory bandwidth overhead</li>
+            <li>QNN/NPU path immature vs native QNN SDK</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 02 · TensorRT-LLM ════════════════════════════════════════ -->
+<section class="section">
+  <div class="section-num reveal">02</div>
+  <h2 class="section-title reveal reveal-delay-1">TensorRT-LLM</h2>
+  <p class="section-subtitle reveal reveal-delay-2">NVIDIA's production inference engine — the throughput king</p>
+
+  <div class="runtime-block reveal">
+    <div class="runtime-header">
+      <div class="runtime-logo" style="background:rgba(167,139,250,0.1)">🟢</div>
+      <div>
+        <div class="runtime-name">TensorRT-LLM</div>
+        <div class="runtime-maker">NVIDIA · 2023–present · C++/Python · Apache 2.0</div>
+      </div>
+    </div>
+    <div class="runtime-body">
+      <p>TensorRT-LLM is NVIDIA's open-source library that takes a HuggingFace model, compiles it into a highly optimized TensorRT engine, and runs it with batching strategies designed for LLM inference. It's what NVIDIA uses internally and what AWS, Azure, and GCP run for managed inference on NVIDIA hardware.</p>
+
+      <h4>The Compilation Pipeline</h4>
+      <div class="pipeline">
+        <div class="pipe-step">HuggingFace checkpoint<span class="pipe-step-sub">fp16 / bf16</span></div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step">trtllm-build<span class="pipe-step-sub">Layer fusion, kernel selection</span></div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step">TRT Engine<span class="pipe-step-sub">.engine file, GPU-specific</span></div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step">Runtime Serving<span class="pipe-step-sub">Paged KV, continuous batching</span></div>
+      </div>
+
+      <h4>What Makes It Fast: Five Key Optimizations</h4>
+
+      <p><strong>1. Kernel Fusion.</strong> Standard PyTorch runs LayerNorm → Attention → Softmax → Projection as separate CUDA kernels, each requiring a round-trip to HBM. TRT-LLM fuses these into single custom CUDA kernels. The fusion alone gives 20–35% latency reduction on A100.</p>
+
+      <p><strong>2. Paged Attention &amp; Continuous Batching.</strong> Borrowed from vLLM — KV-cache is stored in fixed-size "pages" rather than contiguous blocks. This eliminates KV-cache fragmentation and allows different sequences at different stages of generation to share a GPU without waiting. Throughput improvement: 2–4× over naïve static batching.</p>
+
+      <p><strong>3. FP8 on H100/H200.</strong> H100 has native FP8 (E4M3/E5M2) tensor cores. TRT-LLM's FP8 workflow quantizes both weights AND activations to FP8, enabling true INT8-speed matrix multiply with FP16-level accuracy. The result: nearly 2× MFU (Model FLOPs Utilization) vs FP16 on H100.</p>
+
+      <pre><span class="cm"># Build TRT-LLM engine for Llama-3-8B with INT4 AWQ weights</span>
+python convert_checkpoint.py \
+  --model_dir meta-llama/Meta-Llama-3-8B \
+  --output_dir ./llama3_awq \
+  --dtype float16 \
+  --use_weight_only \
+  --weight_only_precision int4_awq
+
+trtllm-build \
+  --checkpoint_dir ./llama3_awq \
+  --output_dir ./llama3_trt_engine \
+  --gemm_plugin float16 \        <span class="cm"># GEMM in fp16, weights in int4</span>
+  --max_batch_size <span class="num">32</span> \
+  --max_input_len <span class="num">4096</span> \
+  --max_output_len <span class="num">2048</span> \
+  --use_paged_context_fmha enable  <span class="cm"># paged KV cache</span></pre>
+
+      <p><strong>4. In-flight Batching.</strong> New requests join the batch mid-generation — no waiting for all sequences to finish. This is the key to high utilization at serving time. Combined with paged attention, TRT-LLM serves 3–5× more requests/sec than equivalent naive inference.</p>
+
+      <p><strong>5. Speculative Decoding (Draft Tokens).</strong> A small "draft" model proposes N tokens ahead, and the main model verifies them in parallel in a single forward pass. When the draft is right, you get N tokens at the cost of 1.3 forward passes instead of N. Llama-3-70B + a 1B draft model achieves 2–2.5× decode speedup.</p>
+
+      <div class="callout callout-purple">
+        <div class="callout-icon">⚠️</div>
+        <div class="callout-text"><strong>The catch:</strong> TRT engines are <em>GPU-specific and not portable</em>. An engine compiled for A100 won't run on H100. Recompile per deployment target. Build times for large models can be 30–120 minutes.</div>
+      </div>
+
+      <div class="runtime-grid">
+        <div class="runtime-stat"><div class="runtime-stat-label">Best for</div><div class="runtime-stat-val">NVIDIA GPU production serving</div></div>
+        <div class="runtime-stat"><div class="runtime-stat-label">Quant support</div><div class="runtime-stat-val">INT8, INT4-AWQ, FP8, GPTQ</div></div>
+        <div class="runtime-stat"><div class="runtime-stat-label">Throughput gain</div><div class="runtime-stat-val">3–5× vs naive PyTorch</div></div>
+        <div class="runtime-stat"><div class="runtime-stat-label">Min GPU</div><div class="runtime-stat-val">A10G / RTX 4090 and above</div></div>
+      </div>
+
+      <div class="pros-cons">
+        <div class="pros">
+          <div class="pros-title">Strengths</div>
+          <ul>
+            <li>Highest throughput on NVIDIA hardware</li>
+            <li>Native FP8 on H100/H200</li>
+            <li>Continuous batching + paged KV built-in</li>
+            <li>Triton Inference Server integration</li>
+            <li>Speculative decoding support</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <div class="cons-title">Limitations</div>
+          <ul>
+            <li>NVIDIA-only (no AMD, no edge)</li>
+            <li>Long compile times per model+GPU pair</li>
+            <li>Static engine — no dynamic shape flex</li>
+            <li>Steep learning curve vs vLLM or Ollama</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 03 · QNN SDK ════════════════════════════════════════════ -->
+<section class="section">
+  <div class="section-num reveal">03</div>
+  <h2 class="section-title reveal reveal-delay-1">Qualcomm QNN SDK</h2>
+  <p class="section-subtitle reveal reveal-delay-2">The NPU path — the only way to unlock Snapdragon's Hexagon DSP</p>
+
+  <div class="runtime-block reveal">
+    <div class="runtime-header">
+      <div class="runtime-logo" style="background:rgba(251,191,36,0.1)">🔷</div>
+      <div>
+        <div class="runtime-name">Qualcomm Neural Network (QNN) SDK</div>
+        <div class="runtime-maker">Qualcomm · 2022–present · C++ API · Proprietary (free to use)</div>
+      </div>
+    </div>
+    <div class="runtime-body">
+      <p>QNN SDK (formerly SNPE — Snapdragon Neural Processing Engine) is Qualcomm's inference framework for deploying neural networks on Snapdragon SoCs. It's the only way to run inference on the <strong>Hexagon NPU</strong> — the dedicated AI accelerator that provides 30–75 TOPS at sub-1W power budget in Snapdragon 8 Gen 3 / X Elite chips.</p>
+
+      <h4>Snapdragon AI Architecture: Three Compute Units</h4>
+      <div class="cards cards-3">
+        <div class="card card-amber">
+          <div class="card-icon">🔶</div>
+          <div class="card-title">Hexagon NPU</div>
+          <div class="card-desc">INT8/INT16/FP16 matrix ops. Best TOPS/watt. For quantized model inference. QNN is the only path here.</div>
+        </div>
+        <div class="card card-purple">
+          <div class="card-icon">🟣</div>
+          <div class="card-title">Adreno GPU</div>
+          <div class="card-desc">FP16/FP32 compute via OpenCL or Vulkan. Higher latency than NPU but handles dynamic shapes better.</div>
+        </div>
+        <div class="card card-teal">
+          <div class="card-icon">🔵</div>
+          <div class="card-title">Kryo CPU</div>
+          <div class="card-desc">Fallback for unsupported ops. Slowest but most flexible. GGUF with llama.cpp runs here.</div>
+        </div>
+      </div>
+
+      <h4>The QNN Workflow: From ONNX to Hexagon</h4>
+      <div class="pipeline">
+        <div class="pipe-step">PyTorch Model<span class="pipe-step-sub">fp32 weights</span></div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step">Export ONNX<span class="pipe-step-sub">torch.onnx.export</span></div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step">qnn-onnx-converter<span class="pipe-step-sub">.cpp graph</span></div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step">qnn-model-lib-generator<span class="pipe-step-sub">.so library</span></div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step">On-Device Inference<span class="pipe-step-sub">libQnnHtp.so backend</span></div>
+      </div>
+
+      <pre><span class="cm"># Step 1: Export to ONNX</span>
+torch.onnx.export(model, dummy_input, <span class="str">"model.onnx"</span>,
+  opset_version=<span class="num">17</span>, dynamic_axes={<span class="str">"input"</span>: {<span class="num">0</span>: <span class="str">"batch"</span>}})
+
+<span class="cm"># Step 2: Convert to QNN graph (on Linux dev machine)</span>
+qnn-onnx-converter \
+  --input_network model.onnx \
+  --output_path model_qnn.cpp \
+  --input_dim <span class="str">"input"</span> <span class="num">1</span>,<span class="num">1</span>,<span class="num">768</span> \
+  --quantization_overrides quant_config.json \  <span class="cm"># optional per-layer precision</span>
+  --act_bw <span class="num">16</span> --weights_bw <span class="num">8</span>          <span class="cm"># W8A16 config</span>
+
+<span class="cm"># Step 3: Compile .so for Snapdragon target</span>
+qnn-model-lib-generator \
+  -m model_qnn.cpp -b model_qnn.bin \
+  -t aarch64-android \
+  -l libmodel_qnn.so
+
+<span class="cm"># Step 4: On-device inference (Android NDK / JNI)
+# Load backend → create context → execute graph → read outputs</span></pre>
+
+      <h4>W4A16 vs W8A16 on QNN — the Tradeoff That Matters</h4>
+      <p>For LLMs on Snapdragon, the choice between W4A16 and W8A16 deserves careful analysis:</p>
+
+      <div class="cards cards-2">
+        <div class="card card-teal">
+          <div class="card-title">W8A16 — Safer Default</div>
+          <div class="card-desc">Weights in INT8, activations in FP16. Hexagon HTP handles this natively. Lower accuracy loss (~0.2% on most tasks). Wider op support. Recommended starting point for medical/clinical models where accuracy is paramount.</div>
+          <span class="card-badge">Safer · More ops supported</span>
+        </div>
+        <div class="card card-amber">
+          <div class="card-title">W4A16 — Aggressive Compression</div>
+          <div class="card-desc">Weights in INT4, activations in FP16. Fits larger models on device. ~1.5% accuracy loss. Not all ops support INT4 — some layers fall back to W8A16. Requires per-layer sensitivity analysis (AIMET).</div>
+          <span class="card-badge">Smaller · Needs per-layer tuning</span>
+        </div>
+      </div>
+
+      <div class="callout callout-amber">
+        <div class="callout-icon">🔬</div>
+        <div class="callout-text"><strong>AIMET + QNN:</strong> Qualcomm's AI Model Efficiency Toolkit (AIMET) integrates directly with QNN for quantization-aware fine-tuning and per-layer sensitivity analysis. For on-device LLMs (your Samsung work on Snapdragon 8 Gen 3), this is the production-grade path.</div>
+      </div>
+
+      <div class="runtime-grid">
+        <div class="runtime-stat"><div class="runtime-stat-label">Target SoC</div><div class="runtime-stat-val">Snapdragon 8 Gen 1–3, X Elite</div></div>
+        <div class="runtime-stat"><div class="runtime-stat-label">NPU TOPS</div><div class="runtime-stat-val">26–75 TOPS (Gen 1–3)</div></div>
+        <div class="runtime-stat"><div class="runtime-stat-label">Quant support</div><div class="runtime-stat-val">W4A16, W8A16, INT8, FP16</div></div>
+        <div class="runtime-stat"><div class="runtime-stat-label">Power budget</div><div class="runtime-stat-val">&lt;1W NPU inference</div></div>
+      </div>
+
+      <div class="pros-cons">
+        <div class="pros">
+          <div class="pros-title">Strengths</div>
+          <ul>
+            <li>Only path to Hexagon NPU</li>
+            <li>Best TOPS/watt on Snapdragon</li>
+            <li>AIMET integration for production tuning</li>
+            <li>Samsung Galaxy devices (your deployment target)</li>
+            <li>Thermal efficiency vs GPU path</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <div class="cons-title">Limitations</div>
+          <ul>
+            <li>Qualcomm-only, no cross-platform</li>
+            <li>Complex toolchain (converter → lib-gen → device)</li>
+            <li>Some LLM ops not NPU-supported → CPU fallback</li>
+            <li>Model recompilation per SoC generation</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 04 · ONNX Runtime ════════════════════════════════════════ -->
+<section class="section">
+  <div class="section-num reveal">04</div>
+  <h2 class="section-title reveal reveal-delay-1">ONNX Runtime</h2>
+  <p class="section-subtitle reveal reveal-delay-2">The universal adapter — runs everywhere, optimized for nothing specific</p>
+
+  <div class="runtime-block reveal">
+    <div class="runtime-header">
+      <div class="runtime-logo" style="background:rgba(74,222,128,0.1)">🔗</div>
+      <div>
+        <div class="runtime-name">ONNX Runtime (ORT)</div>
+        <div class="runtime-maker">Microsoft · Linux Foundation · 2019–present · MIT License</div>
+      </div>
+    </div>
+    <div class="runtime-body">
+      <p>ONNX Runtime is the inference engine for the Open Neural Network Exchange format. It's the broadest coverage runtime — a single model can run on x86 CPU, ARM, NVIDIA GPU (via CUDA EP), AMD GPU (via ROCm EP), Apple ANE (via Core ML EP), Qualcomm (via QNN EP), and Intel (via OpenVINO EP). The tradeoff: "Execution Providers" (EPs) are opt-in and vary in maturity.</p>
+
+      <h4>Execution Providers Architecture</h4>
+      <pre><span class="cm">## ORT dispatches ops to the best available EP
+## Unsupported ops fall back to CPU EP automatically</span>
+
+session_options = ort.SessionOptions()
+session_options.graph_optimization_level = (
+    ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+)
+
+session = ort.InferenceSession(
+    <span class="str">"model.onnx"</span>,
+    providers=[
+        <span class="str">"QNNExecutionProvider"</span>,  <span class="cm"># Qualcomm NPU — try first</span>
+        <span class="str">"CUDAExecutionProvider"</span>, <span class="cm"># NVIDIA GPU fallback</span>
+        <span class="str">"CPUExecutionProvider"</span>,  <span class="cm"># Always available</span>
+    ],
+    sess_options=session_options,
+)
+<span class="cm"># ORT automatically routes each op to the highest-priority EP
+# that supports it. If QNN doesn't support op X → CPU handles it.</span></pre>
+
+      <h4>ORT + Generative AI Extension (ORT-GenAI)</h4>
+      <p>For LLMs specifically, Microsoft ships <code>onnxruntime-genai</code> — a wrapper that adds KV-cache management, greedy/beam/top-p sampling, and tokenizer integration to ORT. It's the recommended path for running Phi-3, Mistral, and Llama variants on ORT.</p>
+
+      <pre><span class="cm"># onnxruntime-genai — high-level LLM inference on ORT</span>
+<span class="kw">import</span> onnxruntime_genai <span class="kw">as</span> og
+
+model    = og.Model(<span class="str">"phi-3-mini-int4-cpu-onnx"</span>)
+tokenizer= og.Tokenizer(model)
+params   = og.GeneratorParams(model)
+params.<span class="fn">set_search_options</span>(max_length=<span class="num">512</span>, temperature=<span class="num">0.7</span>)
+
+input_tokens = tokenizer.<span class="fn">encode</span>(<span class="str">"Explain quantization:"</span>)
+params.<span class="fn">input_ids</span> = input_tokens
+
+generator = og.Generator(model, params)
+<span class="kw">while</span> <span class="kw">not</span> generator.<span class="fn">is_done</span>():
+    generator.<span class="fn">compute_logits</span>()
+    generator.<span class="fn">generate_next_token</span>()
+
+output_tokens = generator.<span class="fn">get_sequence</span>(<span class="num">0</span>)
+<span class="kw">print</span>(tokenizer.<span class="fn">decode</span>(output_tokens))</pre>
+
+      <div class="runtime-grid">
+        <div class="runtime-stat"><div class="runtime-stat-label">Best for</div><div class="runtime-stat-val">Cross-platform, Windows on ARM</div></div>
+        <div class="runtime-stat"><div class="runtime-stat-label">EP coverage</div><div class="runtime-stat-val">CPU, CUDA, QNN, CoreML, OpenVINO</div></div>
+        <div class="runtime-stat"><div class="runtime-stat-label">LLM extension</div><div class="runtime-stat-val">onnxruntime-genai</div></div>
+        <div class="runtime-stat"><div class="runtime-stat-label">License</div><div class="runtime-stat-val">MIT</div></div>
+      </div>
+
+      <div class="pros-cons">
+        <div class="pros">
+          <div class="pros-title">Strengths</div>
+          <ul>
+            <li>Single model file, runs everywhere</li>
+            <li>Native Windows on ARM (Snapdragon X Elite PCs)</li>
+            <li>Strong Microsoft backing + Phi-3 optimized</li>
+            <li>Automatic CPU fallback for unsupported ops</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <div class="cons-title">Limitations</div>
+          <ul>
+            <li>No hardware-specific kernel optimizations</li>
+            <li>QNN EP less mature than native QNN SDK</li>
+            <li>ONNX export has dynamic shape limitations</li>
+            <li>LLM throughput below TRT-LLM on NVIDIA</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 05 · Core ML / ExecuTorch / OpenVINO ═════════════════════ -->
+<section class="section">
+  <div class="section-num reveal">05</div>
+  <h2 class="section-title reveal reveal-delay-1">Core ML · ExecuTorch · OpenVINO</h2>
+  <p class="section-subtitle reveal reveal-delay-2">Apple, Meta, and Intel's answers to the same problem</div>
+
+  <div class="runtime-block reveal">
+    <div class="runtime-header">
+      <div class="runtime-logo" style="background:rgba(248,113,113,0.1)">🍎</div>
+      <div>
+        <div class="runtime-name">Core ML</div>
+        <div class="runtime-maker">Apple · macOS / iOS / iPadOS · Swift & Python API · Free (requires Apple hardware)</div>
+      </div>
+    </div>
+    <div class="runtime-body">
+      <p>Core ML is Apple's inference framework and the only way to access the <strong>Apple Neural Engine (ANE)</strong> — the dedicated ML accelerator in all Apple Silicon chips (M1–M4, A14–A18). ANE runs INT8/FP16 ops at 11–38 TOPS depending on chip generation. For on-device LLMs on Apple hardware, Core ML + ANE is the correct path — not llama.cpp's Metal path, which uses the Adreno equivalent (GPU, not ANE).</p>
+
+      <pre><span class="cm"># Convert from PyTorch to Core ML (.mlpackage)</span>
+<span class="kw">import</span> coremltools <span class="kw">as</span> ct
+
+model = <span class="fn">torch.load</span>(<span class="str">"llm_backbone.pt"</span>)
+traced = torch.<span class="fn">jit.trace</span>(model, example_inputs)
+
+mlmodel = ct.<span class="fn">convert</span>(
+    traced,
+    inputs=[ct.TensorType(shape=(ct.RangeDim(<span class="num">1</span>,<span class="num">1</span>), ct.RangeDim(<span class="num">1</span>,<span class="num">4096</span>), <span class="num">4096</span>))],
+    compute_units=ct.ComputeUnit.ALL,  <span class="cm"># ANE + GPU + CPU</span>
+    minimum_deployment_target=ct.target.iOS17,
+    compute_precision=ct.precision.FLOAT16,
+)
+mlmodel.<span class="fn">save</span>(<span class="str">"model.mlpackage"</span>)</pre>
+
+      <div class="callout callout-salmon">
+        <div class="callout-icon">📌</div>
+        <div class="callout-text"><strong>Apple's LLM kit:</strong> The <code>MLX</code> framework (Apple's own) and <code>llm.mlx</code> have become the de-facto standard for running quantized LLMs on Mac. MLX handles Apple Silicon's unified memory (CPU+GPU same DRAM) efficiently and is faster than llama.cpp's Metal path for most models on M-series chips.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="runtime-block reveal">
+    <div class="runtime-header">
+      <div class="runtime-logo" style="background:rgba(249,168,212,0.1)">🔺</div>
+      <div>
+        <div class="runtime-name">ExecuTorch</div>
+        <div class="runtime-maker">Meta · 2023–present · C++ · BSD License</div>
+      </div>
+    </div>
+    <div class="runtime-body">
+      <p>ExecuTorch is Meta's lightweight runtime for deploying PyTorch models at the edge — targeting iOS, Android, and microcontrollers. It uses <code>torch.export()</code> (the new PyTorch 2.x export path) to generate a portable, ahead-of-time compiled graph. The core runtime is ~50KB — smaller than ONNX Runtime's multi-MB footprint.</p>
+
+      <pre><span class="cm"># ExecuTorch export pipeline</span>
+<span class="kw">from</span> executorch.<span class="fn">exir</span> <span class="kw">import</span> to_edge
+<span class="kw">from</span> executorch.backends.xnnpack.partition <span class="kw">import</span> XnnpackPartitioner
+
+exported = torch.<span class="fn">export</span>(model, (example_input,))
+edge_prog = <span class="fn">to_edge</span>(exported)
+
+<span class="cm"># Delegate compute-intensive ops to XNNPACK (ARM NEON / AVX2)</span>
+lowered = edge_prog.<span class="fn">to_backend</span>(<span class="fn">XnnpackPartitioner</span>())
+exe_prog = lowered.<span class="fn">to_executorch</span>()
+
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"model.pte"</span>, <span class="str">"wb"</span>) <span class="kw">as</span> f:
+    f.<span class="fn">write</span>(exe_prog.<span class="fn">buffer</span>)</pre>
+
+      <p>ExecuTorch has backends for <strong>XNNPACK</strong> (optimized CPU kernels for ARM/x86), <strong>Vulkan</strong> (Android GPU), <strong>Core ML</strong> (iOS ANE), and <strong>QNN</strong> (Snapdragon NPU). It's how Meta deploys LLaMA 3.2 1B/3B on-device in Meta AI on WhatsApp/Instagram.</p>
+    </div>
+  </div>
+
+  <div class="runtime-block reveal">
+    <div class="runtime-header">
+      <div class="runtime-logo" style="background:rgba(125,211,252,0.1)">🔵</div>
+      <div>
+        <div class="runtime-name">OpenVINO</div>
+        <div class="runtime-maker">Intel · 2018–present · C++/Python · Apache 2.0</div>
+      </div>
+    </div>
+    <div class="runtime-body">
+      <p>OpenVINO is Intel's inference toolkit optimized for Intel CPUs (especially 4th-gen Xeon with AMX — Advanced Matrix Extensions), Intel GPUs (Arc series), and Intel NPUs (Meteor Lake+). For server-side inference on Intel Xeon, OpenVINO with INT8 quantization achieves 3–5× throughput vs PyTorch FP32 and rivals ONNX Runtime.</p>
+
+      <pre><span class="cm"># OpenVINO with INT8 quantization via NNCF</span>
+<span class="kw">from</span> openvino.runtime <span class="kw">import</span> Core
+<span class="kw">import</span> nncf
+
+<span class="cm"># Quantize to INT8 with calibration data</span>
+quantized = nncf.<span class="fn">quantize</span>(
+    model, calibration_dataset,
+    preset=nncf.QuantizationPreset.MIXED,  <span class="cm"># weights INT8, activations INT8</span>
+    subset_size=<span class="num">128</span>,
+)
+ov_model = ov.<span class="fn">convert_model</span>(quantized)
+ov.<span class="fn">save_model</span>(ov_model, <span class="str">"model_int8.xml"</span>)
+
+<span class="cm"># Deploy</span>
+core = Core()
+compiled = core.<span class="fn">compile_model</span>(<span class="str">"model_int8.xml"</span>, <span class="str">"CPU"</span>)</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 06 · Benchmarks ══════════════════════════════════════════ -->
+<section class="section" id="bench">
+  <div class="section-num reveal">06</div>
+  <h2 class="section-title reveal reveal-delay-1">Relative Performance Landscape</h2>
+  <p class="section-subtitle reveal reveal-delay-2">Throughput normalized to baseline — within-hardware comparison</p>
+
+  <div class="callout callout-amber reveal">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-text"><strong>Caveat:</strong> These are representative relative figures for Llama-3-8B inference, not absolute benchmarks. Actual numbers vary by model, batch size, precision, and hardware generation. Use as directional guidance only.</div>
+  </div>
+
+  <h3 class="reveal">NVIDIA A100 — Throughput (tokens/sec, batch=8)</h3>
+  <div class="bench reveal" id="bench-nvidia">
+    <div class="bench-row"><div class="bench-label">PyTorch FP16</div><div class="bench-bar-wrap"><div class="bench-bar" style="background:var(--text-faint)" data-width="30"></div></div><div class="bench-val">~420 t/s</div></div>
+    <div class="bench-row"><div class="bench-label">vLLM FP16</div><div class="bench-bar-wrap"><div class="bench-bar" style="background:var(--purple)" data-width="55"></div></div><div class="bench-val">~780 t/s</div></div>
+    <div class="bench-row"><div class="bench-label">TRT-LLM INT8</div><div class="bench-bar-wrap"><div class="bench-bar" style="background:var(--purple)" data-width="75"></div></div><div class="bench-val">~1050 t/s</div></div>
+    <div class="bench-row"><div class="bench-label">TRT-LLM INT4</div><div class="bench-bar-wrap"><div class="bench-bar" style="background:var(--teal)" data-width="90"></div></div><div class="bench-val">~1260 t/s</div></div>
+    <div class="bench-row"><div class="bench-label">TRT-LLM FP8*</div><div class="bench-bar-wrap"><div class="bench-bar" style="background:var(--teal)" data-width="100"></div></div><div class="bench-val">~1400 t/s</div></div>
+  </div>
+  <p class="reveal" style="font-size:0.78rem;color:var(--text-faint)">* FP8 requires H100/H200 — shown here as reference. A100 max is TRT-LLM INT4.</p>
+
+  <h3 class="reveal">Snapdragon 8 Gen 3 — Latency (ms/token, batch=1)</h3>
+  <div class="bench reveal" id="bench-snap">
+    <div class="bench-row"><div class="bench-label">CPU (llama.cpp)</div><div class="bench-bar-wrap"><div class="bench-bar" style="background:var(--text-faint)" data-width="15"></div></div><div class="bench-val">~180 ms</div></div>
+    <div class="bench-row"><div class="bench-label">Adreno GPU (ORT)</div><div class="bench-bar-wrap"><div class="bench-bar" style="background:var(--amber)" data-width="45"></div></div><div class="bench-val">~60 ms</div></div>
+    <div class="bench-row"><div class="bench-label">NPU W8A16 (QNN)</div><div class="bench-bar-wrap"><div class="bench-bar" style="background:var(--teal)" data-width="78"></div></div><div class="bench-val">~35 ms</div></div>
+    <div class="bench-row"><div class="bench-label">NPU W4A16 (QNN)</div><div class="bench-bar-wrap"><div class="bench-bar" style="background:var(--teal)" data-width="100"></div></div><div class="bench-val">~22 ms</div></div>
+  </div>
+  <p class="reveal" style="font-size:0.78rem;color:var(--text-faint)">Values for a 1B–3B parameter model. Larger models require more layers on CPU fallback.</p>
+</section>
+
+<!-- ══ 07 · Comparison Table ════════════════════════════════════ -->
+<section class="section">
+  <div class="section-num reveal">07</div>
+  <h2 class="section-title reveal reveal-delay-1">Side-by-Side Comparison</h2>
+  <p class="section-subtitle reveal reveal-delay-2">All seven runtimes across the dimensions that matter</p>
+
+  <div class="table-wrap reveal">
+    <table>
+      <thead>
+        <tr>
+          <th>Runtime</th>
+          <th>Hardware Target</th>
+          <th>LLM Ready</th>
+          <th>Best Precision</th>
+          <th>Setup Effort</th>
+          <th>Portability</th>
+          <th>License</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>GGUF / llama.cpp</td>
+          <td>CPU, Mac, GPU (CUDA/Metal)</td>
+          <td><span class="check">✓</span> Native</td>
+          <td>Q4_K_M / Q5_K_M</td>
+          <td>Low — single binary</td>
+          <td><span class="check">High</span></td>
+          <td>MIT</td>
+        </tr>
+        <tr>
+          <td>TensorRT-LLM</td>
+          <td>NVIDIA A10 → H200</td>
+          <td><span class="check">✓</span> Native</td>
+          <td>INT4-AWQ / FP8</td>
+          <td>High — compile per GPU</td>
+          <td><span class="cross">None</span></td>
+          <td>Apache 2.0</td>
+        </tr>
+        <tr>
+          <td>QNN SDK</td>
+          <td>Snapdragon NPU</td>
+          <td><span class="partial">Partial</span> (evolving)</td>
+          <td>W4A16 / W8A16</td>
+          <td>High — 3-step pipeline</td>
+          <td><span class="cross">QC-only</span></td>
+          <td>Proprietary</td>
+        </tr>
+        <tr>
+          <td>ONNX Runtime</td>
+          <td>CPU, CUDA, QNN EP, CoreML EP</td>
+          <td><span class="check">✓</span> via GenAI</td>
+          <td>INT8 / INT4</td>
+          <td>Medium</td>
+          <td><span class="check">Very High</span></td>
+          <td>MIT</td>
+        </tr>
+        <tr>
+          <td>Core ML / MLX</td>
+          <td>Apple ANE (M/A series)</td>
+          <td><span class="check">✓</span> via MLX</td>
+          <td>INT4 / FP16</td>
+          <td>Medium</td>
+          <td><span class="cross">Apple-only</span></td>
+          <td>MIT (MLX)</td>
+        </tr>
+        <tr>
+          <td>ExecuTorch</td>
+          <td>Android / iOS / embedded</td>
+          <td><span class="check">✓</span> Llama 3.2</td>
+          <td>INT4 / INT8</td>
+          <td>Medium — torch.export</td>
+          <td><span class="check">High</span></td>
+          <td>BSD</td>
+        </tr>
+        <tr>
+          <td>OpenVINO</td>
+          <td>Intel CPU / GPU / NPU</td>
+          <td><span class="partial">Growing</span></td>
+          <td>INT8 via NNCF</td>
+          <td>Low–Medium</td>
+          <td><span class="cross">Intel-only</span></td>
+          <td>Apache 2.0</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══ 08 · Decision Tree ════════════════════════════════════════ -->
+<section class="section" id="choose">
+  <div class="section-num reveal">08</div>
+  <h2 class="section-title reveal reveal-delay-1">When to Choose What</h2>
+  <p class="section-subtitle reveal reveal-delay-2">The decision logic — hardware first, then use-case</p>
+
+  <div class="decision-tree reveal">
+    <div class="dt-title">Runtime Selection — Start Here</div>
+
+    <div class="dt-node"><span class="dt-q">🔵 What hardware are you deploying to?</span></div>
+
+    <div class="dt-children">
+      <div class="dt-answer">
+        <span class="dt-cond">NVIDIA GPU</span>
+        <span class="dt-rec rec-trt">→ TensorRT-LLM</span>
+        <span style="font-size:0.78rem;color:var(--text-faint)">(or vLLM for faster iteration, TRT for max throughput)</span>
+      </div>
+      <div class="dt-answer">
+        <span class="dt-cond">Snapdragon</span>
+        <span class="dt-rec rec-qnn">→ QNN SDK (NPU)</span>
+        <span style="font-size:0.78rem;color:var(--text-faint)">(ONNX Runtime QNN EP if ops unsupported)</span>
+      </div>
+      <div class="dt-answer">
+        <span class="dt-cond">Apple Silicon</span>
+        <span class="dt-rec rec-cml">→ MLX / Core ML</span>
+        <span style="font-size:0.78rem;color:var(--text-faint)">(llama.cpp Metal if quick prototyping)</span>
+      </div>
+      <div class="dt-answer">
+        <span class="dt-cond">Intel CPU/GPU</span>
+        <span class="dt-rec rec-openvino">→ OpenVINO</span>
+        <span style="font-size:0.78rem;color:var(--text-faint)">(ONNX Runtime OpenVINO EP as alternative)</span>
+      </div>
+      <div class="dt-answer">
+        <span class="dt-cond">Android (multi-SoC)</span>
+        <span class="dt-rec rec-et">→ ExecuTorch</span>
+        <span style="font-size:0.78rem;color:var(--text-faint)">(or GGUF + llama.cpp if prototyping on device)</span>
+      </div>
+      <div class="dt-answer">
+        <span class="dt-cond">CPU / Unknown</span>
+        <span class="dt-rec rec-gguf">→ GGUF + llama.cpp</span>
+        <span style="font-size:0.78rem;color:var(--text-faint)">(or ONNX Runtime for broader op coverage)</span>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="reveal">Scenario-Based Guidance</h3>
+
+  <div class="cards cards-2 reveal">
+    <div class="card card-teal">
+      <div class="card-title">🏭 Cloud API / Production Serving</div>
+      <div class="card-desc"><strong>TensorRT-LLM + Triton.</strong> Compile once per GPU SKU. Use paged attention and continuous batching. Deploy behind NVIDIA Triton Inference Server. If you want to skip compilation: vLLM is 80% of TRT throughput with 10% of the setup complexity.</div>
+    </div>
+    <div class="card card-amber">
+      <div class="card-title">📱 Samsung Galaxy On-Device (your use case)</div>
+      <div class="card-desc"><strong>QNN SDK → Hexagon NPU.</strong> Use AIMET for W4A16 quantization + per-layer sensitivity. Target Snapdragon 8 Gen 3. For models where QNN coverage is incomplete, fall back to GGUF on CPU for non-critical paths. Your snore detection / KindKeyboard architecture pattern.</div>
+    </div>
+    <div class="card card-salmon">
+      <div class="card-title">🍎 Mac-side Inference / Research</div>
+      <div class="card-desc"><strong>MLX framework.</strong> Unified memory means no CPU↔GPU copy overhead. 4-bit quantization via <code>mlx-lm</code>. For iOS app deployment, convert to Core ML .mlpackage. llama.cpp Metal is good for prototyping but MLX is measurably faster on M-series.</div>
+    </div>
+    <div class="card card-purple">
+      <div class="card-title">🔬 Research / Rapid Prototyping</div>
+      <div class="card-desc"><strong>GGUF + llama.cpp or Ollama.</strong> Single command, no conversion pipeline, runs on any hardware. Use this to validate the model behavior and quantization tradeoffs before committing to a hardware-specific runtime.</div>
+    </div>
+    <div class="card card-green">
+      <div class="card-title">🌐 Cross-Platform (Windows/Android/iOS)</div>
+      <div class="card-desc"><strong>ONNX Runtime + GenAI extension.</strong> One ONNX model, runtime automatically targets best EP per device. Strong Windows on ARM support (Copilot+ PCs with Snapdragon X Elite). Microsoft ships Phi-3 Mini this way.</div>
+    </div>
+    <div class="card card-teal">
+      <div class="card-title">🤖 Meta's LLaMA on Mobile</div>
+      <div class="card-desc"><strong>ExecuTorch.</strong> torch.export() → XNNPACK (ARM NEON) + optional QNN/Core ML backends. This is how Meta ships Llama 3.2 1B/3B in Meta AI inside WhatsApp, Instagram, and Messenger. Use if your team is already deep in PyTorch 2.x.</div>
+    </div>
+  </div>
+
+  <div class="callout callout-teal reveal" style="margin-top:2rem">
+    <div class="callout-icon">🧭</div>
+    <div class="callout-text">
+      <strong>The practical mental model:</strong> Think hardware-first, not model-first. The runtime is dictated by your deployment target. Then ask: does the runtime support your model's ops? If not, you need an intermediate format (ONNX) that routes ops to fallback EPs. Only after hardware and op coverage are settled does quantization format (GGUF vs QNN vs TRT engine) become the question.
+    </div>
+  </div>
+</section>
+
+<!-- ══ Summary ════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="section-num reveal">09</div>
+  <h2 class="section-title reveal reveal-delay-1">The TL;DR</h2>
+
+  <div class="table-wrap reveal">
+    <table>
+      <thead>
+        <tr><th>If your target is…</th><th>Start with…</th><th>When you need more…</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>NVIDIA cloud GPU</td><td>vLLM (fast to set up)</td><td>TensorRT-LLM (max throughput)</td></tr>
+        <tr><td>Snapdragon Android</td><td>GGUF + llama.cpp (prototype)</td><td>QNN SDK → Hexagon NPU (production)</td></tr>
+        <tr><td>Apple Mac / iPhone</td><td>llama.cpp Metal (quick)</td><td>MLX / Core ML ANE (production)</td></tr>
+        <tr><td>Intel CPU server</td><td>ONNX Runtime CPU EP</td><td>OpenVINO INT8 + AMX</td></tr>
+        <tr><td>Windows on ARM PC</td><td>ONNX Runtime + GenAI</td><td>QNN EP or DirectML EP</td></tr>
+        <tr><td>iOS/Android apps</td><td>ExecuTorch + XNNPACK</td><td>+ Core ML / QNN backend</td></tr>
+        <tr><td>Unknown / Research</td><td>GGUF + Ollama</td><td>Measure, then pick hardware-specific</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+</article>
+
+<footer>
+  <p>Prateek Singh, PhD · Samsung Electronics · <a href="https://prateekiitr.github.io/cv.github.io/blogs.html">← Back to Blogs</a></p>
+  <p style="margin-top:0.5rem">March 2026 · Part of the Model Compression series</p>
+</footer>
+
+<script>
+  // ── Scroll-triggered reveals ────────────────────────────────
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); }
+    });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // ── Animate bench bars on scroll ───────────────────────────
+  const benchObserver = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.querySelectorAll('.bench-bar').forEach(bar => {
+          const w = bar.dataset.width;
+          setTimeout(() => { bar.style.width = w + '%'; }, 100);
+        });
+        benchObserver.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.2 });
+  document.querySelectorAll('.bench').forEach(el => benchObserver.observe(el));
+
+  // ── Nav active states ───────────────────────────────────────
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-links a');
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY + 120;
+    sections.forEach(s => {
+      if (s.offsetTop <= y && s.offsetTop + s.offsetHeight > y) {
+        navLinks.forEach(a => a.classList.remove('active'));
+        const link = document.querySelector(`.nav-links a[href="#${s.id}"]`);
+        if (link) link.style.color = 'var(--teal)';
+        else navLinks.forEach(a => a.style.color = '');
+      }
+    });
+  });
+</script>
+</body>
+</html>
