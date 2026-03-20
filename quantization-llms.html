@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quantization in LLMs — Prateek Singh</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0f; --surface:#12121a; --surface2:#1a1a26; --border:#2a2a3f;
+  --accent:#7c6bff; --accent2:#ff6b9d; --accent3:#00d9b4; --accent4:#ffb347;
+  --text:#f0f0f8; --text-muted:#b0b0c8; --text-dim:#6a6a8a; --code-bg:#0f0f1a;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;line-height:1.75;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.5}
+#progress{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent3));z-index:1000;width:0%;transition:width .1s}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:1rem 3rem;background:rgba(10,10,15,.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);z-index:100}
+.nav-logo{font-family:'JetBrains Mono',monospace;font-size:.75rem;letter-spacing:.2em;color:var(--accent3);text-transform:uppercase}
+.nav-links{display:flex;gap:2rem;list-style:none}
+.nav-links a{font-size:.8rem;letter-spacing:.08em;color:var(--text-muted);text-decoration:none;text-transform:uppercase;transition:color .2s}
+.nav-links a:hover{color:var(--accent3)}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:8rem 3rem 5rem;position:relative;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:
+  radial-gradient(ellipse 80% 60% at 60% 40%, rgba(0,217,180,.10) 0%, transparent 70%),
+  radial-gradient(ellipse 50% 45% at 15% 75%, rgba(124,107,255,.10) 0%, transparent 60%),
+  radial-gradient(ellipse 40% 50% at 85% 65%, rgba(255,107,157,.06) 0%, transparent 60%)}
+.hero-grid{position:absolute;inset:0;opacity:.035;background-image:linear-gradient(var(--accent3) 1px,transparent 1px),linear-gradient(90deg,var(--accent3) 1px,transparent 1px);background-size:60px 60px}
+.hero-label{font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:.3em;color:var(--accent3);text-transform:uppercase;margin-bottom:1.5rem;display:flex;align-items:center;gap:.75rem}
+.hero-label::before{content:'';display:inline-block;width:40px;height:1px;background:var(--accent3)}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(3rem,8vw,7rem);font-weight:900;line-height:1;max-width:960px;background:linear-gradient(135deg,#fff 0%,#a0f0e0 40%,#c0b8ff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:1.5rem}
+.hero-sub{font-size:1.1rem;color:var(--text-muted);max-width:600px;margin-bottom:2.5rem}
+.hero-meta{display:flex;gap:2rem;align-items:center;flex-wrap:wrap}
+.hero-author{font-size:.85rem;color:var(--text-muted)}
+.hero-author span{color:var(--accent3);font-weight:500;letter-spacing:.01em}
+.hero-badges{display:flex;gap:.5rem;flex-wrap:wrap}
+.badge{font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.1em;padding:.3rem .75rem;border-radius:2px;text-transform:uppercase;font-weight:600}
+.badge-purple{background:rgba(124,107,255,.15);color:var(--accent);border:1px solid rgba(124,107,255,.3)}
+.badge-teal{background:rgba(0,217,180,.1);color:var(--accent3);border:1px solid rgba(0,217,180,.25)}
+.badge-pink{background:rgba(255,107,157,.1);color:var(--accent2);border:1px solid rgba(255,107,157,.25)}
+.badge-orange{background:rgba(255,179,71,.1);color:var(--accent4);border:1px solid rgba(255,179,71,.25)}
+.scroll-hint{position:absolute;bottom:2.5rem;right:3rem;display:flex;flex-direction:column;align-items:center;gap:.5rem;font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:.2em;color:var(--text-dim);text-transform:uppercase;animation:float 2.5s ease-in-out infinite}
+.scroll-line{width:1px;height:50px;background:linear-gradient(to bottom,var(--accent3),transparent)}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+
+/* LAYOUT */
+.container{max-width:860px;margin:0 auto;padding:0 2rem}
+.wide-container{max-width:1200px;margin:0 auto;padding:0 2rem}
+
+/* LABELS */
+.section-label{font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.3em;color:var(--accent3);text-transform:uppercase;margin-bottom:1.25rem;display:flex;align-items:center;gap:.6rem}
+.section-label::before{content:'';width:20px;height:1px;background:var(--accent3)}
+.section-label.purple{color:var(--accent)}.section-label.purple::before{background:var(--accent)}
+.section-label.pink{color:var(--accent2)}.section-label.pink::before{background:var(--accent2)}
+.section-label.orange{color:var(--accent4)}.section-label.orange::before{background:var(--accent4)}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:0;position:relative}
+.divider::after{content:attr(data-num);position:absolute;left:0;top:-11px;font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.15em;color:var(--text-dim);background:var(--bg);padding-right:1rem}
+
+/* MODEL SECTION */
+.model-section{padding:5rem 0;border-bottom:1px solid var(--border)}
+.model-header{display:flex;align-items:flex-start;gap:2rem;margin-bottom:3rem;flex-wrap:wrap}
+.model-number{font-family:'Playfair Display',serif;font-size:5rem;font-weight:900;line-height:1;color:var(--border);flex-shrink:0;user-select:none}
+.model-title-group{flex:1}
+.model-name{font-family:'Playfair Display',serif;font-size:clamp(1.8rem,4vw,2.8rem);font-weight:700;line-height:1.1;margin-bottom:.5rem}
+.model-tagline{font-size:.85rem;color:var(--text-muted);margin-bottom:1rem}
+.model-stats{display:flex;gap:.5rem;flex-wrap:wrap}
+.stat-pill{font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:.25rem .7rem;border-radius:100px;letter-spacing:.05em;border:1px solid;white-space:nowrap}
+.stat-params{color:var(--accent);border-color:rgba(124,107,255,.35);background:rgba(124,107,255,.08)}
+.stat-active{color:var(--accent3);border-color:rgba(0,217,180,.3);background:rgba(0,217,180,.06)}
+.stat-ctx{color:var(--accent4);border-color:rgba(255,179,71,.3);background:rgba(255,179,71,.06)}
+.stat-type{color:var(--accent2);border-color:rgba(255,107,157,.3);background:rgba(255,107,157,.06)}
+.model-body p{font-size:1rem;color:var(--text-muted);margin-bottom:1.25rem;max-width:720px}
+.model-body p strong{color:var(--text);font-weight:500}
+
+/* THEME CARDS */
+.themes-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);margin:3rem 0}
+.theme-card{background:var(--surface);padding:2rem 1.75rem;transition:background .2s;position:relative;overflow:hidden}
+.theme-card:hover{background:var(--surface2)}
+.theme-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.theme-card:nth-child(1)::before{background:var(--accent3)}
+.theme-card:nth-child(2)::before{background:var(--accent)}
+.theme-card:nth-child(3)::before{background:var(--accent2)}
+.theme-card:nth-child(4)::before{background:var(--accent4)}
+.theme-card:nth-child(5)::before{background:var(--accent3)}
+.theme-icon{font-size:1.5rem;margin-bottom:1rem}
+.theme-card h3{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;margin-bottom:.5rem;color:var(--text)}
+.theme-card p{font-size:.82rem;color:var(--text-muted);line-height:1.6}
+
+/* FEATURE BOXES */
+.feature-box{margin:2rem 0;border:1px solid var(--border);border-left:3px solid var(--accent3);background:var(--surface);padding:1.5rem 2rem}
+.feature-box.purple{border-left-color:var(--accent)}
+.feature-box.pink{border-left-color:var(--accent2)}
+.feature-box.orange{border-left-color:var(--accent4)}
+.feature-box h4{font-family:'JetBrains Mono',monospace;font-size:.75rem;letter-spacing:.2em;color:var(--accent3);text-transform:uppercase;margin-bottom:.75rem}
+.feature-box.purple h4{color:var(--accent)}
+.feature-box.pink h4{color:var(--accent2)}
+.feature-box.orange h4{color:var(--accent4)}
+.feature-box p{font-size:.9rem;color:var(--text-muted);margin:0}
+
+/* CALLOUT */
+.callout{display:flex;gap:1.25rem;padding:1.5rem 1.75rem;background:var(--surface);border:1px solid var(--border);margin:2rem 0}
+.callout-icon{font-size:1.25rem;flex-shrink:0;margin-top:.1rem}
+.callout p{font-size:.9rem;color:var(--text-muted);margin:0!important;line-height:1.65}
+.callout p strong{color:var(--text)}
+
+/* FORMULA */
+.formula-block{margin:2rem 0;background:var(--code-bg);border:1px solid var(--border);padding:1.75rem 2rem;overflow-x:auto}
+.formula-label{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--text-dim);letter-spacing:.2em;text-transform:uppercase;margin-bottom:1rem}
+.formula{font-family:'JetBrains Mono',monospace;font-size:.92rem;color:var(--accent3);letter-spacing:.03em;line-height:2.1}
+.formula .comment{color:var(--text-dim);font-size:.75rem}
+.formula .hi{color:var(--accent4)}
+.formula .hi2{color:var(--accent2)}
+.formula .hi3{color:var(--accent)}
+
+/* ARCH DIAGRAM */
+.arch-diagram{margin:2.5rem 0;background:var(--code-bg);border:1px solid var(--border);padding:2rem;overflow-x:auto}
+.arch-diagram-label{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--text-dim);letter-spacing:.2em;text-transform:uppercase;margin-bottom:1.25rem}
+.arch-row{display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem;flex-wrap:wrap}
+.arch-block{padding:.4rem 1rem;border-radius:2px;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:600;white-space:nowrap}
+.ab-q{background:rgba(0,217,180,.12);color:var(--accent3);border:1px solid rgba(0,217,180,.3)}
+.ab-f{background:rgba(255,179,71,.12);color:var(--accent4);border:1px solid rgba(255,179,71,.3)}
+.ab-g{background:rgba(124,107,255,.15);color:var(--accent);border:1px solid rgba(124,107,255,.35)}
+.ab-e{background:rgba(255,107,157,.12);color:var(--accent2);border:1px solid rgba(255,107,157,.3)}
+.ab-n{background:rgba(40,40,60,.8);color:var(--text-muted);border:1px solid var(--border)}
+.ab-arrow{color:var(--text-dim);font-size:.9rem}
+.ab-repeat{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--accent4);margin-left:auto}
+
+/* TAGS */
+.tag{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:.6rem;padding:.15rem .5rem;border-radius:2px;margin:2px;background:rgba(0,217,180,.08);color:var(--accent3);border:1px solid rgba(0,217,180,.20)}
+.tag.purple{background:rgba(124,107,255,.12);color:var(--accent);border-color:rgba(124,107,255,.25)}
+.tag.orange{background:rgba(255,179,71,.08);color:var(--accent4);border-color:rgba(255,179,71,.2)}
+.tag.pink{background:rgba(255,107,157,.08);color:var(--accent2);border-color:rgba(255,107,157,.2)}
+
+/* COMPARISON TABLE */
+.comparison-table{width:100%;border-collapse:collapse;margin:2.5rem 0;font-size:.85rem}
+.comparison-table th{font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);padding:.75rem 1rem;text-align:left;background:var(--surface);border-bottom:1px solid var(--border)}
+.comparison-table td{padding:.75rem 1rem;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text-muted);vertical-align:middle}
+.comparison-table tr:hover td{background:var(--surface)}
+.comparison-table td:first-child{color:var(--text);font-weight:500}
+
+/* VIZ */
+.viz-container{margin:3rem 0;background:var(--code-bg);border:1px solid var(--border);padding:2rem;overflow:hidden}
+.viz-label{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--text-dim);letter-spacing:.2em;text-transform:uppercase;margin-bottom:1.5rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem}
+.viz-caption{font-size:.8rem;color:var(--text-muted);margin-top:1rem;text-align:center;font-style:italic}
+
+/* TREND GRID */
+.trend-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:2rem;margin-top:3rem}
+.trend-item{display:flex;gap:1.25rem;align-items:flex-start}
+.trend-num{font-family:'Playfair Display',serif;font-size:3rem;font-weight:900;line-height:1;color:var(--border);flex-shrink:0}
+.trend-text h4{font-size:.95rem;font-weight:500;color:var(--text);margin-bottom:.4rem}
+.trend-text p{font-size:.82rem;color:var(--text-muted);line-height:1.65}
+
+/* TIMELINE */
+.timeline{position:relative;margin-top:3rem;padding-left:140px}
+.timeline::before{content:'';position:absolute;left:110px;top:0;bottom:0;width:1px;background:var(--border)}
+.tl-item{position:relative;margin-bottom:2.5rem}
+.tl-item::before{content:'';position:absolute;left:-30px;top:.45rem;width:8px;height:8px;border-radius:50%;border:1px solid;background:var(--bg)}
+.tl-item:nth-child(1)::before{border-color:var(--accent3);box-shadow:0 0 8px var(--accent3)}
+.tl-item:nth-child(2)::before{border-color:var(--accent);box-shadow:0 0 8px var(--accent)}
+.tl-item:nth-child(3)::before{border-color:var(--accent2);box-shadow:0 0 8px var(--accent2)}
+.tl-item:nth-child(4)::before{border-color:var(--accent4);box-shadow:0 0 8px var(--accent4)}
+.tl-item:nth-child(5)::before{border-color:var(--accent3);box-shadow:0 0 8px var(--accent3)}
+.tl-item:nth-child(6)::before{border-color:var(--accent);box-shadow:0 0 8px var(--accent)}
+.tl-item:nth-child(7)::before{border-color:var(--accent2);box-shadow:0 0 8px var(--accent2)}
+.tl-date{position:absolute;left:-140px;top:.25rem;font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.12em;color:var(--text-dim);text-transform:uppercase;width:110px;text-align:right}
+.tl-title{font-size:.95rem;font-weight:500;color:var(--text);margin-bottom:.3rem}
+.tl-desc{font-size:.82rem;color:var(--text-muted);margin-bottom:.4rem}
+.tl-models{display:flex;flex-wrap:wrap;gap:.3rem}
+
+/* TRENDS SECTION */
+.trends-section{padding:5rem 0;background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+
+mark{background:rgba(0,217,180,.15);color:#a0f0e0;padding:0 .2em;border-radius:2px}
+
+/* ANIMATIONS */
+.fade-up{opacity:0;transform:translateY(28px);transition:opacity .65s ease,transform .65s ease}
+.fade-up.visible{opacity:1;transform:translateY(0)}
+
+/* FOOTER */
+footer{padding:4rem 3rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1.5rem}
+.footer-left{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--text-dim);letter-spacing:.1em}
+.footer-right{display:flex;gap:1.5rem}
+.footer-right a{font-size:.8rem;color:var(--text-muted);text-decoration:none;transition:color .2s}
+.footer-right a:hover{color:var(--accent3)}
+
+/* BIT GRID animation */
+.bit-grid{display:grid;gap:3px;margin:0 auto}
+.bit-cell{border-radius:2px;transition:all .4s ease;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:.45rem;color:rgba(0,0,0,.5);font-weight:700}
+
+/* QUANT SCALE BARS */
+.quant-bar-row{display:flex;align-items:center;gap:.75rem;margin-bottom:.6rem}
+.quant-bar-label{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--text-muted);width:50px;flex-shrink:0;text-align:right}
+.quant-bar-track{flex:1;height:28px;background:rgba(255,255,255,.04);border-radius:2px;overflow:hidden;position:relative}
+.quant-bar-fill{height:100%;border-radius:2px;display:flex;align-items:center;padding-left:.5rem;transition:width 1s cubic-bezier(.16,1,.3,1)}
+.quant-bar-fill span{font-family:'JetBrains Mono',monospace;font-size:.6rem;font-weight:600;color:rgba(0,0,0,.65);white-space:nowrap}
+.quant-bar-meta{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--text-dim);width:90px;flex-shrink:0}
+
+/* RESPONSIVE */
+@media(max-width:640px){
+  nav{padding:1rem 1.25rem}.nav-links{display:none}
+  .hero{padding:7rem 1.25rem 4rem}
+  .container,.wide-container{padding:0 1.25rem}
+  footer{padding:2.5rem 1.25rem;flex-direction:column}
+  .model-number{font-size:3rem}
+  .comparison-table{font-size:.75rem}
+  .comparison-table th,.comparison-table td{padding:.5rem .6rem}
+  .timeline{padding-left:0}.timeline::before{display:none}
+  .tl-date{position:static;text-align:left;width:auto;margin-bottom:.3rem}
+}
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<nav>
+  <div class="nav-logo">Quantization · 2025</div>
+  <ul class="nav-links">
+    <li><a href="blogs.html" style="color:var(--accent3);border:1px solid rgba(0,217,180,.25);padding:.2rem .6rem;border-radius:2px;">← Blogs</a></li>
+    <li><a href="#fundamentals">Fundamentals</a></li>
+    <li><a href="#ptq">PTQ</a></li>
+    <li><a href="#methods">Methods</a></li>
+    <li><a href="#nf4">NF4</a></li>
+    <li><a href="#comparison">Compare</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <canvas id="hero-canvas" style="position:absolute;inset:0;pointer-events:none;z-index:0;"></canvas>
+
+  <div style="position:relative;z-index:1;">
+    <div class="hero-label">Deep Dive · Model Compression</div>
+    <h1>Quantization<br>in LLMs</h1>
+    <p class="hero-sub">
+      A 70B model needs 140 GB at float16. Your GPU has 24 GB. Quantization is the art of making models smaller without making them dumber — from the basics of bits and buckets to GPTQ, AWQ, NF4 and beyond.
+    </p>
+    <div class="hero-meta">
+      <div class="hero-author">March 2025 · <span>Prateek Singh, PhD</span></div>
+      <div class="hero-badges">
+        <span class="badge badge-teal">Quantization</span>
+        <span class="badge badge-purple">GPTQ</span>
+        <span class="badge badge-pink">AWQ</span>
+        <span class="badge badge-orange">NF4 · bitsandbytes</span>
+      </div>
+    </div>
+  </div>
+  <div class="scroll-hint"><div class="scroll-line"></div>scroll</div>
+</section>
+
+<!-- ══ OVERVIEW ══ -->
+<div style="padding:5rem 0;border-bottom:1px solid var(--border);" id="fundamentals">
+<div class="container">
+  <div class="section-label">Why Quantization Exists</div>
+  <h2 style="font-family:'Playfair Display',serif;font-size:clamp(1.8rem,4vw,2.6rem);font-weight:700;margin-bottom:1.5rem;">The memory wall that<br>every large model hits</h2>
+  <p style="font-size:1.05rem;color:var(--text-muted);max-width:700px;margin-bottom:1.25rem;">
+    Every parameter in a neural network is a number. In float32, each number costs 4 bytes. In float16, 2 bytes. A 70B parameter model at float16 needs <strong>140 GB of VRAM</strong> just to store the weights — before activations, KV cache, or gradients. The most powerful consumer GPU (RTX 4090) has 24 GB. Even an A100 has only 80 GB.
+  </p>
+  <p style="font-size:1rem;color:var(--text-muted);max-width:700px;">
+    Quantization is a controlled approximation: <mark>represent each weight using fewer bits</mark>, accepting a small error in exchange for dramatic reductions in memory and compute. Done carefully, a 4-bit quantized 70B model fits in 35–40 GB, runs on two consumer GPUs, and scores within 1–2% of the original on most benchmarks.
+  </p>
+
+  <!-- MEMORY COST INTERACTIVE -->
+  <div class="viz-container fade-up" style="margin-top:3rem;">
+    <div class="viz-label">
+      <span>Memory Required vs Precision — 70B Model</span>
+      <span id="model-size-label" style="color:var(--accent3);">70B parameters</span>
+    </div>
+    <div id="mem-bars"></div>
+    <div style="margin-top:1.5rem;">
+      <input type="range" id="model-slider" min="1" max="4" value="3" step="1" style="width:100%;accent-color:var(--accent3);cursor:pointer;">
+      <div style="display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--text-dim);margin-top:.3rem;">
+        <span>7B</span><span>13B</span><span>34B</span><span>70B</span>
+      </div>
+    </div>
+    <p class="viz-caption">GPU reference: RTX 4090 = 24 GB · A100 = 80 GB · H100 = 80 GB · 2×A100 = 160 GB</p>
+  </div>
+
+  <div class="themes-grid fade-up">
+    <div class="theme-card">
+      <div class="theme-icon">📐</div>
+      <h3>Pre-Training Quant (QAT)</h3>
+      <p>Quantization-Aware Training. Simulate quantization noise during training so the model learns to be robust to it. Best accuracy — highest cost.</p>
+    </div>
+    <div class="theme-card">
+      <div class="theme-icon">🔬</div>
+      <h3>Post-Training Quant (PTQ)</h3>
+      <p>Quantize an already-trained model. No retraining. Uses a small calibration dataset to find optimal quantization parameters. The practical standard.</p>
+    </div>
+    <div class="theme-card">
+      <div class="theme-icon">⚡</div>
+      <h3>Weight-Only Quant</h3>
+      <p>Quantize weights to 4-bit or 8-bit but keep activations in float16. Best accuracy-speed tradeoff for LLM inference. GPTQ, AWQ, NF4 all do this.</p>
+    </div>
+    <div class="theme-card">
+      <div class="theme-icon">🚀</div>
+      <h3>Weight + Activation Quant</h3>
+      <p>Quantize both weights and activations to int8. Enables integer matrix multiply — the fastest path on modern hardware. SmoothQuant, LLM.int8().</p>
+    </div>
+    <div class="theme-card">
+      <div class="theme-icon">🎯</div>
+      <h3>Mixed Precision</h3>
+      <p>Different layers at different precisions. Sensitive layers (first/last, attention outputs) stay in float16. Less sensitive MLP layers go to 4-bit. Best quality per byte.</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ §01 QAT vs PTQ ══ -->
+<div class="divider" data-num="01 — QAT VS PTQ"></div>
+<div class="model-section">
+<div class="container">
+  <div class="model-header">
+    <div class="model-number">01</div>
+    <div class="model-title-group">
+      <div class="model-name">Pre vs Post Training Quantization</div>
+      <div class="model-tagline">The fundamental fork in the road — when do you quantize?</div>
+    </div>
+  </div>
+  <div class="model-body">
+
+    <div class="section-label">QAT — Quantization-Aware Training</div>
+    <p>In QAT, you simulate quantization noise during the forward pass while training. The model sees rounded, clipped values during each step and learns to produce robust weights that tolerate the precision loss. The backward pass still uses full precision gradients — the quantization is a fake forward operation.</p>
+
+    <div class="formula-block fade-up">
+      <div class="formula-label">QAT — Straight-Through Estimator</div>
+      <div class="formula">
+        <span class="comment">Forward pass (quantized):</span><br>
+        w_q = <span class="hi">round</span>( clip(w, −2<sup>b−1</sup>, 2<sup>b−1</sup>−1) )  <span class="comment">← discrete, non-differentiable</span><br>
+        <br>
+        <span class="comment">Backward pass (straight-through estimator):</span><br>
+        ∂L/∂w ≈ ∂L/∂w_q · <span class="hi2">𝟙[|w| ≤ clip_val]</span>  <span class="comment">← pretend quant doesn't exist</span><br>
+        <br>
+        <span class="comment">The model optimizes weights that, when quantized, still minimize loss.</span>
+      </div>
+    </div>
+
+    <p><strong>When to use QAT:</strong> When you own the training pipeline and need maximum accuracy at the target precision. Apple uses QAT for all on-device CoreML models. The cost is real — you're adding quantization simulation overhead to every training step. For a 70B model, this is only feasible for very large compute budgets.</p>
+
+    <div class="section-label" style="margin-top:2.5rem;" id="ptq">PTQ — Post-Training Quantization</div>
+    <p>PTQ quantizes an already-trained model using a small <strong>calibration dataset</strong> — typically 128 to 512 samples — to measure the statistical distribution of weights and activations. No gradient computation. No retraining. You can quantize any model you can load, including models you downloaded from HuggingFace.</p>
+
+    <div class="arch-diagram fade-up">
+      <div class="arch-diagram-label">PTQ Pipeline</div>
+      <div class="arch-row">
+        <div class="arch-block ab-f">Pretrained FP16 Model</div>
+        <div class="ab-arrow">→</div>
+        <div class="arch-block ab-n">128–512 calibration samples</div>
+        <div class="ab-arrow">→</div>
+        <div class="arch-block ab-q">Run forward pass, collect weight/activation stats</div>
+      </div>
+      <div class="arch-row" style="margin-top:.5rem;">
+        <div class="arch-block ab-q">Compute scale + zero-point per layer</div>
+        <div class="ab-arrow">→</div>
+        <div class="arch-block ab-q">Round weights to target precision (INT8/INT4/NF4)</div>
+        <div class="ab-arrow">→</div>
+        <div class="arch-block ab-g">Quantized model ready</div>
+      </div>
+    </div>
+
+    <p>The calibration dataset matters more than people realize. Bad calibration data (e.g., using random text when the model is a code specialist) can introduce significant accuracy loss even with advanced quantization methods. Always use domain-representative samples.</p>
+
+    <!-- QAT vs PTQ visual comparison -->
+    <div class="viz-container fade-up">
+      <div class="viz-label"><span>QAT vs PTQ — Accuracy vs Cost Tradeoff</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;">
+        <div style="border:1px solid rgba(0,217,180,.2);padding:1.5rem;border-radius:2px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--accent3);letter-spacing:.2em;text-transform:uppercase;margin-bottom:1rem;">QAT</div>
+          <div id="qat-metrics"></div>
+        </div>
+        <div style="border:1px solid rgba(124,107,255,.2);padding:1.5rem;border-radius:2px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--accent);letter-spacing:.2em;text-transform:uppercase;margin-bottom:1rem;">PTQ</div>
+          <div id="ptq-metrics"></div>
+        </div>
+      </div>
+      <p class="viz-caption">For most production LLM deployments, PTQ + careful calibration is the pragmatic choice. QAT shines for small edge models where accuracy is non-negotiable.</p>
+    </div>
+
+    <div class="feature-box pink fade-up">
+      <h4>The Outlier Problem — Why LLMs Are Hard to Quantize</h4>
+      <p>In vision models, weight and activation distributions are relatively smooth. In LLMs, a small number of "outlier" values — typically ~0.1% of dimensions in large models — have magnitudes 10–100× larger than the rest. Simple uniform quantization assigns most of its precision budget to representing these outliers, leaving the remaining 99.9% badly approximated. This is <strong>the root cause</strong> behind every advanced quantization method in this blog — they all tackle outliers differently.</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ §02 FUNDAMENTALS ══ -->
+<div class="divider" data-num="02 — QUANTIZATION FUNDAMENTALS"></div>
+<div class="model-section">
+<div class="container">
+  <div class="model-header">
+    <div class="model-number">02</div>
+    <div class="model-title-group">
+      <div class="model-name">Bits, Buckets & Error</div>
+      <div class="model-tagline">How numbers get smaller — and what gets lost</div>
+    </div>
+  </div>
+  <div class="model-body">
+    <p>A 32-bit float uses 1 sign bit, 8 exponent bits, and 23 mantissa bits — representing any value between ±3.4×10³⁸ with ~7 decimal digits of precision. Quantization maps this into a much smaller representation. Understanding the two types of quantization is essential before diving into GPTQ or AWQ.</p>
+
+    <div class="section-label">Uniform Quantization — Abs Max & Zero-Point</div>
+
+    <div class="formula-block fade-up">
+      <div class="formula-label">Symmetric (Abs Max) Quantization</div>
+      <div class="formula">
+        scale = <span class="hi">max(|W|)</span> / (2<sup>b−1</sup> − 1)       <span class="comment">← maps max weight to max int</span><br>
+        W_q   = <span class="hi2">round</span>( W / scale )            <span class="comment">← INT values in [−2^(b-1), 2^(b-1)−1]</span><br>
+        W_deq = W_q × scale                  <span class="comment">← dequantize for compute</span><br>
+        <br>
+        <span class="comment">Error = W − W_deq  (quantization error)</span><br>
+        <span class="comment">For INT8: scale = max/127,  ~0.8% average error</span><br>
+        <span class="comment">For INT4: scale = max/7,    ~3.5% average error</span>
+      </div>
+    </div>
+
+    <!-- BIT ANIMATION -->
+    <div class="viz-container fade-up">
+      <div class="viz-label">
+        <span>Bit Precision — Value Representation</span>
+        <span id="bit-info" style="color:var(--accent3);font-size:.7rem;"></span>
+      </div>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;">
+        <button class="bit-btn" data-bits="32" style="font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:.35rem .8rem;cursor:pointer;border-radius:2px;background:rgba(255,179,71,.1);border:1px solid rgba(255,179,71,.3);color:var(--accent4);">FP32</button>
+        <button class="bit-btn" data-bits="16" style="font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:.35rem .8rem;cursor:pointer;border-radius:2px;background:rgba(0,217,180,.08);border:1px solid rgba(0,217,180,.25);color:var(--accent3);">FP16/BF16</button>
+        <button class="bit-btn" data-bits="8" style="font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:.35rem .8rem;cursor:pointer;border-radius:2px;background:rgba(124,107,255,.1);border:1px solid rgba(124,107,255,.3);color:var(--accent);">INT8</button>
+        <button class="bit-btn active-btn" data-bits="4" style="font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:.35rem .8rem;cursor:pointer;border-radius:2px;background:rgba(255,107,157,.1);border:1px solid rgba(255,107,157,.3);color:var(--accent2);">INT4 / NF4</button>
+        <button class="bit-btn" data-bits="2" style="font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:.35rem .8rem;cursor:pointer;border-radius:2px;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text-muted);">INT2</button>
+      </div>
+      <div id="bit-grid-container" style="display:flex;gap:1.5rem;flex-wrap:wrap;align-items:flex-start;"></div>
+      <div id="bit-stats" style="margin-top:1.25rem;padding:1rem;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:2px;"></div>
+      <p class="viz-caption">Each colored cell = 1 bit. Gray cells = bits saved vs FP32. Lower precision = more gray = less memory but more rounding error.</p>
+    </div>
+
+    <div class="section-label" style="margin-top:2.5rem;">Groupwise Quantization</div>
+    <p>A single scale for an entire weight matrix is too coarse — different rows have wildly different ranges. <strong>Groupwise quantization</strong> divides each row into groups of g weights (typically g=128) and computes a separate scale per group. This dramatically reduces quantization error at the cost of slightly more metadata storage.</p>
+
+    <div class="formula-block fade-up">
+      <div class="formula-label">Groupwise Quantization — Group Size 128</div>
+      <div class="formula">
+        <span class="comment">For weight matrix W ∈ ℝ^(d_out × d_in), group_size = 128:</span><br>
+        n_groups = d_in / 128<br>
+        <br>
+        for each group g:<br>
+        &nbsp;&nbsp;scale_g = <span class="hi">max(|W[:, g*128:(g+1)*128]|)</span> / (2<sup>b−1</sup>−1)<br>
+        &nbsp;&nbsp;W_q[:, g*128:(g+1)*128] = round(W / scale_g)<br>
+        <br>
+        <span class="comment">Metadata overhead: (d_out × n_groups) extra fp16 scale values</span><br>
+        <span class="comment">For 4096×4096 matrix, g=128: 4096×32 = 131K extra fp16 values = 256 KB</span><br>
+        <span class="comment">vs compressed weights: 4096×4096×0.5 bytes = 8 MB — overhead is 3%</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ §03 GPTQ ══ -->
+<div class="divider" data-num="03 — GPTQ"></div>
+<div class="model-section" id="methods">
+<div class="container">
+  <div class="model-header">
+    <div class="model-number">03</div>
+    <div class="model-title-group">
+      <div class="model-name">GPTQ</div>
+      <div class="model-tagline">One-Shot Weight Quantization from the Hessian — 2022</div>
+      <div class="model-stats">
+        <span class="stat-pill stat-active">Frantar et al. 2022</span>
+        <span class="stat-pill stat-params">Weight-only</span>
+        <span class="stat-pill stat-ctx">INT4 / INT3</span>
+        <span class="stat-pill stat-type">Hessian-based</span>
+      </div>
+    </div>
+  </div>
+  <div class="model-body">
+    <p>GPTQ is the most widely deployed quantization method for large language models. The key insight: don't quantize weights independently. <strong>Use second-order information (the Hessian) to compensate for each weight's quantization error by adjusting the remaining unquantized weights.</strong></p>
+
+    <p>It builds on a line of work called Optimal Brain Compression (OBC) / Optimal Brain Surgeon (OBS) from the 1990s. The GPTQ paper scaled it to 175B models and made it run in hours rather than weeks.</p>
+
+    <div class="section-label">The Core Algorithm</div>
+
+    <div class="formula-block fade-up">
+      <div class="formula-label">GPTQ — Layer-Wise Quantization with Hessian Compensation</div>
+      <div class="formula">
+        <span class="comment">Goal: minimize output error per layer independently</span><br>
+        min ‖<span class="hi">W</span>·X − <span class="hi2">Q(W)</span>·X‖²_F<br>
+        <br>
+        <span class="comment">Hessian (second-order) information:</span><br>
+        H = 2·X·Xᵀ  <span class="comment">← computed from calibration data, O(d²) cost</span><br>
+        <br>
+        <span class="comment">For each weight w_q in column order:</span><br>
+        1. Quantize w_q: <span class="hi">δ_q</span> = quant(w_q) − w_q  <span class="comment">← quantization error</span><br>
+        2. Compensate remaining weights in same row:<br>
+        &nbsp;&nbsp;&nbsp;w_remaining −= <span class="hi">δ_q</span> · H<sub>q,remaining</sub> / H<sub>q,q</sub>  <span class="comment">← Hessian update</span><br>
+        3. Move to next column<br>
+        <br>
+        <span class="comment">This ensures quantizing w_q causes minimum damage to the next weights</span>
+      </div>
+    </div>
+
+    <!-- GPTQ ANIMATION -->
+    <div class="viz-container fade-up">
+      <div class="viz-label">
+        <span>GPTQ Column-Wise Quantization</span>
+        <button id="gptq-play" style="font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:.3rem .75rem;background:rgba(0,217,180,.08);border:1px solid rgba(0,217,180,.25);color:var(--accent3);cursor:pointer;border-radius:2px;">▶ Play</button>
+      </div>
+      <div id="gptq-grid" style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-end;justify-content:center;padding:1rem 0;"></div>
+      <div id="gptq-status" style="font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--text-muted);text-align:center;margin-top:.75rem;min-height:20px;"></div>
+      <p class="viz-caption">Green = already quantized (compensated). Orange = currently quantizing. Gray = still in FP16. The Hessian compensation adjusts remaining columns after each quantization step.</p>
+    </div>
+
+    <div class="section-label" style="margin-top:2rem;">Lazy Batch Updates &amp; Cholesky</div>
+    <p>The naïve Hessian update is O(n³) per layer — catastrophically slow for large weight matrices. GPTQ introduces two engineering tricks that make it practical:</p>
+
+    <div class="feature-box fade-up">
+      <h4>Lazy Batch Updates</h4>
+      <p>Instead of updating the Hessian inverse after every weight, GPTQ batches 128 columns together, applies the same compensation formula, then recomputes. This amortizes the matrix inversion cost and maps efficiently to GPU tensor cores. Result: quantizing 175B parameters takes ~4 hours on a single A100 instead of weeks.</p>
+    </div>
+
+    <div class="feature-box purple fade-up">
+      <h4>Cholesky Decomposition Numerical Stability</h4>
+      <p>The raw Hessian inverse is numerically unstable — small calibration datasets and floating-point errors accumulate. GPTQ uses Cholesky decomposition (H = LLᵀ) to compute the inverse in a numerically stable form. Without this, quantization error grows catastrophically in later layers. With it, INT4 GPTQ is within 0.5–1 perplexity point of FP16 on most models.</p>
+    </div>
+
+    <p>GPTQ is <strong>weight-only</strong> — weights are stored in INT4, but dequantized back to FP16 for the actual matrix multiply. You save memory (4-bit storage) but don't get the throughput of INT4 compute. On GPUs without INT4 tensor cores, this means GPTQ is primarily a memory optimization, not a speed optimization.</p>
+  </div>
+</div>
+</div>
+
+<!-- ══ §04 AWQ ══ -->
+<div class="divider" data-num="04 — AWQ"></div>
+<div class="model-section">
+<div class="container">
+  <div class="model-header">
+    <div class="model-number">04</div>
+    <div class="model-title-group">
+      <div class="model-name">AWQ</div>
+      <div class="model-tagline">Activation-aware Weight Quantization — protect what matters</div>
+      <div class="model-stats">
+        <span class="stat-pill stat-active">Lin et al. 2023</span>
+        <span class="stat-pill stat-params">Weight-only</span>
+        <span class="stat-pill stat-ctx">INT4 / INT3</span>
+        <span class="stat-pill stat-type">Activation-aware</span>
+      </div>
+    </div>
+  </div>
+  <div class="model-body">
+    <p>AWQ takes a different perspective on the outlier problem. Rather than compensating after quantization (like GPTQ), it <strong>rescales weights before quantization</strong> so that the most important weights use more of the quantization range. The key observation: not all weights are equally important — the ones with large corresponding input activations matter disproportionately.</p>
+
+    <div class="callout fade-up">
+      <div class="callout-icon">💡</div>
+      <p><strong>The AWQ Insight:</strong> Only ~1% of weights are "salient" — they correspond to large activation magnitudes and contribute disproportionately to output quality. Protecting just these 1% in higher precision preserves performance remarkably well. But instead of keeping them in FP16 (wasteful), AWQ scales them to use the full INT4 range and scales everything else down proportionally. Zero extra memory. Better accuracy than GPTQ on many tasks.</p>
+    </div>
+
+    <div class="formula-block fade-up">
+      <div class="formula-label">AWQ — Per-Channel Scaling</div>
+      <div class="formula">
+        <span class="comment">Saliency: weight importance ∝ activation magnitude</span><br>
+        s<sub>importance</sub> = mean(|X|)  <span class="comment">← average activation per input channel</span><br>
+        <br>
+        <span class="comment">Optimal scale (found by grid search):</span><br>
+        s* = argmin<sub>s</sub> ‖Q(<span class="hi">s</span>·W) · (X/<span class="hi">s</span>) − W·X‖<br>
+        <br>
+        <span class="comment">Intuition: scale up important weights → they use full INT4 range</span><br>
+        <span class="comment">Scale s absorbed into previous LayerNorm — no inference overhead</span><br>
+        <br>
+        s* ≈ s<sub>importance</sub><sup>α</sup>   where  <span class="hi2">α</span> ≈ 0.5  <span class="comment">← tuned per-model</span>
+      </div>
+    </div>
+
+    <!-- AWQ SALIENCY VIZ -->
+    <div class="viz-container fade-up">
+      <div class="viz-label">
+        <span>AWQ — Weight Saliency &amp; Scaling</span>
+        <button id="awq-toggle" style="font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:.3rem .75rem;background:rgba(124,107,255,.08);border:1px solid rgba(124,107,255,.25);color:var(--accent);cursor:pointer;border-radius:2px;">Show Scaled</button>
+      </div>
+      <div id="awq-viz" style="overflow-x:auto;"></div>
+      <p class="viz-caption">Left: raw weights — most cluster near zero, outliers waste quantization range. Right: after AWQ scaling — important channels expanded to fill the INT4 range uniformly.</p>
+    </div>
+
+    <div class="section-label" style="margin-top:2rem;">AWQ vs GPTQ — When to Choose Which</div>
+
+    <table class="comparison-table fade-up">
+      <thead><tr><th>Dimension</th><th>GPTQ</th><th>AWQ</th></tr></thead>
+      <tbody>
+        <tr><td>Core idea</td><td>Compensate after rounding</td><td>Scale before rounding</td></tr>
+        <tr><td>Second-order info</td><td>✅ Hessian</td><td>❌ First-order only</td></tr>
+        <tr><td>Calibration cost</td><td>Higher (Hessian inversion)</td><td>Lower (grid search)</td></tr>
+        <tr><td>Speed (inference)</td><td>Similar</td><td>Similar</td></tr>
+        <tr><td>Accuracy at INT4</td><td>Slightly better on perplexity</td><td>Better on instruction following</td></tr>
+        <tr><td>Multi-modal models</td><td>Requires care</td><td><span class="tag">Better</span> — handles vision tokens well</td></tr>
+        <tr><td>Recommended for</td><td>Pure language models</td><td>Instruction-tuned, multi-modal</td></tr>
+        <tr><td>Popular implementations</td><td><span class="tag">AutoGPTQ</span></td><td><span class="tag purple">AutoAWQ</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<!-- ══ §05 BITSANDBYTES ══ -->
+<div class="divider" data-num="05 — BITSANDBYTES / LLM.INT8()"></div>
+<div class="model-section">
+<div class="container">
+  <div class="model-header">
+    <div class="model-number">05</div>
+    <div class="model-title-group">
+      <div class="model-name">bitsandbytes & LLM.int8()</div>
+      <div class="model-tagline">The mixed decomposition that makes INT8 practical for LLMs</div>
+      <div class="model-stats">
+        <span class="stat-pill stat-active">Dettmers et al. 2022</span>
+        <span class="stat-pill stat-params">INT8 + FP16</span>
+        <span class="stat-pill stat-ctx">No calibration</span>
+        <span class="stat-pill stat-type">Mixed decomposition</span>
+      </div>
+    </div>
+  </div>
+  <div class="model-body">
+    <p>Tim Dettmers' bitsandbytes library and the LLM.int8() paper solved a problem that had blocked INT8 quantization of large models: <strong>the outlier problem</strong>. Standard INT8 quantization of LLMs above ~6B parameters suffers catastrophic accuracy loss because ~0.1% of activation dimensions have values 100× larger than the rest, dominating the quantization range.</p>
+
+    <p>The solution is an elegant <mark>mixed-precision matrix multiplication</mark>: decompose the weight matrix into two parts based on whether the corresponding activation dimension is an outlier.</p>
+
+    <div class="formula-block fade-up">
+      <div class="formula-label">LLM.int8() — Mixed Decomposition</div>
+      <div class="formula">
+        <span class="comment">Step 1: Identify outlier dimensions in activations X</span><br>
+        O = {i : max|X[:,i]| > <span class="hi">threshold</span>}  <span class="comment">← ~0.1% of dimensions, threshold≈6.0</span><br>
+        <br>
+        <span class="comment">Step 2: Split matrix multiply into two parts</span><br>
+        Y = X·Wᵀ<br>
+        &nbsp;= <span class="hi2">X[:,O]·W[O,:]ᵀ</span>           <span class="comment">← outlier dims: keep in FP16</span><br>
+        &nbsp;+ <span class="hi">X[:,!O]·W[!O,:]ᵀ</span>          <span class="comment">← normal dims: quantize to INT8</span><br>
+        <br>
+        <span class="comment">~99.9% of the compute is INT8 · INT8 (fast)</span><br>
+        <span class="comment">~0.1% stays FP16 · FP16 (handles outliers safely)</span>
+      </div>
+    </div>
+
+    <!-- INT8 DECOMPOSITION VIZ -->
+    <div class="viz-container fade-up">
+      <div class="viz-label"><span>LLM.int8() Mixed Decomposition — Live View</span></div>
+      <div id="int8-viz" style="overflow-x:auto;"></div>
+      <p class="viz-caption">Orange columns = outlier dimensions (FP16). Teal columns = normal dimensions (INT8). LLM.int8() routes each column to the right compute path automatically.</p>
+    </div>
+
+    <div class="feature-box fade-up">
+      <h4>Zero-Point vs Absmax Quantization in bitsandbytes</h4>
+      <p>bitsandbytes implements two INT8 strategies: <strong>absmax</strong> (symmetric, scale = max(|X|)/127, zero-point = 0) and <strong>zero-point</strong> (asymmetric, maps the full float range to [−128, 127] using both scale and offset). Absmax is simpler and faster. Zero-point is more accurate for asymmetric distributions (e.g., ReLU outputs that are always non-negative). LLM.int8() uses absmax for the INT8 path and FP16 for the outlier path.</p>
+    </div>
+
+    <p>The practical result: LLM.int8() reduces memory by ~50% vs FP16 with essentially <strong>zero accuracy loss</strong> on models above 6.7B parameters (smaller models have fewer outliers and don't need the decomposition). It's the safest quantization method — but INT8 weights still require dequantization before compute on most GPUs, so the throughput benefit is smaller than you'd expect.</p>
+  </div>
+</div>
+</div>
+
+<!-- ══ §06 NF4 ══ -->
+<div class="divider" data-num="06 — NF4 &amp; QLORA"></div>
+<div class="model-section" id="nf4">
+<div class="container">
+  <div class="model-header">
+    <div class="model-number">06</div>
+    <div class="model-title-group">
+      <div class="model-name">NF4 — NormalFloat4</div>
+      <div class="model-tagline">Information-theoretically optimal for normal distributions</div>
+      <div class="model-stats">
+        <span class="stat-pill stat-active">Dettmers et al. 2023</span>
+        <span class="stat-pill stat-params">4-bit</span>
+        <span class="stat-pill stat-ctx">Quantile quant.</span>
+        <span class="stat-pill stat-type">QLoRA backbone</span>
+      </div>
+    </div>
+  </div>
+  <div class="model-body">
+    <p>NF4 is the quantization format behind QLoRA — the method that made fine-tuning 65B models on a single GPU possible. It's not just a smaller integer — it's a carefully designed 4-bit datatype that is <strong>information-theoretically optimal for normally distributed data.</strong></p>
+
+    <p>The key insight: neural network weights, after training, follow an approximately normal (Gaussian) distribution centered at zero. Standard INT4 maps uniformly-spaced integer values to the weight range — which wastes precision because the uniform grid doesn't match the non-uniform density of the normal distribution. NF4 fixes this with quantile quantization.</p>
+
+    <div class="formula-block fade-up">
+      <div class="formula-label">NF4 — Quantile Quantization Construction</div>
+      <div class="formula">
+        <span class="comment">Concept: place quantization levels at quantiles of N(0,1)</span><br>
+        q_i = Φ<sup>−1</sup>( (i + 0.5) / 2<sup>k</sup> )   for i = 0, 1, ..., 2<sup>k</sup>−1<br>
+        <br>
+        <span class="comment">where Φ<sup>−1</sup> is the inverse CDF of the standard normal</span><br>
+        <span class="comment">Result: each bucket contains roughly equal probability mass</span><br>
+        <br>
+        <span class="comment">NF4 values (16 levels, symmetric around 0):</span><br>
+        <span class="hi">[-1.0, -0.6962, -0.5251, -0.3949, -0.2844, -0.1848, -0.0911, 0.0,</span><br>
+        <span class="hi">&nbsp;0.0796,  0.1609,  0.2461,  0.3379,  0.4407,  0.5626, 0.7229, 1.0]</span><br>
+        <br>
+        <span class="comment">These are NOT uniformly spaced — more levels near 0 where weights cluster</span>
+      </div>
+    </div>
+
+    <!-- NF4 vs INT4 VISUAL -->
+    <div class="viz-container fade-up">
+      <div class="viz-label">
+        <span>NF4 vs INT4 — Quantization Level Placement</span>
+        <div style="display:flex;gap:.75rem;">
+          <button id="show-int4" style="font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:.3rem .75rem;background:rgba(255,179,71,.1);border:1px solid rgba(255,179,71,.3);color:var(--accent4);cursor:pointer;border-radius:2px;">INT4</button>
+          <button id="show-nf4" style="font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:.3rem .75rem;background:rgba(255,107,157,.1);border:1px solid rgba(255,107,157,.3);color:var(--accent2);cursor:pointer;border-radius:2px;">NF4</button>
+          <button id="show-both" style="font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:.3rem .75rem;background:rgba(0,217,180,.08);border:1px solid rgba(0,217,180,.25);color:var(--accent3);cursor:pointer;border-radius:2px;">Both</button>
+        </div>
+      </div>
+      <canvas id="nf4-canvas" width="800" height="220" style="width:100%;height:auto;display:block;"></canvas>
+      <p class="viz-caption">INT4 places levels uniformly across the range — half its precision goes to values rarely seen. NF4 concentrates levels near zero where weights cluster — minimizing average quantization error for Gaussian weight distributions.</p>
+    </div>
+
+    <div class="section-label" style="margin-top:2rem;">Double Quantization</div>
+    <p>QLoRA introduces a second innovation on top of NF4: <strong>double quantization</strong>. Each group of 64 weights shares a quantization constant (scale) stored as a 32-bit float — that's 0.5 bytes per weight overhead. Double quantization quantizes these scale constants themselves using 8-bit floats, reducing the overhead to ~0.127 bytes per weight. For a 65B model, this saves about 2 GB.</p>
+
+    <div class="feature-box pink fade-up">
+      <h4>Why NF4 Is Better Than INT4 for Weights — But Not for Activations</h4>
+      <p>Trained model weights follow a Gaussian distribution because SGD with L2 regularization (weight decay) actively pushes them toward zero. NF4's quantile-based levels perfectly match this. But activations don't follow a Gaussian — after ReLU they're clipped positive, after attention softmax they're in [0,1], after LayerNorm they can be any shape. NF4 is specifically designed for weight-only quantization; INT8/FP8 remains the right choice for activations.</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ §07 SMOOTHQUANT & FP8 ══ -->
+<div class="divider" data-num="07 — SMOOTHQUANT, FP8 &amp; GGUF"></div>
+<div class="model-section">
+<div class="container">
+  <div class="model-header">
+    <div class="model-number">07</div>
+    <div class="model-title-group">
+      <div class="model-name">SmoothQuant, FP8 & GGUF</div>
+      <div class="model-tagline">The rest of the quantization zoo — and when each makes sense</div>
+    </div>
+  </div>
+  <div class="model-body">
+
+    <div class="section-label">SmoothQuant — Migrate Difficulty from Activations to Weights</div>
+    <p>SmoothQuant (Xiao et al., 2022) solves a different problem: activations are harder to quantize than weights because their distribution changes per-input (you can't run calibration on every new prompt). The insight: <strong>shift the quantization difficulty from activations to weights</strong>, which are static and easier to calibrate.</p>
+
+    <div class="formula-block fade-up">
+      <div class="formula-label">SmoothQuant — Per-Channel Smoothing</div>
+      <div class="formula">
+        <span class="comment">Original: Y = (X · W)  — X has outliers, hard to quantize</span><br>
+        <span class="comment">SmoothQuant: Y = (X / s) · (s · W)  where s = smoothing scale</span><br>
+        <br>
+        s_j = <span class="hi">max(|X[:,j]|)</span><sup>α</sup> / <span class="hi2">max(|W[j,:]|)</span><sup>1−α</sup>  <span class="comment">← per input channel</span><br>
+        <br>
+        <span class="comment">α = 0.5 → equal difficulty split between X and W</span><br>
+        <span class="comment">α → 1.0 → push all difficulty to weights (better for activation quant)</span><br>
+        <span class="comment">Result: both X/s and s·W are easier to quantize to INT8</span>
+      </div>
+    </div>
+
+    <div class="section-label" style="margin-top:2.5rem;">FP8 — The Hardware Native Solution</div>
+    <p>NVIDIA H100 GPUs introduced native FP8 tensor cores. FP8 is a floating-point format (not integer) with two variants: <strong>E4M3</strong> (4 exponent bits, 3 mantissa, range ±448) and <strong>E5M2</strong> (5 exponent bits, 2 mantissa, range ±57344). Unlike INT8 which requires dequantization to do matrix multiply, FP8 runs natively — meaning actual speedup, not just memory savings.</p>
+
+    <div class="feature-box fade-up">
+      <h4>FP8 Training at Scale</h4>
+      <p>Meta's Llama-3 405B and Google's Gemini 1.5 both used FP8 training on parts of the forward pass. The FP8 E4M3 format for weights and FP8 E5M2 for gradients is becoming a standard. FP8 inference on H100 achieves <strong>2× throughput</strong> vs FP16 with near-identical accuracy — the next generation of fast inference will be FP8, not INT4.</p>
+    </div>
+
+    <div class="section-label" style="margin-top:2.5rem;">GGUF — The Deployment Format</div>
+    <p>GGUF (GPT-Generated Unified Format) is llama.cpp's model format — it bundles weights, tokenizer, and quantization metadata into a single file. It supports a range of quantization types labeled Q2_K through Q8_0, where the number is the target bit-width and the letter indicates the groupwise strategy.</p>
+
+    <table class="comparison-table fade-up">
+      <thead><tr><th>GGUF Type</th><th>Bits/Weight</th><th>70B Model Size</th><th>Quality</th><th>Use Case</th></tr></thead>
+      <tbody>
+        <tr><td>Q2_K</td><td>~2.6 bits</td><td><span class="tag">~24 GB</span></td><td>⚠️ Noticeable loss</td><td>Ultra-low memory only</td></tr>
+        <tr><td>Q4_K_S</td><td>~4.4 bits</td><td><span class="tag">~38 GB</span></td><td>✅ Good</td><td>Standard 4-bit</td></tr>
+        <tr><td>Q4_K_M</td><td>~4.8 bits</td><td><span class="tag">~42 GB</span></td><td>✅ Very good</td><td>Recommended default</td></tr>
+        <tr><td>Q5_K_M</td><td>~5.7 bits</td><td><span class="tag">~50 GB</span></td><td>✅✅ Excellent</td><td>Quality-conscious deployment</td></tr>
+        <tr><td>Q6_K</td><td>~6.6 bits</td><td><span class="tag">~57 GB</span></td><td>✅✅ Near FP16</td><td>Maximum quality INT</td></tr>
+        <tr><td>Q8_0</td><td>8 bits</td><td><span class="tag">~70 GB</span></td><td>✅✅✅ FP16 quality</td><td>Reference / highest quality</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout fade-up">
+      <div class="callout-icon">📦</div>
+      <p><strong>K-quants in GGUF:</strong> The _K suffix means "k-quants" — a mixed-precision scheme where important layers (embeddings, attention output, first/last transformer layers) are quantized at higher precision than less important layers. Q4_K_M uses Q6_K for ~10% of layers and Q4_K for the rest. This mixed approach is why K-quants consistently outperform non-K variants at the same average bit-width.</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ §08 COMPARISON ══ -->
+<div class="divider" data-num="08 — FULL COMPARISON"></div>
+<div class="model-section" id="comparison">
+<div class="container">
+  <div class="section-label">Head to Head</div>
+  <h2 style="font-family:'Playfair Display',serif;font-size:clamp(1.8rem,4vw,2.5rem);font-weight:700;margin-bottom:2rem;">Every Method Side by Side</h2>
+
+  <!-- ACCURACY VS SIZE CHART -->
+  <div class="viz-container fade-up">
+    <div class="viz-label"><span>Accuracy Retention vs Memory Savings — 70B Model</span></div>
+    <canvas id="acc-chart" width="800" height="280" style="width:100%;height:auto;display:block;"></canvas>
+    <p class="viz-caption">Bubble area ∝ inference throughput improvement vs FP16. Top-right = ideal (high accuracy, high compression). No method reaches both extremes.</p>
+  </div>
+
+  <table class="comparison-table fade-up">
+    <thead>
+      <tr><th>Method</th><th>Precision</th><th>Memory vs FP16</th><th>Accuracy Loss</th><th>Speed vs FP16</th><th>Calibration</th><th>Best For</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>FP16 Baseline</td>
+        <td><span class="tag orange">16-bit float</span></td>
+        <td>1.0×</td>
+        <td>0%</td>
+        <td>1.0×</td>
+        <td>None</td>
+        <td>Max accuracy, ample VRAM</td>
+      </tr>
+      <tr>
+        <td>LLM.int8()</td>
+        <td><span class="tag">INT8 + FP16</span></td>
+        <td>2.0×</td>
+        <td>~0%</td>
+        <td>~1.0× (memory bound)</td>
+        <td>None</td>
+        <td>Safe drop-in, large models</td>
+      </tr>
+      <tr>
+        <td>SmoothQuant</td>
+        <td><span class="tag">INT8 W+A</span></td>
+        <td>2.0×</td>
+        <td>&lt;0.5%</td>
+        <td>1.5–1.8× (INT8 matmul)</td>
+        <td>Small</td>
+        <td>High throughput inference</td>
+      </tr>
+      <tr>
+        <td>GPTQ</td>
+        <td><span class="tag pink">INT4</span></td>
+        <td>3.5–4.0×</td>
+        <td>0.5–1.5%</td>
+        <td>1.5–2.0×</td>
+        <td>Yes (calibration set)</td>
+        <td>Language models, perplexity-sensitive</td>
+      </tr>
+      <tr>
+        <td>AWQ</td>
+        <td><span class="tag pink">INT4</span></td>
+        <td>3.5–4.0×</td>
+        <td>0.5–1.5%</td>
+        <td>1.5–2.0×</td>
+        <td>Yes (smaller)</td>
+        <td>Instruction-tuned, multi-modal</td>
+      </tr>
+      <tr>
+        <td>NF4 (QLoRA)</td>
+        <td><span class="tag purple">NF4 4-bit</span></td>
+        <td>4.0×+</td>
+        <td>~1%</td>
+        <td>1.5× (dequant on-the-fly)</td>
+        <td>None</td>
+        <td>Training + inference on consumer GPU</td>
+      </tr>
+      <tr>
+        <td>GGUF Q4_K_M</td>
+        <td><span class="tag">~4.8-bit mixed</span></td>
+        <td>3.3×</td>
+        <td>&lt;1%</td>
+        <td>1.5–2.5× (CPU + GPU)</td>
+        <td>None (pre-computed)</td>
+        <td>Local deployment, llama.cpp</td>
+      </tr>
+      <tr>
+        <td>FP8 (H100)</td>
+        <td><span class="tag orange">8-bit float</span></td>
+        <td>2.0×</td>
+        <td>~0%</td>
+        <td>2.0× (hardware native)</td>
+        <td>Small</td>
+        <td>Production serving on H100</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+</div>
+
+<!-- ══ §09 TIMELINE ══ -->
+<div class="divider" data-num="09 — TIMELINE"></div>
+<div class="model-section">
+<div class="container">
+  <div class="section-label teal">History</div>
+  <h2 style="font-family:'Playfair Display',serif;font-size:clamp(1.8rem,4vw,2.5rem);font-weight:700;margin-bottom:1rem;">From Neural Compression to NF4</h2>
+
+  <div class="timeline fade-up">
+    <div class="tl-item">
+      <div class="tl-date">1993</div>
+      <div class="tl-title">Optimal Brain Surgeon (OBS)</div>
+      <div class="tl-desc">Hassibi & Stork use Hessian-based weight removal for neural network compression. The theoretical foundation GPTQ would build on 30 years later.</div>
+      <div class="tl-models"><span class="tag">OBS</span><span class="tag">Hessian pruning</span></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-date">2017</div>
+      <div class="tl-title">Quantization-Aware Training at Google</div>
+      <div class="tl-desc">Google's mobile team formalizes QAT for TFLite, making INT8 quantization practical for on-device vision models. Straight-through estimator becomes standard.</div>
+      <div class="tl-models"><span class="tag">QAT</span><span class="tag">TFLite</span></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-date">Aug 2022</div>
+      <div class="tl-title">LLM.int8() — bitsandbytes</div>
+      <div class="tl-desc">Dettmers solves the outlier problem with mixed-precision decomposition. First method to quantize 175B+ models to INT8 with near-zero accuracy loss. Integrated into HuggingFace.</div>
+      <div class="tl-models"><span class="tag">LLM.int8()</span><span class="tag">bitsandbytes</span></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-date">Nov 2022</div>
+      <div class="tl-title">GPTQ — One-Shot 4-bit</div>
+      <div class="tl-desc">Frantar et al. adapt OBS to quantize OPT-175B to INT4 in 4 hours on one GPU. GPTQ becomes the dominant INT4 method for open-weight models.</div>
+      <div class="tl-models"><span class="tag pink">GPTQ</span><span class="tag pink">INT4</span></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-date">May 2023</div>
+      <div class="tl-title">QLoRA &amp; NF4</div>
+      <div class="tl-desc">Dettmers introduces NF4 as an information-theoretically optimal 4-bit format and combines it with LoRA fine-tuning. Fine-tuning 65B on a single GPU becomes reality.</div>
+      <div class="tl-models"><span class="tag purple">NF4</span><span class="tag purple">QLoRA</span><span class="tag purple">Double Quant</span></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-date">Jun 2023</div>
+      <div class="tl-title">AWQ — Activation-Aware Scaling</div>
+      <div class="tl-desc">Lin et al. show that scaling salient channels before quantization outperforms GPTQ on instruction following tasks. AWQ becomes default for multi-modal models.</div>
+      <div class="tl-models"><span class="tag">AWQ</span></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-date">2024–25</div>
+      <div class="tl-title">FP8 Goes Production</div>
+      <div class="tl-desc">H100 FP8 inference deployed at Meta, Google, and OpenAI. 2× throughput over FP16 with near-zero accuracy loss. The future of high-performance serving.</div>
+      <div class="tl-models"><span class="tag orange">FP8</span><span class="tag orange">H100</span></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ §10 VERDICT ══ -->
+<div class="divider" data-num="10 — DECISION GUIDE"></div>
+<div class="model-section">
+<div class="container">
+  <div class="section-label pink">Practical Guide</div>
+  <h2 style="font-family:'Playfair Display',serif;font-size:clamp(1.8rem,4vw,2.5rem);font-weight:700;margin-bottom:1.5rem;">Which Method For Which Situation</h2>
+
+  <div class="themes-grid fade-up">
+    <div class="theme-card">
+      <div class="theme-icon">💻</div>
+      <h3>Local / Consumer GPU</h3>
+      <p>GGUF Q4_K_M via llama.cpp for inference. NF4 via bitsandbytes if you're also fine-tuning. Both work on 24 GB VRAM for 70B models split across CPU+GPU.</p>
+    </div>
+    <div class="theme-card">
+      <div class="theme-icon">🖥️</div>
+      <h3>Single A100 Serving</h3>
+      <p>GPTQ or AWQ INT4 for maximum model size per GPU. SmoothQuant INT8 if you need better accuracy. LLM.int8() as the safe no-calibration option.</p>
+    </div>
+    <div class="theme-card">
+      <div class="theme-icon">⚡</div>
+      <h3>High-Throughput Production</h3>
+      <p>FP8 on H100 is the state of the art — 2× throughput, near-zero accuracy cost. SmoothQuant INT8 on A100/A10 if FP8 hardware isn't available.</p>
+    </div>
+    <div class="theme-card">
+      <div class="theme-icon">📱</div>
+      <h3>On-Device / Mobile</h3>
+      <p>QAT with INT8 (CoreML / ONNX) for maximum accuracy. GGUF Q4_K_S for llama.cpp on phone. Target 1–3B models — quantization helps but model size is the real constraint.</p>
+    </div>
+    <div class="theme-card">
+      <div class="theme-icon">🔧</div>
+      <h3>Fine-Tuning on a Budget</h3>
+      <p>QLoRA with NF4 — the only practical way to fine-tune 13B+ models on consumer hardware. Base model in NF4, LoRA adapters in BF16. bitsandbytes handles everything.</p>
+    </div>
+  </div>
+
+  <div class="callout fade-up" style="margin-top:3rem;border-color:rgba(0,217,180,.3);">
+    <div class="callout-icon">🔬</div>
+    <p><strong>My take:</strong> The quantization landscape is converging on two tiers. For <strong>production at scale</strong>, FP8 on H100/H200 will dominate within 2 years — it's hardware-native, lossless, and fast. For <strong>local deployment and fine-tuning</strong>, 4-bit methods (AWQ, GGUF Q4_K_M, NF4) have hit a quality plateau where further research yields diminishing returns. The interesting frontier is pushing to <strong>2-bit quantization</strong> without catastrophic loss — QuIP#, AQLM, and BitNet 1.58b are early results suggesting it's possible, but not yet practical at scale.</p>
+  </div>
+</div>
+</div>
+
+<footer>
+  <div class="footer-left">© 2025 Prateek Singh, PhD · prateeksinghphd.com</div>
+  <div class="footer-right">
+    <a href="blogs.html">← All Posts</a>
+    <a href="https://github.com/prateekiitr">GitHub</a>
+  </div>
+</footer>
+
+<script>
+// PROGRESS
+window.addEventListener('scroll',()=>{
+  const s=document.documentElement;
+  document.getElementById('progress').style.width=(s.scrollTop/(s.scrollHeight-s.clientHeight)*100)+'%';
+});
+
+// FADE UP
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target);}});
+},{threshold:.08});
+document.querySelectorAll('.fade-up').forEach(el=>obs.observe(el));
+
+// HERO PARTICLES
+(function(){
+  const c=document.getElementById('hero-canvas'),ctx=c.getContext('2d');
+  let W,H;
+  function resize(){W=c.width=c.offsetWidth;H=c.height=c.offsetHeight;}
+  resize();window.addEventListener('resize',resize);
+  const pts=Array.from({length:55},()=>({x:Math.random()*1600,y:Math.random()*900,vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.22,r:Math.random()*1.5+.4,a:Math.random()*Math.PI*2}));
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    pts.forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;p.a+=.004;
+      if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(0,217,180,${(.3+.3*Math.sin(p.a))*.45})`;ctx.fill();
+    });
+    pts.forEach((a,i)=>pts.slice(i+1).forEach(b=>{
+      const d=Math.hypot(a.x-b.x,a.y-b.y);
+      if(d<110){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);
+        ctx.strokeStyle=`rgba(124,107,255,${.1*(1-d/110)})`;ctx.lineWidth=.5;ctx.stroke();}
+    }));
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// MEMORY BARS
+(function(){
+  const modelSizes=[7,13,34,70];
+  const labels=['FP32','FP16/BF16','INT8','INT4 / NF4','INT2'];
+  const bytesPerParam=[4,2,1,.5,.25];
+  const colors=['rgba(255,179,71,.75)','rgba(0,217,180,.7)','rgba(124,107,255,.7)','rgba(255,107,157,.7)','rgba(255,255,255,.3)'];
+  const gpuLines=[{label:'RTX 4090',gb:24,col:'rgba(0,217,180,.5)'},{label:'A100 80GB',gb:80,col:'rgba(255,179,71,.5)'},{label:'2×A100',gb:160,col:'rgba(255,107,157,.5)'}];
+  const slider=document.getElementById('model-slider');
+  const sizeLabel=document.getElementById('model-size-label');
+
+  function render(idx){
+    const B=modelSizes[idx-1]*1e9;
+    sizeLabel.textContent=modelSizes[idx-1]+'B parameters';
+    const maxGB=B*4/1e9;
+    let html='';
+    labels.forEach((lbl,i)=>{
+      const gb=(B*bytesPerParam[i])/1e9;
+      const pct=Math.min(100,gb/maxGB*100);
+      const gpuFits=gpuLines.filter(g=>gb<=g.gb).map(g=>`<span class="tag" style="font-size:.55rem;">${g.label} ✓</span>`).join('');
+      html+=`<div class="quant-bar-row">
+        <div class="quant-bar-label">${lbl}</div>
+        <div class="quant-bar-track">
+          <div class="quant-bar-fill" style="width:0%;background:${colors[i]};" data-pct="${pct}">
+            <span>${gb.toFixed(0)} GB</span>
+          </div>
+        </div>
+        <div class="quant-bar-meta">${gpuFits}</div>
+      </div>`;
+    });
+    document.getElementById('mem-bars').innerHTML=html;
+    setTimeout(()=>{document.querySelectorAll('.quant-bar-fill').forEach(el=>el.style.width=el.dataset.pct+'%');},60);
+  }
+  render(parseInt(slider.value));
+  slider.addEventListener('input',function(){render(parseInt(this.value));});
+})();
+
+// QAT vs PTQ metrics
+(function(){
+  const metrics=[
+    {label:'Accuracy',qat:99.5,ptq:98.2},
+    {label:'Training cost',qat:100,ptq:2},
+    {label:'Inference speed',qat:90,ptq:90},
+    {label:'Ease of use',qat:25,ptq:88},
+    {label:'Memory (train)',qat:15,ptq:95},
+  ];
+  function bar(val,col,maxW=220){
+    return `<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;">
+      <div style="width:95px;font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--text-muted);">${metrics[0].label}</div>
+    </div>`;
+  }
+  function render(id,key,col){
+    let html='';
+    metrics.forEach(m=>{
+      const pct=m[key];
+      html+=`<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.55rem;">
+        <div style="width:100px;font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--text-muted);">${m.label}</div>
+        <div style="flex:1;height:14px;background:rgba(255,255,255,.04);border-radius:2px;overflow:hidden;">
+          <div style="height:100%;background:${col};width:${pct}%;border-radius:2px;transition:width 1s ease;"></div>
+        </div>
+        <div style="width:32px;font-family:'JetBrains Mono',monospace;font-size:.58rem;color:${col};">${pct}%</div>
+      </div>`;
+    });
+    document.getElementById(id).innerHTML=html;
+  }
+  render('qat-metrics','qat','rgba(0,217,180,.7)');
+  render('ptq-metrics','ptq','rgba(124,107,255,.7)');
+})();
+
+// BIT GRID VIZ
+(function(){
+  const bitData={
+    32:{name:'FP32',bits:32,desc:'1 sign + 8 exponent + 23 mantissa bits',mem:'4.0 bytes/param',total:'280 GB for 70B',cols:['rgba(255,179,71,.3)','rgba(255,179,71,.5)','rgba(255,179,71,.7)'],saved:0},
+    16:{name:'FP16/BF16',bits:16,desc:'1 sign + 5 exp + 10 mantissa (FP16)',mem:'2.0 bytes/param',total:'140 GB for 70B',cols:['rgba(0,217,180,.35)','rgba(0,217,180,.55)','rgba(0,217,180,.75)'],saved:16},
+    8:{name:'INT8',bits:8,desc:'Unsigned integer, uniform spacing',mem:'1.0 bytes/param',total:'70 GB for 70B',cols:['rgba(124,107,255,.4)','rgba(124,107,255,.65)','rgba(124,107,255,.85)'],saved:24},
+    4:{name:'INT4 / NF4',bits:4,desc:'4 levels (INT4) or quantile-spaced (NF4)',mem:'0.5 bytes/param',total:'35 GB for 70B',cols:['rgba(255,107,157,.45)','rgba(255,107,157,.7)','rgba(255,107,157,.9)'],saved:28},
+    2:{name:'INT2',bits:2,desc:'Only 4 levels — extreme quality loss',mem:'0.25 bytes/param',total:'17.5 GB for 70B',cols:['rgba(200,200,200,.25)','rgba(200,200,200,.4)','rgba(200,200,200,.55)'],saved:30},
+  };
+
+  function renderBits(bits){
+    const d=bitData[bits];
+    const container=document.getElementById('bit-grid-container');
+    const rows=4; const cellSz=22;
+    let html='<div>';
+    // draw 32 cells in a 8×4 grid
+    for(let r=0;r<rows;r++){
+      html+='<div style="display:flex;gap:3px;margin-bottom:3px;">';
+      for(let c=0;c<8;c++){
+        const idx=r*8+c;
+        const active=idx<bits;
+        const col=active?d.cols[Math.min(2,Math.floor(idx/bits*3))]:'rgba(255,255,255,.04)';
+        const border=active?'1px solid rgba(255,255,255,.12)':'1px solid rgba(255,255,255,.04)';
+        html+=`<div style="width:${cellSz}px;height:${cellSz}px;background:${col};border:${border};border-radius:2px;"></div>`;
+      }
+      html+='</div>';
+    }
+    html+='</div>';
+    container.innerHTML=html;
+    document.getElementById('bit-info').textContent=`${bits} bits / ${d.mem}`;
+    document.getElementById('bit-stats').innerHTML=`
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.75rem;">
+        <div><div style="font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--text-dim);margin-bottom:.25rem;">FORMAT</div><div style="font-size:.82rem;color:var(--text);font-weight:500;">${d.name}</div></div>
+        <div><div style="font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--text-dim);margin-bottom:.25rem;">STORAGE</div><div style="font-size:.82rem;color:var(--accent3);">${d.mem}</div></div>
+        <div><div style="font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--text-dim);margin-bottom:.25rem;">70B MODEL</div><div style="font-size:.82rem;color:var(--accent4);">${d.total}</div></div>
+        <div><div style="font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--text-dim);margin-bottom:.25rem;">DESCRIPTION</div><div style="font-size:.78rem;color:var(--text-muted);">${d.desc}</div></div>
+      </div>`;
+  }
+
+  renderBits(4);
+  document.querySelectorAll('.bit-btn').forEach(btn=>{
+    btn.addEventListener('click',function(){
+      renderBits(parseInt(this.dataset.bits));
+    });
+  });
+})();
+
+// GPTQ ANIMATION
+(function(){
+  const N=12;
+  const states=Array.from({length:N},()=>'fp16');
+  let step=0; let timer=null;
+
+  function renderGrid(){
+    let html='';
+    for(let i=0;i<N;i++){
+      const s=states[i];
+      const h=40+Math.random()*40;
+      const col=s==='done'?'rgba(0,217,180,.6)':s==='active'?'rgba(255,179,71,.8)':'rgba(124,107,255,.2)';
+      const border=s==='active'?'1px solid rgba(255,179,71,.8)':s==='done'?'1px solid rgba(0,217,180,.4)':'1px solid rgba(124,107,255,.2)';
+      html+=`<div style="width:44px;background:${col};border:${border};border-radius:3px;height:${40+i*4}px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:.25rem;transition:all .3s;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:.5rem;color:rgba(255,255,255,.6);">W${i}</span>
+      </div>`;
+    }
+    document.getElementById('gptq-grid').innerHTML=html;
+  }
+
+  function nextStep(){
+    if(step>0) states[step-1]='done';
+    if(step<N){ states[step]='active'; }
+    renderGrid();
+    document.getElementById('gptq-status').textContent=step<N?`Quantizing column ${step+1}/${N} — compensating remaining ${N-step-1} columns via Hessian...`:'✓ All columns quantized. Layer complete.';
+    step++;
+    if(step>N){ clearInterval(timer); timer=null; document.getElementById('gptq-play').textContent='▶ Play'; step=0; }
+  }
+
+  renderGrid();
+  document.getElementById('gptq-play').addEventListener('click',function(){
+    if(timer){clearInterval(timer);timer=null;this.textContent='▶ Play';states.fill('fp16');step=0;renderGrid();return;}
+    states.fill('fp16');step=0;renderGrid();
+    this.textContent='⏸ Stop';
+    timer=setInterval(nextStep,500);
+  });
+})();
+
+// AWQ SALIENCY VIZ
+(function(){
+  const N=16;
+  const saliency=[0.1,0.8,0.2,0.9,0.15,0.3,0.95,0.12,0.4,0.85,0.18,0.25,0.7,0.1,0.6,0.35];
+  let showScaled=false;
+
+  function render(){
+    let html='<div style="display:flex;gap:4px;align-items:flex-end;justify-content:center;padding:1rem 0;flex-wrap:wrap;">';
+    saliency.forEach((s,i)=>{
+      const isHigh=s>0.7;
+      let h, col, glow;
+      if(showScaled){
+        h=20+s*70;
+        col=isHigh?'rgba(255,107,157,.8)':'rgba(0,217,180,.5)';
+        glow=isHigh?'box-shadow:0 0 12px rgba(255,107,157,.5)':'';
+      } else {
+        h=20+s*70;
+        col=isHigh?'rgba(255,179,71,.9)':'rgba(124,107,255,.4)';
+        glow=isHigh?'box-shadow:0 0 12px rgba(255,179,71,.5)':'';
+      }
+      html+=`<div style="display:flex;flex-direction:column;align-items:center;gap:.3rem;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:.5rem;color:${isHigh?'rgba(255,255,255,.6)':'rgba(255,255,255,.25)'};">${s.toFixed(1)}</div>
+        <div style="width:26px;height:${h}px;background:${col};border-radius:2px;${glow};transition:all .4s ease;"></div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:.5rem;color:var(--text-dim);">c${i}</div>
+      </div>`;
+    });
+    html+='</div>';
+    html+=`<div style="display:flex;gap:1.5rem;justify-content:center;margin-top:.5rem;flex-wrap:wrap;">
+      ${showScaled?
+        '<div style="display:flex;align-items:center;gap:.4rem;"><div style="width:10px;height:10px;background:rgba(255,107,157,.8);border-radius:2px;"></div><span style="font-family:JetBrains Mono,monospace;font-size:.6rem;color:var(--text-muted);">Salient (scaled up)</span></div><div style="display:flex;align-items:center;gap:.4rem;"><div style="width:10px;height:10px;background:rgba(0,217,180,.5);border-radius:2px;"></div><span style="font-family:JetBrains Mono,monospace;font-size:.6rem;color:var(--text-muted);">Normal</span></div>':
+        '<div style="display:flex;align-items:center;gap:.4rem;"><div style="width:10px;height:10px;background:rgba(255,179,71,.9);border-radius:2px;"></div><span style="font-family:JetBrains Mono,monospace;font-size:.6rem;color:var(--text-muted);">Salient channels</span></div><div style="display:flex;align-items:center;gap:.4rem;"><div style="width:10px;height:10px;background:rgba(124,107,255,.4);border-radius:2px;"></div><span style="font-family:JetBrains Mono,monospace;font-size:.6rem;color:var(--text-muted);">Normal channels</span></div>'
+      }
+    </div>`;
+    document.getElementById('awq-viz').innerHTML=html;
+  }
+
+  render();
+  document.getElementById('awq-toggle').addEventListener('click',function(){
+    showScaled=!showScaled;
+    this.textContent=showScaled?'Show Raw':'Show Scaled';
+    render();
+  });
+})();
+
+// INT8 DECOMPOSITION VIZ
+(function(){
+  const N=20;
+  const outlier=[2,7,13,17];
+  let html='<div style="display:flex;gap:3px;flex-wrap:wrap;align-items:flex-end;padding:.5rem 0;">';
+  for(let i=0;i<N;i++){
+    const isOut=outlier.includes(i);
+    const h=isOut?70:30;
+    const col=isOut?'rgba(255,179,71,.85)':'rgba(0,217,180,.55)';
+    const border=isOut?'1px solid rgba(255,179,71,.6)':'1px solid rgba(0,217,180,.3)';
+    const label=isOut?'FP16':'INT8';
+    const lCol=isOut?'rgba(255,179,71,.9)':'rgba(0,217,180,.8)';
+    html+=`<div style="display:flex;flex-direction:column;align-items:center;gap:.25rem;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.45rem;color:${lCol};">${label}</div>
+      <div style="width:26px;height:${h}px;background:${col};border:${border};border-radius:2px;"></div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.45rem;color:var(--text-dim);">d${i}</div>
+    </div>`;
+  }
+  html+='</div>';
+  html+=`<div style="display:flex;gap:1.5rem;margin-top:.5rem;flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:.4rem;"><div style="width:10px;height:10px;background:rgba(255,179,71,.85);border-radius:2px;"></div><span style="font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--text-muted);">Outlier dims — kept FP16 (~0.1%)</span></div>
+    <div style="display:flex;align-items:center;gap:.4rem;"><div style="width:10px;height:10px;background:rgba(0,217,180,.55);border-radius:2px;"></div><span style="font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--text-muted);">Normal dims — INT8 (~99.9%)</span></div>
+  </div>`;
+  document.getElementById('int8-viz').innerHTML=html;
+})();
+
+// NF4 CANVAS
+(function(){
+  const canvas=document.getElementById('nf4-canvas');
+  const ctx=canvas.getContext('2d');
+  const W=800,H=220;
+  const PAD={l:40,r:20,t:30,b:50};
+  const PW=W-PAD.l-PAD.r,PH=H-PAD.t-PAD.b;
+
+  const int4Levels=Array.from({length:16},(_,i)=>-1+(i/7.5));
+  const nf4Levels=[-1.0,-0.6962,-0.5251,-0.3949,-0.2844,-0.1848,-0.0911,0.0,0.0796,0.1609,0.2461,0.3379,0.4407,0.5626,0.7229,1.0];
+
+  // Normal distribution PDF
+  function normalPDF(x){return Math.exp(-x*x/2)/Math.sqrt(2*Math.PI);}
+
+  let mode='both';
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+
+    // Axes
+    ctx.strokeStyle='rgba(255,255,255,.08)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(PAD.l,PAD.t);ctx.lineTo(PAD.l,PAD.t+PH);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(PAD.l,PAD.t+PH);ctx.lineTo(PAD.l+PW,PAD.t+PH);ctx.stroke();
+
+    // Normal distribution curve
+    ctx.beginPath();ctx.strokeStyle='rgba(255,255,255,.15)';ctx.lineWidth=1.5;
+    for(let px=0;px<PW;px++){
+      const x=-1.5+(px/PW)*3;
+      const y=normalPDF(x);
+      const sy=PAD.t+PH-(y/0.42)*PH*.85;
+      const sx=PAD.l+px;
+      px===0?ctx.moveTo(sx,sy):ctx.lineTo(sx,sy);
+    }
+    ctx.stroke();
+
+    // Fill under curve
+    ctx.beginPath();
+    for(let px=0;px<PW;px++){
+      const x=-1.5+(px/PW)*3;
+      const y=normalPDF(x);
+      const sy=PAD.t+PH-(y/0.42)*PH*.85;
+      px===0?ctx.moveTo(PAD.l,PAD.t+PH):px===1?ctx.lineTo(PAD.l,sy):ctx.lineTo(PAD.l+px,sy);
+    }
+    ctx.lineTo(PAD.l+PW,PAD.t+PH);ctx.closePath();
+    ctx.fillStyle='rgba(255,255,255,.04)';ctx.fill();
+
+    function xToSvg(v){return PAD.l+(v+1.5)/3*PW;}
+
+    // INT4 levels
+    if(mode==='int4'||mode==='both'){
+      int4Levels.forEach(v=>{
+        const sx=xToSvg(v);
+        ctx.beginPath();ctx.moveTo(sx,PAD.t);ctx.lineTo(sx,PAD.t+PH);
+        ctx.strokeStyle='rgba(255,179,71,.5)';ctx.lineWidth=1.5;ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+        ctx.beginPath();ctx.arc(sx,PAD.t+PH,3,0,Math.PI*2);
+        ctx.fillStyle='rgba(255,179,71,.8)';ctx.fill();
+      });
+      ctx.fillStyle='rgba(255,179,71,.7)';ctx.font='11px JetBrains Mono';
+      ctx.fillText('INT4 (uniform)',PAD.l+4,PAD.t+14);
+    }
+
+    // NF4 levels
+    if(mode==='nf4'||mode==='both'){
+      nf4Levels.forEach(v=>{
+        const sx=xToSvg(v);
+        ctx.beginPath();ctx.moveTo(sx,PAD.t+5);ctx.lineTo(sx,PAD.t+PH);
+        ctx.strokeStyle='rgba(255,107,157,.6)';ctx.lineWidth=2;ctx.stroke();
+        ctx.beginPath();ctx.arc(sx,PAD.t+PH,3.5,0,Math.PI*2);
+        ctx.fillStyle='rgba(255,107,157,.9)';ctx.fill();
+      });
+      ctx.fillStyle='rgba(255,107,157,.8)';ctx.font='11px JetBrains Mono';
+      ctx.fillText('NF4 (quantile)',PAD.l+4,PAD.t+28);
+    }
+
+    // X axis labels
+    ctx.fillStyle='rgba(255,255,255,.25)';ctx.font='10px JetBrains Mono';
+    [-1.5,-1,-.5,0,.5,1,1.5].forEach(v=>{
+      const sx=xToSvg(v);
+      ctx.fillText(v.toString(),sx-8,PAD.t+PH+16);
+    });
+    ctx.fillStyle='rgba(255,255,255,.2)';ctx.font='10px JetBrains Mono';
+    ctx.fillText('Weight value',PAD.l+PW/2-30,H-6);
+  }
+
+  draw();
+  document.getElementById('show-int4').addEventListener('click',()=>{mode='int4';draw();});
+  document.getElementById('show-nf4').addEventListener('click',()=>{mode='nf4';draw();});
+  document.getElementById('show-both').addEventListener('click',()=>{mode='both';draw();});
+})();
+
+// ACCURACY VS COMPRESSION CHART
+(function(){
+  const canvas=document.getElementById('acc-chart');
+  const ctx=canvas.getContext('2d');
+  const W=800,H=280;
+  const PAD={l:55,r:20,t:20,b:50};
+  const PW=W-PAD.l-PAD.r,PH=H-PAD.t-PAD.b;
+
+  const models=[
+    {name:'FP16',x:1,y:100,r:8,col:'rgba(255,255,255,.5)'},
+    {name:'FP8',x:2,y:99.8,r:12,col:'rgba(255,179,71,.85)'},
+    {name:'LLM.int8()',x:2,y:99.5,r:9,col:'rgba(0,217,180,.8)'},
+    {name:'SmoothQuant',x:2.2,y:99.2,r:11,col:'rgba(0,217,180,.65)'},
+    {name:'GPTQ INT4',x:4,y:97.5,r:10,col:'rgba(255,107,157,.8)'},
+    {name:'AWQ INT4',x:4,y:97.8,r:10,col:'rgba(124,107,255,.85)'},
+    {name:'NF4 QLoRA',x:4.2,y:97,r:9,col:'rgba(255,107,157,.6)'},
+    {name:'GGUF Q4_K_M',x:3.3,y:98,r:8,col:'rgba(0,217,180,.5)'},
+    {name:'GGUF Q2',x:6,y:91,r:6,col:'rgba(255,255,255,.25)'},
+  ];
+
+  // Gridlines
+  [92,94,96,98,100].forEach(y=>{
+    const sy=PAD.t+PH-((y-90)/12)*PH;
+    ctx.beginPath();ctx.moveTo(PAD.l,sy);ctx.lineTo(PAD.l+PW,sy);
+    ctx.strokeStyle='rgba(255,255,255,.04)';ctx.lineWidth=1;ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,.2)';ctx.font='10px JetBrains Mono';
+    ctx.fillText(y+'%',4,sy+4);
+  });
+  [1,2,3,4,5,6].forEach(x=>{
+    const sx=PAD.l+((x-1)/5)*PW;
+    ctx.beginPath();ctx.moveTo(sx,PAD.t);ctx.lineTo(sx,PAD.t+PH);
+    ctx.strokeStyle='rgba(255,255,255,.04)';ctx.lineWidth=1;ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,.2)';ctx.font='10px JetBrains Mono';
+    ctx.fillText(x+'×',sx-6,PAD.t+PH+16);
+  });
+
+  // Axes labels
+  ctx.fillStyle='rgba(255,255,255,.2)';ctx.font='10px JetBrains Mono';
+  ctx.fillText('Memory reduction vs FP16',PAD.l+PW/2-60,H-6);
+  ctx.save();ctx.translate(12,PAD.t+PH/2+40);ctx.rotate(-Math.PI/2);
+  ctx.fillText('Accuracy retention',0,0);ctx.restore();
+
+  // Points
+  models.forEach(m=>{
+    const sx=PAD.l+((m.x-1)/5)*PW;
+    const sy=PAD.t+PH-((m.y-90)/12)*PH;
+    ctx.beginPath();ctx.arc(sx,sy,m.r,0,Math.PI*2);
+    ctx.fillStyle=m.col;ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.7)';ctx.font='10px JetBrains Mono';
+    const labelX=sx+(m.x>4?-m.r-3:m.r+4);
+    const anchor=m.x>4?'right':'left';
+    ctx.textAlign=anchor;
+    ctx.fillText(m.name,labelX,sy-m.r-2);
+    ctx.textAlign='left';
+  });
+})();
+</script>
+</body>
+</html>
