@@ -1,14 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DCEDZ55RDE"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-DCEDZ55RDE');
-    </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Quantization in LLMs — Prateek Singh</title>
@@ -379,17 +371,18 @@ footer{padding:4rem 3rem;border-top:1px solid var(--border);display:flex;justify
 
     <!-- QAT vs PTQ visual comparison -->
     <div class="viz-container fade-up">
-      <div class="viz-label"><span>QAT vs PTQ — Accuracy vs Cost Tradeoff</span></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;">
-        <div style="border:1px solid rgba(0,217,180,.2);padding:1.5rem;border-radius:2px;">
-          <div style="font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--accent3);letter-spacing:.2em;text-transform:uppercase;margin-bottom:1rem;">QAT</div>
-          <div id="qat-metrics"></div>
-        </div>
-        <div style="border:1px solid rgba(124,107,255,.2);padding:1.5rem;border-radius:2px;">
-          <div style="font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--accent);letter-spacing:.2em;text-transform:uppercase;margin-bottom:1rem;">PTQ</div>
-          <div id="ptq-metrics"></div>
-        </div>
+      <div class="viz-label"><span>QAT vs PTQ — Side-by-Side Comparison</span></div>
+
+      <!-- Column headers -->
+      <div style="display:grid;grid-template-columns:160px 1fr 1fr;gap:.75rem;margin-bottom:.75rem;padding:0 .25rem;">
+        <div></div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--accent3);letter-spacing:.2em;text-transform:uppercase;text-align:center;">QAT</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--accent);letter-spacing:.2em;text-transform:uppercase;text-align:center;">PTQ</div>
       </div>
+
+      <!-- Metric rows -->
+      <div id="qatptq-rows"></div>
+
       <p class="viz-caption">For most production LLM deployments, PTQ + careful calibration is the pragmatic choice. QAT shines for small edge models where accuracy is non-negotiable.</p>
     </div>
 
@@ -1069,33 +1062,32 @@ document.querySelectorAll('.fade-up').forEach(el=>obs.observe(el));
 // QAT vs PTQ metrics
 (function(){
   const metrics=[
-    {label:'Accuracy',qat:99.5,ptq:98.2},
-    {label:'Training cost',qat:100,ptq:2},
-    {label:'Inference speed',qat:90,ptq:90},
-    {label:'Ease of use',qat:25,ptq:88},
-    {label:'Memory (train)',qat:15,ptq:95},
+    {label:'Accuracy',        qat:99.5, ptq:98.2, note:'QAT slightly edges PTQ'},
+    {label:'Training cost',   qat:100,  ptq:2,    note:'PTQ needs no retraining'},
+    {label:'Inference speed', qat:90,   ptq:90,   note:'Both produce same model'},
+    {label:'Ease of use',     qat:25,   ptq:88,   note:'PTQ: just run calibration'},
+    {label:'Memory (train)',  qat:15,   ptq:95,   note:'PTQ: no gradient storage'},
   ];
-  function bar(val,col,maxW=220){
-    return `<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;">
-      <div style="width:95px;font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--text-muted);">${metrics[0].label}</div>
-    </div>`;
-  }
-  function render(id,key,col){
-    let html='';
-    metrics.forEach(m=>{
-      const pct=m[key];
-      html+=`<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.55rem;">
-        <div style="width:100px;font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--text-muted);">${m.label}</div>
-        <div style="flex:1;height:14px;background:rgba(255,255,255,.04);border-radius:2px;overflow:hidden;">
-          <div style="height:100%;background:${col};width:${pct}%;border-radius:2px;transition:width 1s ease;"></div>
+  let html='';
+  metrics.forEach(m=>{
+    html+=`<div style="display:grid;grid-template-columns:160px 1fr 1fr;gap:.75rem;align-items:center;margin-bottom:.65rem;padding:.5rem .25rem;background:rgba(255,255,255,.02);border-radius:2px;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--text-muted);white-space:nowrap;">${m.label}</div>
+      <div style="display:flex;align-items:center;gap:.5rem;">
+        <div style="flex:1;height:16px;background:rgba(255,255,255,.04);border-radius:2px;overflow:hidden;">
+          <div style="height:100%;background:rgba(0,217,180,.65);width:${m.qat}%;border-radius:2px;transition:width 1s ease;"></div>
         </div>
-        <div style="width:32px;font-family:'JetBrains Mono',monospace;font-size:.58rem;color:${col};">${pct}%</div>
-      </div>`;
-    });
-    document.getElementById(id).innerHTML=html;
-  }
-  render('qat-metrics','qat','rgba(0,217,180,.7)');
-  render('ptq-metrics','ptq','rgba(124,107,255,.7)');
+        <div style="width:36px;font-family:'JetBrains Mono',monospace;font-size:.6rem;color:rgba(0,217,180,.9);text-align:right;">${m.qat}%</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:.5rem;">
+        <div style="flex:1;height:16px;background:rgba(255,255,255,.04);border-radius:2px;overflow:hidden;">
+          <div style="height:100%;background:rgba(124,107,255,.65);width:${m.ptq}%;border-radius:2px;transition:width 1s ease;"></div>
+        </div>
+        <div style="width:36px;font-family:'JetBrains Mono',monospace;font-size:.6rem;color:rgba(124,107,255,.9);text-align:right;">${m.ptq}%</div>
+      </div>
+    </div>`;
+  });
+  const el=document.getElementById('qatptq-rows');
+  if(el) el.innerHTML=html;
 })();
 
 // BIT GRID VIZ
