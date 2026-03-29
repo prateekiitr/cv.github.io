@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0d0d12">
+<title>TurboQuant — Google's KV Cache Breakthrough · Prateek Singh</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#0d0d12;--surface:#13131e;--surface2:#1c1c2a;--border:#32325a;
+  --accent:#7c6bff;--accent2:#ff6b9d;--accent3:#00d9b4;--accent4:#ffb347;
+  --text:#f2f2fa;--text-muted:#c4c4e0;--text-dim:#8888aa;--code-bg:#0a0a14;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;background:#0d0d12!important}
+body{background:#0d0d12!important;color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;line-height:1.75;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.5}
+#progress{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent3));z-index:1000;width:0%;transition:width .1s}
+nav{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:1rem 3rem;background:rgba(13,13,18,.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);z-index:100}
+.nav-logo{font-family:'JetBrains Mono',monospace;font-size:.75rem;letter-spacing:.2em;color:var(--accent3);text-transform:uppercase}
+.nav-links{display:flex;gap:1.75rem;list-style:none}
+.nav-links a{font-size:.78rem;letter-spacing:.08em;color:var(--text-muted);text-decoration:none;text-transform:uppercase;transition:color .2s}
+.nav-links a:hover{color:var(--accent3)}
+.nav-back{color:var(--accent3)!important;border:1px solid rgba(0,217,180,.3);padding:.2rem .6rem;border-radius:2px}
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:8rem 3rem 5rem;position:relative;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 75% 55% at 62% 38%,rgba(0,217,180,.11) 0%,transparent 70%),radial-gradient(ellipse 50% 45% at 12% 72%,rgba(124,107,255,.10) 0%,transparent 60%),radial-gradient(ellipse 40% 50% at 88% 68%,rgba(255,107,157,.06) 0%,transparent 60%)}
+.hero-grid{position:absolute;inset:0;opacity:.032;background-image:linear-gradient(var(--accent3) 1px,transparent 1px),linear-gradient(90deg,var(--accent3) 1px,transparent 1px);background-size:60px 60px}
+.hero-label{font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:.3em;color:var(--accent3);text-transform:uppercase;margin-bottom:1.5rem;display:flex;align-items:center;gap:.75rem}
+.hero-label::before{content:'';display:inline-block;width:40px;height:1px;background:var(--accent3)}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(3rem,8vw,7rem);font-weight:900;line-height:1;max-width:900px;background:linear-gradient(135deg,#fff 0%,#a0f0e0 40%,#c0b8ff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:1.5rem}
+.hero-sub{font-size:1.1rem;color:var(--text-muted);max-width:600px;margin-bottom:2.5rem}
+.hero-meta{display:flex;gap:2rem;align-items:center;flex-wrap:wrap}
+.hero-author{font-size:.85rem;color:var(--text-muted)}
+.hero-author span{color:var(--accent3);font-weight:500}
+.hero-badges{display:flex;gap:.5rem;flex-wrap:wrap}
+.badge{font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.1em;padding:.3rem .75rem;border-radius:2px;text-transform:uppercase;font-weight:600}
+.badge-purple{background:rgba(124,107,255,.15);color:var(--accent);border:1px solid rgba(124,107,255,.3)}
+.badge-teal{background:rgba(0,217,180,.1);color:var(--accent3);border:1px solid rgba(0,217,180,.25)}
+.badge-pink{background:rgba(255,107,157,.1);color:var(--accent2);border:1px solid rgba(255,107,157,.25)}
+.badge-orange{background:rgba(255,179,71,.1);color:var(--accent4);border:1px solid rgba(255,179,71,.25)}
+.scroll-hint{position:absolute;bottom:2.5rem;right:3rem;display:flex;flex-direction:column;align-items:center;gap:.5rem;font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:.2em;color:var(--text-dim);text-transform:uppercase;animation:float 2.5s ease-in-out infinite}
+.scroll-line{width:1px;height:50px;background:linear-gradient(to bottom,var(--accent3),transparent)}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+.container{max-width:860px;margin:0 auto;padding:0 2rem}
+.wide-container{max-width:1100px;margin:0 auto;padding:0 2rem}
+.section-label{font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.3em;color:var(--accent3);text-transform:uppercase;margin-bottom:1.25rem;display:flex;align-items:center;gap:.6rem}
+.section-label::before{content:'';width:20px;height:1px;background:var(--accent3)}
+.section-label.purple{color:var(--accent)}.section-label.purple::before{background:var(--accent)}
+.section-label.pink{color:var(--accent2)}.section-label.pink::before{background:var(--accent2)}
+.section-label.orange{color:var(--accent4)}.section-label.orange::before{background:var(--accent4)}
+.divider{height:1px;background:var(--border);margin:0;position:relative}
+.divider::after{content:attr(data-num);position:absolute;left:0;top:-11px;font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.15em;color:var(--text-dim);background:#0d0d12;padding-right:1rem}
+.model-section{padding:5rem 0;border-bottom:1px solid var(--border)}
+.model-header{display:flex;align-items:flex-start;gap:2rem;margin-bottom:3rem;flex-wrap:wrap}
+.model-number{font-family:'Playfair Display',serif;font-size:5rem;font-weight:900;line-height:1;color:var(--border);flex-shrink:0;user-select:none}
+.model-title-group{flex:1}
+.model-name{font-family:'Playfair Display',serif;font-size:clamp(1.8rem,4vw,2.6rem);font-weight:700;line-height:1.1;margin-bottom:.5rem}
+.model-tagline{font-size:.85rem;color:var(--text-muted);margin-bottom:1rem}
+.model-stats{display:flex;gap:.5rem;flex-wrap:wrap}
+.stat-pill{font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:.25rem .7rem;border-radius:100px;letter-spacing:.05em;border:1px solid;white-space:nowrap}
+.stat-params{color:var(--accent);border-color:rgba(124,107,255,.4);background:rgba(124,107,255,.1)}
+.stat-active{color:var(--accent3);border-color:rgba(0,217,180,.35);background:rgba(0,217,180,.08)}
+.stat-ctx{color:var(--accent4);border-color:rgba(255,179,71,.35);background:rgba(255,179,71,.08)}
+.stat-type{color:var(--accent2);border-color:rgba(255,107,157,.35);background:rgba(255,107,157,.08)}
+.model-body p{font-size:1rem;color:var(--text-muted);margin-bottom:1.25rem;max-width:720px}
+.model-body p strong{color:var(--text);font-weight:500}
+.themes-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);margin:2.5rem 0}
+.theme-card{background:var(--surface);padding:1.75rem;transition:background .2s;position:relative;overflow:hidden}
+.theme-card:hover{background:var(--surface2)}
+.theme-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.theme-card:nth-child(1)::before{background:var(--accent3)}
+.theme-card:nth-child(2)::before{background:var(--accent)}
+.theme-card:nth-child(3)::before{background:var(--accent2)}
+.theme-card:nth-child(4)::before{background:var(--accent4)}
+.theme-icon{font-size:1.4rem;margin-bottom:.9rem}
+.theme-card h3{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;margin-bottom:.4rem;color:var(--text)}
+.theme-card p{font-size:.83rem;color:var(--text-muted);line-height:1.62}
+.feature-box{margin:2rem 0;border:1px solid var(--border);border-left:3px solid var(--accent3);background:var(--surface);padding:1.5rem 2rem}
+.feature-box.purple{border-left-color:var(--accent)}
+.feature-box.pink{border-left-color:var(--accent2)}
+.feature-box.orange{border-left-color:var(--accent4)}
+.feature-box h4{font-family:'JetBrains Mono',monospace;font-size:.75rem;letter-spacing:.2em;color:var(--accent3);text-transform:uppercase;margin-bottom:.75rem}
+.feature-box.purple h4{color:var(--accent)}
+.feature-box.pink h4{color:var(--accent2)}
+.feature-box.orange h4{color:var(--accent4)}
+.feature-box p{font-size:.9rem;color:var(--text-muted);margin:0}
+.callout{display:flex;gap:1.25rem;padding:1.5rem 1.75rem;background:var(--surface);border:1px solid var(--border);margin:2rem 0}
+.callout-icon{font-size:1.25rem;flex-shrink:0;margin-top:.1rem}
+.callout p{font-size:.9rem;color:var(--text-muted);margin:0!important;line-height:1.65}
+.callout p strong{color:var(--text)}
+.formula-block{margin:2rem 0;background:var(--code-bg);border:1px solid var(--border);padding:1.75rem 2rem;overflow-x:auto}
+.formula-label{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--text-dim);letter-spacing:.2em;text-transform:uppercase;margin-bottom:1rem}
+.formula{font-family:'JetBrains Mono',monospace;font-size:.9rem;color:var(--accent3);letter-spacing:.03em;line-height:2.2}
+.formula .comment{color:var(--text-dim);font-size:.76rem}
+.formula .hi{color:var(--accent4)}
+.formula .hi2{color:var(--accent2)}
+.formula .hi3{color:var(--accent)}
+.arch-diagram{margin:2.5rem 0;background:var(--code-bg);border:1px solid var(--border);padding:2rem;overflow-x:auto}
+.arch-diagram-label{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--text-dim);letter-spacing:.2em;text-transform:uppercase;margin-bottom:1.25rem}
+.arch-row{display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem;flex-wrap:wrap}
+.arch-block{padding:.4rem 1rem;border-radius:2px;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:600;white-space:nowrap}
+.ab-g{background:rgba(0,217,180,.15);color:var(--accent3);border:1px solid rgba(0,217,180,.4)}
+.ab-r{background:rgba(255,107,157,.15);color:var(--accent2);border:1px solid rgba(255,107,157,.4)}
+.ab-p{background:rgba(124,107,255,.18);color:#c0b8ff;border:1px solid rgba(124,107,255,.45)}
+.ab-o{background:rgba(255,179,71,.15);color:var(--accent4);border:1px solid rgba(255,179,71,.4)}
+.ab-n{background:rgba(50,50,80,.8);color:var(--text-muted);border:1px solid var(--border)}
+.ab-arrow{color:var(--text-dim);font-size:.9rem}
+.tag{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:.6rem;padding:.15rem .5rem;border-radius:2px;margin:2px;background:rgba(0,217,180,.1);color:var(--accent3);border:1px solid rgba(0,217,180,.25)}
+.tag.purple{background:rgba(124,107,255,.12);color:var(--accent);border-color:rgba(124,107,255,.28)}
+.tag.orange{background:rgba(255,179,71,.1);color:var(--accent4);border-color:rgba(255,179,71,.25)}
+.tag.pink{background:rgba(255,107,157,.1);color:var(--accent2);border-color:rgba(255,107,157,.25)}
+.comparison-table{width:100%;border-collapse:collapse;margin:2.5rem 0;font-size:.85rem}
+.comparison-table th{font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);padding:.75rem 1rem;text-align:left;background:var(--surface);border-bottom:1px solid var(--border)}
+.comparison-table td{padding:.75rem 1rem;border-bottom:1px solid rgba(255,255,255,.05);color:var(--text-muted);vertical-align:middle}
+.comparison-table tr:hover td{background:var(--surface)}
+.comparison-table td:first-child{color:var(--text);font-weight:500}
+.viz-container{margin:3rem 0;background:var(--code-bg);border:1px solid var(--border);padding:2rem;overflow:hidden}
+.viz-label{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--text-dim);letter-spacing:.2em;text-transform:uppercase;margin-bottom:1.5rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem}
+.viz-caption{font-size:.8rem;color:var(--text-muted);margin-top:1rem;text-align:center;font-style:italic}
+.bar-row{display:flex;align-items:center;gap:.75rem;margin-bottom:.65rem}
+.bar-label{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--text-muted);width:130px;flex-shrink:0;text-align:right}
+.bar-track{flex:1;height:26px;background:rgba(255,255,255,.04);border-radius:2px;overflow:hidden}
+.bar-fill{height:100%;border-radius:2px;display:flex;align-items:center;padding-left:.5rem;transition:width 1.2s cubic-bezier(.16,1,.3,1)}
+.bar-fill span{font-family:'JetBrains Mono',monospace;font-size:.62rem;font-weight:600;color:rgba(0,0,0,.7);white-space:nowrap}
+.bar-note{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--text-dim);width:90px;flex-shrink:0}
+mark{background:rgba(0,217,180,.15);color:#a0ffee;padding:0 .2em;border-radius:2px}
+.fade-up{opacity:0;transform:translateY(28px);transition:opacity .65s ease,transform .65s ease}
+.fade-up.visible{opacity:1;transform:translateY(0)}
+footer{padding:4rem 3rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1.5rem}
+.footer-left{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--text-dim);letter-spacing:.1em}
+.footer-right{display:flex;gap:1.5rem}
+.footer-right a{font-size:.8rem;color:var(--text-muted);text-decoration:none;transition:color .2s}
+.footer-right a:hover{color:var(--accent3)}
+@media(max-width:640px){nav{padding:1rem 1.25rem}.nav-links{display:none}.hero{padding:7rem 1.25rem 4rem}.container,.wide-container{padding:0 1.25rem}footer{padding:2.5rem 1.25rem;flex-direction:column}.model-number{font-size:3rem}.comparison-table{font-size:.75rem}.comparison-table th,.comparison-table td{padding:.5rem .6rem}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+
+<nav>
+  <div class="nav-logo">TurboQuant · ICLR 2026</div>
+  <ul class="nav-links">
+    <li><a href="blogs.html" class="nav-back">← Blogs</a></li>
+    <li><a href="#problem">KV Cache</a></li>
+    <li><a href="#architecture">Architecture</a></li>
+    <li><a href="#polarquant">PolarQuant</a></li>
+    <li><a href="#qjl">QJL</a></li>
+    <li><a href="#results">Results</a></li>
+    <li><a href="#comparison">vs Others</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <canvas id="hero-canvas" style="position:absolute;inset:0;pointer-events:none;z-index:0;"></canvas>
+  <div style="position:relative;z-index:1;">
+    <div class="hero-label">Deep Dive · Google Research · ICLR 2026</div>
+    <h1>TurboQuant</h1>
+    <p class="hero-sub">Google just solved the KV cache memory bottleneck — the single biggest cost driver in LLM inference. 6× compression, 8× speedup, zero accuracy loss, no retraining. Here's the algorithm in full detail.</p>
+    <div class="hero-meta">
+      <div class="hero-author">March 2026 · <span>Prateek Singh, PhD</span></div>
+      <div class="hero-badges">
+        <span class="badge badge-teal">KV Cache Quantization</span>
+        <span class="badge badge-purple">PolarQuant</span>
+        <span class="badge badge-pink">QJL</span>
+        <span class="badge badge-orange">Vector Search</span>
+      </div>
+    </div>
+  </div>
+  <div class="scroll-hint"><div class="scroll-line"></div>scroll</div>
+</section>
+
+<!-- OVERVIEW CARDS -->
+<div style="padding:5rem 0;border-bottom:1px solid var(--border);" id="problem">
+<div class="container">
+  <div class="section-label">Why KV Cache Is the Bottleneck</div>
+  <h2 style="font-family:'Playfair Display',serif;font-size:clamp(1.8rem,4vw,2.5rem);font-weight:700;margin-bottom:1.5rem;">Every token you generate stores 16-bit vectors.<br>They add up fast.</h2>
+  <p style="font-size:1.05rem;color:var(--text-muted);max-width:700px;margin-bottom:1.25rem;">During transformer inference, key and value projections for every token in the context must be stored so attention can be computed without recomputation. This KV cache is your model's working memory. At 128K context, a 70B model's KV cache alone exceeds <strong>140 GB of VRAM</strong> — more than the model weights themselves.</p>
+  <p style="font-size:1rem;color:var(--text-muted);max-width:700px;">Previous attempts at KV quantization suffered from a hidden problem: <mark>quantization constants</mark> — the scale factors and normalisation values needed to dequantize — had to be stored in full precision alongside the compressed data, adding 1–2 extra bits per value and partially defeating the compression. TurboQuant eliminates this overhead entirely through a two-stage mathematical pipeline.</p>
+
+  <div class="themes-grid fade-up">
+    <div class="theme-card"><div class="theme-icon">📉</div><h3>6× Memory Reduction</h3><p>FP16 KV cache compressed to 3–4 bits with near-zero accuracy loss. 140 GB becomes ~23 GB for a 128K context 70B model.</p></div>
+    <div class="theme-card"><div class="theme-icon">⚡</div><h3>8× Attention Speedup</h3><p>4-bit TurboQuant achieves up to 8× faster attention logit computation vs 32-bit keys on H100 GPUs in JAX benchmarks.</p></div>
+    <div class="theme-card"><div class="theme-icon">🎯</div><h3>No Training Needed</h3><p>Data-oblivious and training-free. No calibration set, no fine-tuning, no model-specific tuning. Works on any transformer architecture.</p></div>
+    <div class="theme-card"><div class="theme-icon">📐</div><h3>Near Information-Theoretic Optimal</h3><p>TurboQuant operates near the known theoretical lower bound for quantization distortion — not just a heuristic, a provably near-optimal method.</p></div>
+  </div>
+
+  <div class="callout fade-up" style="border-color:rgba(255,179,71,.3);">
+    <div class="callout-icon">💡</div>
+    <p><strong>The Pied Piper reaction:</strong> The paper dropped March 24, 2026. Within 24 hours, memory chip stocks fell sharply — Micron and NAND manufacturers hit at market open. Cloudflare CEO Matthew Prince called it "Google's DeepSeek moment." TechCrunch noted the internet immediately dubbed it Pied Piper (from HBO Silicon Valley). The community reaction was proportionate: this closes in on the information-theoretic limit for KV cache compression. The remaining room to optimise is narrow.</p>
+  </div>
+</div>
+</div>
+
+<!-- §01 THE OVERHEAD PROBLEM -->
+<div class="divider" data-num="01 — THE OVERHEAD PROBLEM"></div>
+<div class="model-section">
+<div class="container">
+  <div class="model-header">
+    <div class="model-number">01</div>
+    <div class="model-title-group">
+      <div class="model-name">Why Traditional KV Quantization Was Leaky</div>
+      <div class="model-tagline">The hidden cost that made conventional methods less effective than their headline numbers</div>
+      <div class="model-stats">
+        <span class="stat-pill stat-type">+1–2 overhead bits</span>
+        <span class="stat-pill stat-active">Per-block constants</span>
+        <span class="stat-pill stat-params">FP32 scale storage</span>
+      </div>
+    </div>
+  </div>
+  <div class="model-body">
+    <p>Standard vector quantization maps continuous values to a smaller discrete set. For INT4 quantization, you round each float16 value to the nearest of 16 integer levels. Simple in theory. But in practice, quantizing a vector of floats requires knowing the <strong>scale and zero-point</strong> of that vector — how to map integers back to floats when you need them.</p>
+    <p>These constants must be stored alongside the compressed data, in full precision (FP32). For block-wise quantization with block size 64, this adds 32/64 = 0.5 bits per value at FP32. For block size 16, it's 2 bits per value — <mark>partially undoing the compression</mark> you just performed. This overhead has been the fundamental ceiling on how aggressively you can compress the KV cache.</p>
+
+    <div class="formula-block fade-up">
+      <div class="formula-label">Traditional Block-Wise KV Quantization — Effective Bit Rate</div>
+      <div class="formula">
+        <span class="comment">Target: compress KV vectors to b bits per element</span><br>
+        <span class="comment">But per-block scale requires FP32 (32 bits) stored per block of size g:</span><br>
+        <br>
+        effective_bits = b + <span class="hi">32 / g</span>   <span class="comment">← scale overhead per element</span><br>
+        <br>
+        g = 64:  effective_bits = 4 + 0.50 = <span class="hi">4.5 bits</span>  <span class="comment">(target was 4.0)</span><br>
+        g = 16:  effective_bits = 4 + 2.00 = <span class="hi">6.0 bits</span>  <span class="comment">(target was 4.0 — 50% overhead!)</span><br>
+        <br>
+        <span class="comment">TurboQuant overhead: 0 bits (zero quantization constants to store)</span>
+      </div>
+    </div>
+
+    <p>TurboQuant's key architectural insight: <strong>if you can transform the data so its distribution is known in advance, you don't need to store any quantization constants at all</strong>. The quantizer can be precomputed once offline and applied universally. This is exactly what PolarQuant achieves through random rotation.</p>
+
+    <!-- KV CACHE MEMORY GROWTH DIAGRAM -->
+    <div class="viz-container fade-up">
+      <div class="viz-label"><span>KV Cache Memory Growth vs Context Length</span></div>
+      <canvas id="kv-canvas" width="800" height="240" style="width:100%;height:auto;display:block;"></canvas>
+      <p class="viz-caption">KV cache memory grows linearly with context length and model size — it's the dominant memory cost in long-context inference. TurboQuant 4-bit compresses the entire shaded region by 6×.</p>
+    </div>
+
+<!-- §02 TURBOQUANT ARCHITECTURE -->
+<div class="divider" data-num="02 — TURBOQUANT ARCHITECTURE" id="architecture"></div>
+<div class="model-section">
+<div class="container">
+  <div class="model-header">
+    <div class="model-number">02</div>
+    <div class="model-title-group">
+      <div class="model-name">The TurboQuant Pipeline</div>
+      <div class="model-tagline">Two-stage compression — PolarQuant for the bulk, QJL for the residual</div>
+      <div class="model-stats">
+        <span class="stat-pill stat-active">Stage 1: PolarQuant</span>
+        <span class="stat-pill stat-params">Stage 2: QJL (1 bit)</span>
+        <span class="stat-pill stat-type">Zero overhead</span>
+        <span class="stat-pill stat-ctx">Training-free</span>
+      </div>
+    </div>
+  </div>
+  <div class="model-body">
+    <p>TurboQuant works by splitting the compression budget into two stages. The first stage (PolarQuant) handles the bulk of compression — typically b−1 bits — capturing the dominant structure of each vector with near-zero overhead. The second stage (QJL) uses the remaining 1 bit to correct the residual error left by the first stage. Together they achieve optimal rate-distortion with zero memory overhead.</p>
+
+    <div class="arch-diagram fade-up">
+      <div class="arch-diagram-label">TurboQuant — Full Pipeline for one KV vector</div>
+      <div class="arch-row">
+        <div class="arch-block ab-n">Input KV vector  x ∈ ℝ<sup>d</sup>  (FP16, d=128 per head)</div>
+      </div>
+      <div class="arch-row"><div class="ab-arrow">↓  Stage 1: PolarQuant</div></div>
+      <div class="arch-row">
+        <div class="arch-block ab-g">Random orthogonal rotation  Π·x</div>
+        <div class="ab-arrow">→</div>
+        <div class="arch-block ab-g">Pair coordinates → polar form (r, θ)</div>
+        <div class="ab-arrow">→</div>
+        <div class="arch-block ab-g">Lloyd-Max quantize θ using (b−1) bits</div>
+      </div>
+      <div class="arch-row"><div style="font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--text-dim);margin-left:0.5rem;">↳ Quantization levels precomputed offline — zero constants stored at runtime</div></div>
+      <div class="arch-row" style="margin-top:.5rem;"><div class="ab-arrow">↓  Residual error</div></div>
+      <div class="arch-row">
+        <div class="arch-block ab-p">Residual  ε = x − x̂  (what PolarQuant missed)</div>
+        <div class="ab-arrow">→</div>
+        <div class="arch-block ab-p">QJL: project onto random sign vector  → 1 bit</div>
+      </div>
+      <div class="arch-row"><div style="font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--text-dim);margin-left:0.5rem;">↳ Eliminates bias in residual — zero extra memory overhead for 1-bit sign</div></div>
+      <div class="arch-row" style="margin-top:.5rem;"><div class="ab-arrow">↓  Output</div></div>
+      <div class="arch-row">
+        <div class="arch-block ab-o">Compressed KV vector: (b−1) bits from PolarQuant + 1 bit from QJL = b bits total</div>
+      </div>
+      <div class="arch-row"><div style="font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--text-dim);">Total overhead: 0 bits of quantization constants stored</div></div>
+    </div>
+
+    <p>The key design decision is how to split the budget: PolarQuant takes b−1 bits because it captures the majority of the vector's information — the angles in polar coordinates follow a known, compressible distribution. QJL takes exactly 1 bit because even a single sign bit of the residual, processed correctly through the JL estimator, eliminates the quantization bias that would otherwise accumulate across the attention computation.</p>
+
+    <!-- VISUAL PIPELINE FLOWCHART -->
+    <div class="viz-container fade-up">
+      <div class="viz-label"><span>TurboQuant — Visual Architecture Flowchart</span></div>
+      <canvas id="pipeline-canvas" width="860" height="320" style="width:100%;height:auto;display:block;"></canvas>
+      <p class="viz-caption">Left path: PolarQuant compresses the bulk of each KV vector using (b−1) bits with zero runtime overhead. Right path: QJL contributes 1 residual-correction bit. Both paths combine to produce a b-bit compressed vector.</p>
+    </div>
+
+<!-- §03 POLARQUANT -->
+<div class="divider" data-num="03 — POLARQUANT: STAGE 1" id="polarquant"></div>
+<div class="model-section">
+<div class="container">
+  <div class="model-header">
+    <div class="model-number">03</div>
+    <div class="model-title-group">
+      <div class="model-name">PolarQuant</div>
+      <div class="model-tagline">Random rotation + polar coordinates = a distribution you can precompute a quantizer for</div>
+      <div class="model-stats">
+        <span class="stat-pill stat-active">AISTATS 2026</span>
+        <span class="stat-pill stat-params">Cartesian → Polar</span>
+        <span class="stat-pill stat-type">Lloyd-Max optimal</span>
+        <span class="stat-pill stat-ctx">Zero runtime overhead</span>
+      </div>
+    </div>
+  </div>
+  <div class="model-body">
+    <div class="section-label">Step 1 — Random Orthogonal Rotation</div>
+    <p>The core problem with quantizing arbitrary vectors is that their values can be distributed any way — skewed, heavy-tailed, clustered. A quantizer optimal for one distribution is terrible for another. PolarQuant sidesteps this by first applying a <strong>random orthogonal rotation</strong> to the vector.</p>
+
+    <div class="formula-block fade-up">
+      <div class="formula-label">Random Rotation — Why It Works</div>
+      <div class="formula">
+        <span class="comment">Let Π be a random orthogonal matrix (d × d), pre-generated offline</span><br>
+        <span class="comment">Apply rotation to input vector x:</span><br>
+        x̃ = <span class="hi">Π · x</span>   <span class="comment">← rotated vector, same norm, spread uniformly</span><br>
+        <br>
+        <span class="comment">Key property (Johnson-Lindenstrauss): after random rotation,</span><br>
+        <span class="comment">each coordinate x̃_i follows approximately N(0, ‖x‖²/d)</span><br>
+        <span class="comment">→ distribution is now KNOWN and PREDICTABLE regardless of input</span><br>
+        <br>
+        <span class="comment">Use QR decomposition to build Π (once offline, reuse forever):</span><br>
+        G ~ N(0, I<sub>d×d</sub>)   Π, _ = <span class="hi3">QR</span>(G)
+      </div>
+    </div>
+
+    <p>After rotation, every coordinate follows approximately the same Gaussian distribution regardless of the original vector's structure. This is the crucial enabler: <strong>you can now design a quantizer offline, once, for this known distribution</strong>, and apply it to every vector at runtime without storing any per-vector constants.</p>
+
+    <div class="section-label" style="margin-top:2.5rem;">Step 2 — Polar Coordinate Representation</div>
+    <p>Rather than quantizing coordinates independently (Cartesian quantization), PolarQuant converts pairs of rotated coordinates (x̃₂ᵢ, x̃₂ᵢ₊₁) into polar form. The key insight: <strong>the angular component θ has a much more concentrated, predictable distribution than the raw Cartesian values</strong> — making it far more compressible.</p>
+
+    <div class="formula-block fade-up">
+      <div class="formula-label">PolarQuant — Polar Coordinate Quantization</div>
+      <div class="formula">
+        <span class="comment">For each pair of rotated coordinates (x̃₂ᵢ, x̃₂ᵢ₊₁):</span><br>
+        r_i = √(x̃₂ᵢ² + x̃₂ᵢ₊₁²)       <span class="comment">← radius (magnitude of pair)</span><br>
+        θ_i = atan2(x̃₂ᵢ₊₁, x̃₂ᵢ)      <span class="comment">← angle in [−π, π]</span><br>
+        <br>
+        <span class="comment">After random rotation: θ_i is uniformly distributed on [−π, π]</span><br>
+        <span class="comment">→ optimal quantizer for uniform distribution = uniform grid!</span><br>
+        <br>
+        <span class="comment">Quantize angle with (b−1) bits:</span><br>
+        θ̂_i = <span class="hi">round</span>(θ_i · 2<sup>b−1</sup> / (2π)) · (2π / 2<sup>b−1</sup>)<br>
+        <br>
+        <span class="comment">Reconstruct: x̂₂ᵢ = r_i·cos(θ̂_i),  x̂₂ᵢ₊₁ = r_i·sin(θ̂_i)</span><br>
+        <span class="comment">Note: radius r_i is NOT quantized — it cancels in attention (K·Qᵀ normalises)</span>
+      </div>
+    </div>
+
+    <div class="callout fade-up" style="border-color:rgba(0,217,180,.3);">
+      <div class="callout-icon">📐</div>
+      <p><strong>Why the radius doesn't need to be stored:</strong> In the attention mechanism, you compute <code style="font-family:'JetBrains Mono',monospace;font-size:.85em;color:var(--accent3);">softmax(Q·Kᵀ / √d)</code>. The softmax operation is scale-invariant — multiplying all logits by a constant doesn't change the output. So the radius r_i, which scales the key vector, cancels out in the attention score computation. PolarQuant stores only the angle, which determines the direction of the vector. This is the core trick that eliminates all storage overhead.</p>
+    </div>
+
+    <!-- CARTESIAN vs POLAR CANVAS DIAGRAM -->
+    <div class="viz-container fade-up">
+      <div class="viz-label">
+        <span>Cartesian vs Polar Representation — Why Polar Wins</span>
+        <button id="polar-btn" style="font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:.3rem .75rem;background:rgba(0,217,180,.08);border:1px solid rgba(0,217,180,.3);color:var(--accent3);cursor:pointer;border-radius:2px;">▶ Animate Rotation</button>
+      </div>
+      <canvas id="polar-canvas" width="800" height="260" style="width:100%;height:auto;display:block;"></canvas>
+      <p class="viz-caption">Left: raw coordinates clustered unevenly — quantizing them requires per-vector scale constants. Right: after random rotation and polar conversion, angle θ is uniformly distributed — optimal quantizer computable offline once, reused for all vectors.</p>
+    </div>
+      <p>For a uniform angular distribution (which PolarQuant guarantees after rotation), the optimal quantizer is simply a uniform grid — equally spaced levels across [−π, π]. This can be computed analytically once and hardcoded. For non-uniform distributions (such as the Beta distribution that arises in some head configurations), PolarQuant uses the Lloyd-Max algorithm to find the optimal level placements. Either way, the quantizer is computed offline and never changes — zero runtime overhead, optimal distortion.</p>
+    </div>
+
+    <!-- POLAR VISUALISATION -->
+    <div class="viz-container fade-up">
+      <div class="viz-label"><span>PolarQuant — Compression at Different Bit Widths</span></div>
+      <div id="polar-bars"></div>
+      <p class="viz-caption">Angle quantization error vs bit width. 4-bit PolarQuant achieves near-lossless angular precision — error is far below the noise floor of FP16 arithmetic rounding.</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- §04 QJL -->
+<div class="divider" data-num="04 — QJL: STAGE 2 (THE 1-BIT CORRECTOR)" id="qjl"></div>
+<div class="model-section">
+<div class="container">
+  <div class="model-header">
+    <div class="model-number">04</div>
+    <div class="model-title-group">
+      <div class="model-name">QJL — Quantized Johnson-Lindenstrauss</div>
+      <div class="model-tagline">One bit of residual correction that eliminates quantization bias entirely</div>
+      <div class="model-stats">
+        <span class="stat-pill stat-active">AAAI 2025</span>
+        <span class="stat-pill stat-params">1 bit per vector</span>
+        <span class="stat-pill stat-type">Bias-free estimator</span>
+        <span class="stat-pill stat-ctx">JL Transform</span>
+      </div>
+    </div>
+  </div>
+  <div class="model-body">
+    <p>After PolarQuant compresses the vector using b−1 bits, there is a small residual error ε = x − x̂. If ignored, this error introduces a <strong>systematic bias</strong> into the attention score — every dot product Q·K is shifted by a small but consistent amount that accumulates across all attention heads and all tokens, degrading model quality.</p>
+    <p>QJL eliminates this bias with a single additional bit per vector. The insight comes from the Johnson-Lindenstrauss lemma: <strong>a random projection preserves inner products in expectation</strong>. You don't need to store the full residual — just its sign along a random direction.</p>
+
+    <div class="formula-block fade-up">
+      <div class="formula-label">QJL — Quantized Johnson-Lindenstrauss Transform</div>
+      <div class="formula">
+        <span class="comment">Residual after PolarQuant:</span><br>
+        ε = x − x̂    <span class="comment">← small but introduces bias in Q·K</span><br>
+        <br>
+        <span class="comment">QJL: project residual onto random sign vector g ∈ {±1}^d:</span><br>
+        b_ε = <span class="hi2">sign</span>(gᵀ · ε)   <span class="comment">← just 1 bit stored per KV vector</span><br>
+        <br>
+        <span class="comment">At query time, unbiased attention score estimator:</span><br>
+        Q·K ≈ Q·x̂  +  <span class="hi3">√d · b_ε · (gᵀ · Q)</span>   <span class="comment">← corrected dot product</span><br>
+        <br>
+        <span class="comment">Why it works: E[b_ε · (gᵀ·Q)] = E[sign(gᵀ·ε)·(gᵀ·Q)]</span><br>
+        <span class="comment">             = (2/π)·‖ε‖·‖Q‖·cos(angle)  — unbiased estimate of ε·Q</span><br>
+        <br>
+        <span class="comment">Memory cost: 1 bit per KV vector (vs 32·d bits for full residual)</span>
+      </div>
+    </div>
+
+    <div class="callout fade-up">
+      <div class="callout-icon">🔬</div>
+      <p><strong>The estimator trick explained plainly:</strong> You want to know gᵀ·ε (the inner product of the residual with the query). You don't store ε — you only store its sign along a random direction g. The JL estimator says: if you know the sign of the projection and the magnitude of the query along the same direction, you can construct an <em>unbiased</em> estimate of the original inner product. The estimate has variance, but zero mean error. Over the softmax in attention, this variance is harmless — the softmax is robust to small symmetric noise. The bias from PolarQuant, however, would not cancel — it would shift all attention scores in one direction. QJL's purpose is solely to eliminate that systematic drift.</p>
+    </div>
+
+    <div class="feature-box orange fade-up">
+      <h4>Why 1 Bit Is Enough — And Not More</h4>
+      <p>The residual ε after PolarQuant is already small — PolarQuant captures the dominant structure of the vector. What remains is high-frequency, near-random noise. The JL lemma tells us that for random noise, a single bit of sign information along a random direction provides the maximum information gain per bit — additional bits on the residual have strongly diminishing returns. This is why TurboQuant's optimal split is always (b−1) bits for PolarQuant + 1 bit for QJL, regardless of the total budget b.</p>
+    </div>
+
+    <!-- QJL VISUAL DIAGRAM -->
+    <div class="viz-container fade-up">
+      <div class="viz-label"><span>QJL — 1-Bit Residual Correction Mechanism</span></div>
+      <canvas id="qjl-canvas" width="800" height="240" style="width:100%;height:auto;display:block;"></canvas>
+      <p class="viz-caption">PolarQuant leaves a small residual error ε. QJL projects ε onto a random sign vector g (stored offline) and records only the sign — 1 bit. At query time, this single bit corrects the bias in the dot product Q·K without storing any additional data per vector.</p>
+    </div>
+
+    <!-- FULL PIPELINE VIZ -->
+    <div class="viz-container fade-up">
+      <div class="viz-label"><span>TurboQuant — Animate Full Pipeline</span>
+        <button id="pipeline-btn" style="font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:.3rem .75rem;background:rgba(0,217,180,.08);border:1px solid rgba(0,217,180,.3);color:var(--accent3);cursor:pointer;border-radius:2px;">▶ Run</button>
+      </div>
+      <div id="pipeline-viz"></div>
+      <p class="viz-caption">A KV vector enters at FP16. PolarQuant captures direction with (b−1) bits. QJL adds 1 residual correction bit. Output: b-bit compressed vector with zero stored constants.</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- §05 RESULTS -->
+<div class="divider" data-num="05 — BENCHMARKS & RESULTS" id="results"></div>
+<div class="model-section">
+<div class="container">
+  <div class="model-header">
+    <div class="model-number">05</div>
+    <div class="model-title-group">
+      <div class="model-name">The Numbers</div>
+      <div class="model-tagline">What TurboQuant actually achieves on Gemma, Mistral, and vector search</div>
+      <div class="model-stats">
+        <span class="stat-pill stat-active">H100 GPU benchmarks</span>
+        <span class="stat-pill stat-params">JAX baseline</span>
+        <span class="stat-pill stat-type">Gemma · Mistral</span>
+      </div>
+    </div>
+  </div>
+  <div class="model-body">
+
+    <!-- SPEEDUP BARS -->
+    <div class="viz-container fade-up">
+      <div class="viz-label"><span>Attention Logit Speedup vs FP32 Baseline — H100 GPU</span></div>
+      <div id="speedup-bars"></div>
+      <p class="viz-caption">Measured on NVIDIA H100 GPUs in JAX. TurboQuant 4-bit achieves 8× speedup vs FP32 unquantized keys. Even 3-bit delivers 6×. Compared against a highly optimised JAX FP32 baseline.</p>
+    </div>
+
+    <!-- MEMORY BARS -->
+    <div class="viz-container fade-up">
+      <div class="viz-label"><span>KV Cache Memory — 70B Model at 128K Context</span></div>
+      <div id="memory-bars"></div>
+      <p class="viz-caption">At 128K tokens, FP16 KV cache requires ~140 GB. TurboQuant 4-bit reduces this to ~35 GB — fitting on a single 80 GB A100. At 3-bit, under 27 GB — fits on a single H100.</p>
+    </div>
+
+    <div class="section-label" style="margin-top:2.5rem;">Accuracy on LongBench / Needle-in-Haystack</div>
+    <p>Accuracy was evaluated on Gemma and Mistral using LongBench (multi-task long-context understanding) and the "needle in a haystack" retrieval task — where a key fact is hidden deep in a long context and the model must retrieve it exactly. PolarQuant at 4-bit was near-lossless on both. At 3-bit, quality starts degrading noticeably on models smaller than 8B, but remains within acceptable bounds on 7B+ models.</p>
+
+    <div class="feature-box fade-up">
+      <h4>Key Sensitivity: Values vs Keys</h4>
+      <p>Community experiments have found an important asymmetry: <strong>value quantization is the bottleneck, not key quantization.</strong> At 2-bit values, cosine similarity degrades to ~0.94 — noticeable quality loss. At 4-bit values, cosine similarity is 0.997 — essentially FP16 quality. Keys are less sensitive because they interact through the softmax, which is robust to small perturbations. Practical recommendation: use 4-bit for values, 3-bit for keys if budget is tight.</p>
+    </div>
+
+    <div class="section-label teal" style="margin-top:2.5rem;">Vector Search — GloVe Benchmark</div>
+    <p>Beyond LLM inference, TurboQuant was evaluated as a general-purpose vector search algorithm on the GloVe dataset (d=200, 1.2M vectors). It achieved <strong>superior recall ratios</strong> across top-k retrieval tasks compared to both Product Quantization (PQ) and RaBitQ — without requiring large codebooks, dataset-specific tuning, or any training data. This matters because vector search underpins Google Search, YouTube recommendations, and advertising targeting.</p>
+  </div>
+</div>
+</div>
+
+<!-- §06 COMPARISON -->
+<div class="divider" data-num="06 — COMPARISON WITH OTHER METHODS" id="comparison"></div>
+<div class="model-section">
+<div class="container">
+  <div class="section-label">How It Stacks Up</div>
+  <h2 style="font-family:'Playfair Display',serif;font-size:clamp(1.8rem,4vw,2.4rem);font-weight:700;margin-bottom:1.5rem;">TurboQuant vs the Field</h2>
+  <p style="font-size:1rem;color:var(--text-muted);max-width:720px;margin-bottom:2rem;">Five categories of competing approaches — each with different tradeoffs. TurboQuant is the first to combine zero overhead, training-free operation, and near-optimal rate-distortion in one method.</p>
+
+  <table class="comparison-table fade-up">
+    <thead>
+      <tr><th>Method</th><th>Bits</th><th>Overhead</th><th>Training?</th><th>Vector Search?</th><th>Accuracy</th><th>Speedup</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>FP16 (baseline)</td>
+        <td><span class="tag orange">16 bits</span></td>
+        <td>0</td>
+        <td>No</td>
+        <td>✅</td>
+        <td>Reference</td>
+        <td>1×</td>
+      </tr>
+      <tr>
+        <td>vLLM FP8 KV</td>
+        <td><span class="tag">8 bits</span></td>
+        <td>Low</td>
+        <td>No</td>
+        <td>❌</td>
+        <td>Near-lossless</td>
+        <td>~1.5×</td>
+      </tr>
+      <tr>
+        <td>GPTQ (weight quant)</td>
+        <td><span class="tag pink">4 bits</span></td>
+        <td>Group scale (FP16)</td>
+        <td>Calibration</td>
+        <td>❌</td>
+        <td>~0.5–1% loss</td>
+        <td>Memory only</td>
+      </tr>
+      <tr>
+        <td>KVQuant</td>
+        <td><span class="tag pink">4 bits</span></td>
+        <td>Per-vector scale</td>
+        <td>Calibration</td>
+        <td>❌</td>
+        <td>Good on 7B+</td>
+        <td>2–3×</td>
+      </tr>
+      <tr>
+        <td>Ollama q4_0/q8_0</td>
+        <td><span class="tag pink">4–8 bits</span></td>
+        <td>Block scale</td>
+        <td>No</td>
+        <td>❌</td>
+        <td>Unpredictable</td>
+        <td>Memory only</td>
+      </tr>
+      <tr>
+        <td>Product Quant. (PQ)</td>
+        <td><span class="tag">Variable</span></td>
+        <td>Large codebook</td>
+        <td>✅ Required</td>
+        <td>✅</td>
+        <td>Good</td>
+        <td>3–4×</td>
+      </tr>
+      <tr>
+        <td>RaBitQ</td>
+        <td><span class="tag">1 bit</span></td>
+        <td>Norm storage</td>
+        <td>No</td>
+        <td>✅</td>
+        <td>Lossy at low bits</td>
+        <td>5–6×</td>
+      </tr>
+      <tr>
+        <td style="color:var(--accent3);"><strong>TurboQuant (4-bit)</strong></td>
+        <td><span class="tag">4 bits</span></td>
+        <td><span class="tag" style="background:rgba(0,217,180,.15);">Zero</span></td>
+        <td>No</td>
+        <td>✅</td>
+        <td>Near-lossless</td>
+        <td><span class="tag">8×</span></td>
+      </tr>
+      <tr>
+        <td style="color:var(--accent3);"><strong>TurboQuant (3-bit)</strong></td>
+        <td><span class="tag pink">3 bits</span></td>
+        <td><span class="tag" style="background:rgba(0,217,180,.15);">Zero</span></td>
+        <td>No</td>
+        <td>✅</td>
+        <td>Good on 7B+</td>
+        <td><span class="tag">6×</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="section-label purple" style="margin-top:2.5rem;">Where TurboQuant Wins — Uniquely</div>
+
+  <div class="themes-grid fade-up">
+    <div class="theme-card">
+      <div class="theme-icon">🏆</div>
+      <h3>Zero Overhead</h3>
+      <p>The only 4-bit KV method that stores literally zero quantization constants. Every competing method stores at least 0.5 extra bits per element for scales or codebooks. TurboQuant: 0.</p>
+    </div>
+    <div class="theme-card">
+      <div class="theme-icon">🔌</div>
+      <h3>Works for Both KV + Vector Search</h3>
+      <p>FP8, GPTQ, KVQuant — all LLM-specific. TurboQuant is a general vector quantization algorithm that also beats PQ and RaBitQ on the GloVe benchmark. One method, two massive use cases.</p>
+    </div>
+    <div class="theme-card">
+      <div class="theme-icon">📐</div>
+      <h3>Near Information-Theoretic Optimal</h3>
+      <p>TurboQuant operates near the Shannon lower bound for quantization distortion. Most methods are heuristics. This is a theorem — provably near-optimal rate-distortion for the given bit budget.</p>
+    </div>
+    <div class="theme-card">
+      <div class="theme-icon">⚡</div>
+      <h3>Hardware-Friendly</h3>
+      <p>The polar coordinate representation maps naturally to efficient bitwise operations. 4-bit attention logits on H100 achieve 8× speedup — not just memory savings but actual compute acceleration.</p>
+    </div>
+  </div>
+
+  <div class="section-label pink" style="margin-top:2.5rem;">Where TurboQuant Has Limits</div>
+
+  <div class="feature-box pink fade-up">
+    <h4>Small Models (Under 3B) Need Care</h4>
+    <p>At 3-bit, models below 3B parameters show noticeable output degradation — repetitive or incoherent text. Smaller models have less redundancy in their KV representations, making them more sensitive to quantization noise. Community experiments confirm 4-bit is safe down to ~1B; 3-bit should only be used on 7B+ models. This is not a fundamental limitation of TurboQuant's algorithm — it reflects the information content of small model activations.</p>
+  </div>
+
+  <div class="feature-box orange fade-up">
+    <h4>No Official Implementation Yet — Community is Moving Fast</h4>
+    <p>As of March 2026, there is no official Google open-source release. The paper provides theory and pseudocode. However: community integration into llama.cpp is tracked in issue #20969; MLX experiments on Apple Silicon report ~5× compression with 99.5% quality retention; vLLM has an open feature request for native TurboQuant KV quantization. Official code is expected Q2 2026.</p>
+  </div>
+
+  <div class="callout fade-up" style="border-color:rgba(0,217,180,.3);">
+    <div class="callout-icon">🔬</div>
+    <p><strong>My take:</strong> TurboQuant is the most theoretically rigorous KV cache compression method published to date. The combination of zero overhead, training-free operation, and near-optimal rate-distortion is genuinely novel. What makes it important is not just that it compresses more — it's that it establishes where the <em>limit</em> is. KV cache compression is approaching its information-theoretic boundary. The next major efficiency gains in LLM inference will have to come from somewhere else: attention architecture changes (like Mamba hybrid models), memory hierarchy design, or fundamentally different ways of representing context. TurboQuant doesn't just solve a problem — it closes the chapter on this particular problem.</p>
+  </div>
+</div>
+</div>
+
+<footer>
+  <div class="footer-left">© 2026 Prateek Singh, PhD · prateeksinghphd.com</div>
+  <div class="footer-right">
+    <a href="blogs.html">← All Posts</a>
+    <a href="https://github.com/prateekiitr">GitHub</a>
+  </div>
+</footer>
+
+<script>
+window.addEventListener('scroll',()=>{const s=document.documentElement;document.getElementById('progress').style.width=(s.scrollTop/(s.scrollHeight-s.clientHeight)*100)+'%';});
+const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target);}});},{threshold:.08});
+document.querySelectorAll('.fade-up').forEach(el=>obs.observe(el));
+
+// HERO PARTICLES
+(function(){
+  const c=document.getElementById('hero-canvas'),ctx=c.getContext('2d');
+  let W,H;
+  function resize(){W=c.width=c.offsetWidth;H=c.height=c.offsetHeight;}
+  resize();window.addEventListener('resize',resize);
+  const pts=Array.from({length:55},()=>({x:Math.random()*1600,y:Math.random()*900,vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.22,r:Math.random()*1.4+.4,a:Math.random()*Math.PI*2}));
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.a+=.004;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(0,217,180,${(.25+.25*Math.sin(p.a))*.5})`;ctx.fill();});
+    pts.forEach((a,i)=>pts.slice(i+1).forEach(b=>{const d=Math.hypot(a.x-b.x,a.y-b.y);if(d<110){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=`rgba(124,107,255,${.1*(1-d/110)})`;ctx.lineWidth=.5;ctx.stroke();}}));
+    requestAnimationFrame(draw);
+  }draw();
+})();
+
+// SPEEDUP BARS
+(function(){
+  const rows=[
+    {label:'TurboQuant 4-bit',val:8,max:8,col:'rgba(0,217,180,.8)',note:'8×'},
+    {label:'TurboQuant 3-bit',val:6,max:8,col:'rgba(0,217,180,.6)',note:'6×'},
+    {label:'RaBitQ 1-bit',val:5.5,max:8,col:'rgba(124,107,255,.6)',note:'5.5×'},
+    {label:'FP8 (vLLM)',val:1.5,max:8,col:'rgba(255,179,71,.6)',note:'1.5×'},
+    {label:'FP16 baseline',val:1,max:8,col:'rgba(255,255,255,.25)',note:'1×'},
+  ];
+  let html='';
+  rows.forEach(r=>{const pct=r.val/r.max*100;
+    html+=`<div class="bar-row"><div class="bar-label">${r.label}</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:${r.col};" data-pct="${pct}"><span>${r.note} speedup</span></div></div></div>`;
+  });
+  const el=document.getElementById('speedup-bars');el.innerHTML=html;
+  setTimeout(()=>el.querySelectorAll('.bar-fill').forEach(b=>b.style.width=b.dataset.pct+'%'),80);
+})();
+
+// MEMORY BARS
+(function(){
+  const rows=[
+    {label:'FP16 KV cache',val:140,col:'rgba(255,107,157,.7)',note:'140 GB'},
+    {label:'FP8 KV cache',val:70,col:'rgba(255,179,71,.65)',note:'70 GB'},
+    {label:'TurboQuant 4-bit',val:35,col:'rgba(0,217,180,.8)',note:'35 GB — fits 1× A100'},
+    {label:'TurboQuant 3-bit',val:26,col:'rgba(0,217,180,.6)',note:'26 GB — fits 1× H100'},
+  ];
+  const max=150;let html='';
+  rows.forEach(r=>{const pct=r.val/max*100;
+    html+=`<div class="bar-row"><div class="bar-label">${r.label}</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:${r.col};" data-pct="${pct}"><span>${r.note}</span></div></div></div>`;
+  });
+  const el=document.getElementById('memory-bars');el.innerHTML=html;
+  setTimeout(()=>el.querySelectorAll('.bar-fill').forEach(b=>b.style.width=b.dataset.pct+'%'),80);
+})();
+
+// ── KV CACHE MEMORY GROWTH DIAGRAM ──────────────────────────────────────────
+(function(){
+  const canvas=document.getElementById('kv-canvas');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const W=800,H=240,PAD={l:70,r:20,t:20,b:50};
+  const PW=W-PAD.l-PAD.r,PH=H-PAD.t-PAD.b;
+
+  const contexts=[4,8,16,32,64,128]; // K tokens
+  const labels=['4K','8K','16K','32K','64K','128K'];
+  const colors={fp16:'rgba(255,107,157,.7)',fp8:'rgba(255,179,71,.6)',tq4:'rgba(0,217,180,.8)',tq3:'rgba(0,217,180,.5)'};
+
+  function kvcache(tokens_k,bits){return tokens_k*1000*2*128*32*bits/8/1e9;} // GB approx 7B model
+
+  ctx.clearRect(0,0,W,H);
+  // grid
+  [0,25,50,75,100,125].forEach(gb=>{
+    const y=PAD.t+PH-(gb/140)*PH;
+    ctx.beginPath();ctx.moveTo(PAD.l,y);ctx.lineTo(PAD.l+PW,y);
+    ctx.strokeStyle='rgba(255,255,255,.04)';ctx.lineWidth=1;ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,.3)';ctx.font='10px JetBrains Mono';
+    ctx.fillText(gb+'GB',4,y+4);
+  });
+
+  function drawLine(bits,color,label){
+    ctx.beginPath();
+    contexts.forEach((c,i)=>{
+      const x=PAD.l+(i/(contexts.length-1))*PW;
+      const gb=kvcache(c,bits);
+      const y=PAD.t+PH-(Math.min(gb,140)/140)*PH;
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });
+    ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.stroke();
+    // fill under
+    ctx.lineTo(PAD.l+PW,PAD.t+PH);ctx.lineTo(PAD.l,PAD.t+PH);
+    ctx.fillStyle=color.replace('.7','.08').replace('.6','.06').replace('.8','.12').replace('.5','.08');
+    ctx.fill();
+    // label at end
+    const lastGb=kvcache(contexts[contexts.length-1],bits);
+    const ly=PAD.t+PH-(Math.min(lastGb,140)/140)*PH;
+    ctx.fillStyle=color;ctx.font='bold 10px JetBrains Mono';
+    ctx.fillText(label,PAD.l+PW+4,ly+4);
+  }
+
+  drawLine(16,'rgba(255,107,157,.7)','FP16');
+  drawLine(8,'rgba(255,179,71,.6)','FP8');
+  drawLine(4,'rgba(0,217,180,.75)','TQ 4-bit');
+  drawLine(3,'rgba(0,217,180,.45)','TQ 3-bit');
+
+  // x axis labels
+  contexts.forEach((c,i)=>{
+    const x=PAD.l+(i/(contexts.length-1))*PW;
+    ctx.fillStyle='rgba(255,255,255,.3)';ctx.font='10px JetBrains Mono';ctx.textAlign='center';
+    ctx.fillText(labels[i],x,PAD.t+PH+16);
+  });
+  ctx.textAlign='center';ctx.fillStyle='rgba(255,255,255,.2)';ctx.font='10px JetBrains Mono';
+  ctx.fillText('Context window (tokens)',PAD.l+PW/2,H-4);
+  ctx.textAlign='left';
+
+  // H100 80GB line
+  const hLine=PAD.t+PH-(80/140)*PH;
+  ctx.beginPath();ctx.moveTo(PAD.l,hLine);ctx.lineTo(PAD.l+PW,hLine);
+  ctx.strokeStyle='rgba(124,107,255,.5)';ctx.lineWidth=1;ctx.setLineDash([6,4]);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='rgba(124,107,255,.8)';ctx.font='10px JetBrains Mono';
+  ctx.fillText('H100 80GB',PAD.l+4,hLine-4);
+})();
+
+// ── TURBOQUANT PIPELINE FLOWCHART ────────────────────────────────────────────
+(function(){
+  const canvas=document.getElementById('pipeline-canvas');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const W=860,H=320;
+  ctx.clearRect(0,0,W,H);
+
+  const BOX_W=160,BOX_H=48,R=4;
+  const colors={input:'#32325a',rot:'#00d9b4',polar:'#00d9b4',quant:'#00d9b4',res:'#7c6bff',qjl:'#7c6bff',out:'#ffb347'};
+  const textC={input:'#b0b0cc',rot:'#0d0d12',polar:'#0d0d12',quant:'#0d0d12',res:'#0d0d12',qjl:'#0d0d12',out:'#0d0d12'};
+
+  function roundRect(x,y,w,h,r,fill,stroke){
+    ctx.beginPath();ctx.roundRect(x,y,w,h,r);
+    if(fill){ctx.fillStyle=fill;ctx.fill();}
+    if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.stroke();}
+  }
+
+  function label(text,x,y,col,size=11,bold=false){
+    ctx.fillStyle=col;ctx.font=(bold?'bold ':'')+size+'px DM Sans';ctx.textAlign='center';ctx.fillText(text,x,y);
+  }
+  function mono(text,x,y,col,size=9){
+    ctx.fillStyle=col;ctx.font=size+'px JetBrains Mono';ctx.textAlign='center';ctx.fillText(text,x,y);
+  }
+  function arrow(x1,y1,x2,y2,col='rgba(255,255,255,.25)'){
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);
+    ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.stroke();
+    // arrowhead
+    const ang=Math.atan2(y2-y1,x2-x1);
+    ctx.beginPath();ctx.moveTo(x2,y2);
+    ctx.lineTo(x2-8*Math.cos(ang-0.4),y2-8*Math.sin(ang-0.4));
+    ctx.lineTo(x2-8*Math.cos(ang+0.4),y2-8*Math.sin(ang+0.4));
+    ctx.closePath();ctx.fillStyle=col;ctx.fill();
+  }
+
+  const cx=W/2;
+
+  // Input
+  const inX=cx-BOX_W/2,inY=10;
+  roundRect(inX,inY,BOX_W,BOX_H,R,'#1c1c2a','#32325a');
+  label('Input KV Vector x',cx,inY+18,'#c4c4e0',11,true);
+  mono('FP16 · d=128 per head',cx,inY+34,'#6a6a8a');
+
+  // Split arrow
+  arrow(cx,inY+BOX_H,cx,inY+BOX_H+22,'rgba(255,255,255,.2)');
+
+  // Split node
+  ctx.beginPath();ctx.arc(cx,inY+BOX_H+30,6,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,.15)';ctx.fill();
+
+  // LEFT PATH — PolarQuant
+  const lx=200;
+  arrow(cx,inY+BOX_H+30,lx+BOX_W,inY+BOX_H+50,'rgba(0,217,180,.5)');
+  mono('STAGE 1 — PolarQuant',lx+BOX_W/2,inY+BOX_H+52,'rgba(0,217,180,.7)',9);
+
+  // Rotation box
+  const r1y=inY+BOX_H+62;
+  roundRect(lx,r1y,BOX_W,BOX_H,R,'rgba(0,217,180,.18)','rgba(0,217,180,.5)');
+  label('Random Rotation',lx+BOX_W/2,r1y+18,'#00d9b4',11,true);
+  mono('Π·x → uniform dist.',lx+BOX_W/2,r1y+34,'rgba(0,217,180,.6)');
+  arrow(lx+BOX_W/2,r1y+BOX_H,lx+BOX_W/2,r1y+BOX_H+14,'rgba(0,217,180,.5)');
+
+  // Polar box
+  const r2y=r1y+BOX_H+18;
+  roundRect(lx,r2y,BOX_W,BOX_H,R,'rgba(0,217,180,.18)','rgba(0,217,180,.5)');
+  label('Polar Conversion',lx+BOX_W/2,r2y+18,'#00d9b4',11,true);
+  mono('(x,y) → (r, θ)',lx+BOX_W/2,r2y+34,'rgba(0,217,180,.6)');
+  arrow(lx+BOX_W/2,r2y+BOX_H,lx+BOX_W/2,r2y+BOX_H+14,'rgba(0,217,180,.5)');
+
+  // Quantize box
+  const r3y=r2y+BOX_H+18;
+  roundRect(lx,r3y,BOX_W,BOX_H,R,'rgba(0,217,180,.25)','rgba(0,217,180,.7)');
+  label('Lloyd-Max Quantize θ',lx+BOX_W/2,r3y+18,'#00d9b4',11,true);
+  mono('(b−1) bits · zero overhead',lx+BOX_W/2,r3y+34,'rgba(0,217,180,.7)');
+
+  // RIGHT PATH — QJL
+  const rx=500;
+  arrow(cx,inY+BOX_H+30,rx,inY+BOX_H+50,'rgba(124,107,255,.5)');
+  mono('STAGE 2 — QJL',rx+BOX_W/2,inY+BOX_H+52,'rgba(124,107,255,.7)',9);
+
+  // Residual box
+  const q1y=inY+BOX_H+62;
+  roundRect(rx,q1y,BOX_W,BOX_H,R,'rgba(124,107,255,.18)','rgba(124,107,255,.5)');
+  label('Compute Residual ε',rx+BOX_W/2,q1y+18,'#c0b8ff',11,true);
+  mono('ε = x − x̂ (small error)',rx+BOX_W/2,q1y+34,'rgba(124,107,255,.6)');
+  arrow(rx+BOX_W/2,q1y+BOX_H,rx+BOX_W/2,q1y+BOX_H+14,'rgba(124,107,255,.5)');
+
+  // QJL sign box
+  const q2y=q1y+BOX_H+18;
+  roundRect(rx,q2y,BOX_W,BOX_H+30,R,'rgba(124,107,255,.25)','rgba(124,107,255,.7)');
+  label('QJL Sign Projection',rx+BOX_W/2,q2y+18,'#c0b8ff',11,true);
+  mono('b_ε = sign(gᵀ·ε)',rx+BOX_W/2,q2y+34,'rgba(124,107,255,.8)');
+  mono('1 bit · zero overhead',rx+BOX_W/2,q2y+50,'rgba(124,107,255,.6)');
+
+  // Merge arrows to output
+  const outY=r3y+BOX_H+28;
+  arrow(lx+BOX_W/2,r3y+BOX_H,cx-BOX_W/2,outY,'rgba(0,217,180,.5)');
+  arrow(rx+BOX_W/2,q2y+BOX_H+30,cx+BOX_W/2,outY,'rgba(124,107,255,.5)');
+
+  // Output box
+  roundRect(cx-BOX_W/2,outY,BOX_W,BOX_H+8,R,'rgba(255,179,71,.2)','rgba(255,179,71,.6)');
+  label('Compressed KV Vector',cx,outY+18,'#ffb347',11,true);
+  mono('b-bit · (b−1) PolarQuant + 1 QJL · 0 constants',cx,outY+34,'rgba(255,179,71,.7)',8.5);
+  mono('6× smaller · 8× faster attention',cx,outY+48,'rgba(255,179,71,.5)',8.5);
+
+  ctx.textAlign='left';
+})();
+
+// ── CARTESIAN vs POLAR CANVAS ────────────────────────────────────────────────
+(function(){
+  const canvas=document.getElementById('polar-canvas');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const W=800,H=260;
+  ctx.clearRect(0,0,W,H);
+
+  const CX1=160,CX2=550,CY=130,CR=95;
+
+  // Helper
+  function circle(cx,cy,r,col){ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.strokeStyle=col;ctx.lineWidth=1;ctx.stroke();}
+  function cross(cx,cy,len,col){ctx.strokeStyle=col;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(cx-len,cy);ctx.lineTo(cx+len,cy);ctx.moveTo(cx,cy-len);ctx.lineTo(cx,cy+len);ctx.stroke();}
+
+  // LEFT — Cartesian (non-uniform)
+  ctx.fillStyle='rgba(255,255,255,.06)';ctx.fillRect(40,30,235,200);
+  ctx.fillStyle='rgba(255,107,157,.8)';ctx.font='bold 11px JetBrains Mono';ctx.textAlign='center';
+  ctx.fillText('CARTESIAN (before rotation)',CX1,22);
+  ctx.fillStyle='rgba(255,107,157,.5)';ctx.font='9px JetBrains Mono';
+  ctx.fillText('Non-uniform → needs per-vector scale',CX1,H-10);
+
+  cross(CX1,CY,CR+10,'rgba(255,255,255,.12)');
+  circle(CX1,CY,CR,'rgba(255,255,255,.08)');
+
+  // Clustered points (simulate non-uniform high-value outliers)
+  const pts1=[
+    [0.8,0.3],[0.85,0.4],[0.9,0.25],[0.75,0.5],[0.95,0.35],
+    [0.7,0.6],[0.6,0.7],[-0.2,0.1],[-0.15,0.15],[-0.1,0.05],
+    [0.3,-0.2],[0.25,-0.25],[0.35,-0.15]
+  ];
+  pts1.forEach(([nx,ny])=>{
+    const px=CX1+nx*CR,py=CY-ny*CR;
+    ctx.beginPath();ctx.arc(px,py,4,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,107,157,.85)';ctx.fill();
+  });
+
+  // Scale constant label
+  ctx.fillStyle='rgba(255,179,71,.8)';ctx.font='9px JetBrains Mono';
+  ctx.fillText('scale = max(|x|) / 7',CX1,CY+CR+20);
+  ctx.fillText('⚠ different for every vector',CX1,CY+CR+33);
+
+  // ARROW in middle
+  ctx.strokeStyle='rgba(0,217,180,.6)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(310,CY);ctx.lineTo(375,CY);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(375,CY);ctx.lineTo(365,CY-6);ctx.lineTo(365,CY+6);ctx.closePath();
+  ctx.fillStyle='rgba(0,217,180,.6)';ctx.fill();
+  ctx.fillStyle='rgba(0,217,180,.8)';ctx.font='bold 9px JetBrains Mono';ctx.textAlign='center';
+  ctx.fillText('Π·x',342,CY-8);
+  ctx.fillText('rotate',342,CY+18);
+
+  // RIGHT — After rotation + polar (uniform)
+  ctx.fillStyle='rgba(255,255,255,.06)';ctx.fillRect(390,30,370,200);
+  ctx.fillStyle='rgba(0,217,180,.9)';ctx.font='bold 11px JetBrains Mono';ctx.textAlign='center';
+  ctx.fillText('POLAR (after rotation)',CX2,22);
+  ctx.fillStyle='rgba(0,217,180,.5)';ctx.font='9px JetBrains Mono';
+  ctx.fillText('Uniform θ → precomputed quantizer',CX2,H-10);
+
+  cross(CX2,CY,CR+10,'rgba(255,255,255,.12)');
+  circle(CX2,CY,CR,'rgba(0,217,180,.2)');
+
+  // Uniformly distributed points on circle (angles are uniform after rotation)
+  for(let i=0;i<16;i++){
+    const theta=(i/16)*Math.PI*2;
+    const r=CR*(0.75+Math.random()*0.22);
+    const px=CX2+Math.cos(theta)*r,py=CY+Math.sin(theta)*r;
+    ctx.beginPath();ctx.arc(px,py,4,0,Math.PI*2);
+    ctx.fillStyle='rgba(0,217,180,.85)';ctx.fill();
+    // show angle line
+    ctx.beginPath();ctx.moveTo(CX2,CY);ctx.lineTo(px,py);
+    ctx.strokeStyle='rgba(0,217,180,.12)';ctx.lineWidth=0.8;ctx.stroke();
+  }
+
+  // Label one angle
+  const ang=Math.PI/5;
+  ctx.beginPath();ctx.arc(CX2,CY,30,0,-ang,true);ctx.strokeStyle='rgba(0,217,180,.6)';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.fillStyle='rgba(0,217,180,.9)';ctx.font='bold 10px JetBrains Mono';ctx.textAlign='left';
+  ctx.fillText('θ',CX2+34,CY-12);
+  ctx.fillStyle='rgba(0,217,180,.65)';ctx.font='9px JetBrains Mono';ctx.textAlign='center';
+  ctx.fillText('θ ~ Uniform[−π, π]',CX2,CY+CR+20);
+  ctx.fillText('✓ same quantizer for all vectors',CX2,CY+CR+33);
+
+  ctx.textAlign='left';
+
+  // Animate random rotation button
+  let angle=0;let animTimer=null;
+  document.getElementById('polar-btn').addEventListener('click',function(){
+    if(animTimer){clearInterval(animTimer);animTimer=null;this.textContent='▶ Animate Rotation';return;}
+    this.textContent='⏸ Stop';
+    animTimer=setInterval(()=>{
+      angle+=0.04;
+      // redraw left points rotated
+      ctx.clearRect(40,30,235,200);
+      ctx.fillStyle='rgba(255,255,255,.06)';ctx.fillRect(40,30,235,200);
+      cross(CX1,CY,CR+10,'rgba(255,255,255,.12)');circle(CX1,CY,CR,'rgba(255,255,255,.08)');
+      pts1.forEach(([nx,ny])=>{
+        const c=Math.cos(angle),s=Math.sin(angle);
+        const rx2=c*nx-s*ny,ry2=s*nx+c*ny;
+        const px=CX1+rx2*CR,py=CY-ry2*CR;
+        ctx.beginPath();ctx.arc(px,py,4,0,Math.PI*2);
+        ctx.fillStyle=`rgba(0,217,180,${0.5+0.4*(Math.abs(Math.cos(angle)))})`;ctx.fill();
+      });
+    },30);
+  });
+})();
+
+// ── QJL RESIDUAL DIAGRAM ─────────────────────────────────────────────────────
+(function(){
+  const canvas=document.getElementById('qjl-canvas');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const W=800,H=240;
+  ctx.clearRect(0,0,W,H);
+
+  // Three panels: Original vector | After PolarQuant | QJL correction
+  const panels=[
+    {x:20,label:'Original KV Vector (K)',col:'rgba(255,255,255,.6)'},
+    {x:290,label:'After PolarQuant (K̂)',col:'rgba(0,217,180,.8)'},
+    {x:560,label:'QJL Residual Correction',col:'rgba(124,107,255,.9)'},
+  ];
+
+  const d=16; // dimensions to show
+  const barW=12,barH_max=80,barY=70;
+
+  // Simulate values
+  const orig=Array.from({length:d},(_,i)=>Math.sin(i*0.8+1)*0.9+Math.cos(i*1.3)*0.4);
+  const quant=orig.map(v=>Math.round(v*3.5)/3.5); // simulate 4-level quantization
+  const resid=orig.map((v,i)=>v-quant[i]);
+
+  panels.forEach((p,pi)=>{
+    ctx.fillStyle='rgba(255,255,255,.05)';ctx.fillRect(p.x,20,240,H-30);
+    ctx.fillStyle=p.col;ctx.font='bold 9px JetBrains Mono';ctx.textAlign='center';
+    ctx.fillText(p.label,p.x+120,15);
+    // zero line
+    ctx.strokeStyle='rgba(255,255,255,.15)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(p.x+5,barY+barH_max/2);ctx.lineTo(p.x+235,barY+barH_max/2);ctx.stroke();
+
+    const vals=pi===0?orig:pi===1?quant:resid;
+    const scale=pi===2?3:1;
+    vals.slice(0,d).forEach((v,i)=>{
+      const bh=v*barH_max*0.5*scale;
+      const bx=p.x+8+i*(barW+2);
+      const by=barY+barH_max/2;
+      const col=pi===0?'rgba(255,107,157,.75)':pi===1?'rgba(0,217,180,.8)':'rgba(124,107,255,.8)';
+      ctx.fillStyle=col;
+      ctx.fillRect(bx,bh>=0?by-bh:by,barW,Math.abs(bh)||1);
+    });
+
+    // annotation
+    if(pi===1){
+      ctx.fillStyle='rgba(0,217,180,.6)';ctx.font='9px JetBrains Mono';ctx.textAlign='center';
+      ctx.fillText('(b−1) bits stored',p.x+120,H-10);
+      ctx.fillText('zero constants',p.x+120,H-20);
+    }
+    if(pi===2){
+      // show sign bit
+      ctx.fillStyle='rgba(124,107,255,.9)';ctx.font='bold 11px JetBrains Mono';ctx.textAlign='center';
+      const signVal=resid.reduce((a,v,i)=>a+(i%2?1:-1)*v,0)>=0?'+1':'-1';
+      ctx.fillText(`b_ε = ${signVal}`,p.x+120,H-20);
+      ctx.fillStyle='rgba(124,107,255,.6)';ctx.font='9px JetBrains Mono';
+      ctx.fillText('1 bit stored · bias eliminated',p.x+120,H-8);
+    }
+  });
+
+  // Arrows between panels
+  [[250,90,280,90],[520,90,550,90]].forEach(([x1,y1,x2,y2])=>{
+    ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-7,y2-5);ctx.lineTo(x2-7,y2+5);ctx.closePath();
+    ctx.fillStyle='rgba(255,255,255,.2)';ctx.fill();
+  });
+
+  ctx.textAlign='left';
+})();
+
+(function(){
+  const rows=[
+    {label:'2-bit',val:78,col:'rgba(255,107,157,.7)',note:'Lossy'},
+    {label:'3-bit',val:91,col:'rgba(255,179,71,.7)',note:'Good on 7B+'},
+    {label:'4-bit',val:99.7,col:'rgba(0,217,180,.8)',note:'Near-lossless'},
+    {label:'FP16 (ref)',val:100,col:'rgba(255,255,255,.3)',note:'Reference'},
+  ];
+  const max=100;let html='';
+  rows.forEach(r=>{const pct=r.val/max*100;
+    html+=`<div class="bar-row"><div class="bar-label">${r.label}</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:${r.col};" data-pct="${pct}"><span>${r.val}% quality</span></div></div><div class="bar-note">${r.note}</div></div>`;
+  });
+  const el=document.getElementById('polar-bars');el.innerHTML=html;
+  setTimeout(()=>el.querySelectorAll('.bar-fill').forEach(b=>b.style.width=b.dataset.pct+'%'),80);
+})();
+
+// PIPELINE ANIMATION
+(function(){
+  const stages=[
+    {label:'Input KV vector x',detail:'FP16 — 128 values × 16 bits = 2048 bits per vector',col:'rgba(255,255,255,.15)'},
+    {label:'Random rotation Π·x',detail:'Orthogonal matrix applied — values now uniformly distributed',col:'rgba(124,107,255,.4)'},
+    {label:'Polar conversion (r, θ)',detail:'Pairs of coords → angle θ ∈ [−π, π]. Radius r discarded (cancels in attention)',col:'rgba(124,107,255,.6)'},
+    {label:'PolarQuant: quantize θ',detail:'(b−1) bits per angle using precomputed Lloyd-Max grid. Zero constants stored.',col:'rgba(0,217,180,.5)'},
+    {label:'Compute residual ε',detail:'ε = x − x̂. Small — PolarQuant captured dominant structure.',col:'rgba(255,179,71,.5)'},
+    {label:'QJL: b_ε = sign(gᵀ·ε)',detail:'Project residual onto random sign vector. Store 1 bit. Eliminates bias.',col:'rgba(0,217,180,.7)'},
+    {label:'Output: b-bit vector',detail:'(b−1) bits from PolarQuant + 1 bit from QJL. Total overhead: 0 bits.',col:'rgba(0,217,180,.9)'},
+  ];
+  let step=-1;let timer=null;
+
+  function render(active){
+    let html='<div style="display:flex;flex-direction:column;gap:6px;">';
+    stages.forEach((s,i)=>{
+      const isActive=i===active;const isDone=i<active;
+      const bg=isDone?'rgba(0,217,180,.12)':isActive?s.col:'rgba(255,255,255,.03)';
+      const border=isActive?'1px solid rgba(0,217,180,.6)':isDone?'1px solid rgba(0,217,180,.2)':'1px solid rgba(255,255,255,.06)';
+      const textCol=isActive?'#ffffff':isDone?'rgba(0,217,180,.9)':'var(--text-dim)';
+      const detailCol=isActive?'rgba(255,255,255,.7)':isDone?'rgba(0,217,180,.6)':'rgba(255,255,255,.2)';
+      html+=`<div style="padding:.6rem 1rem;background:${bg};border:${border};border-radius:2px;transition:all .3s;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:600;color:${textCol};">${isDone?'✓ ':isActive?'▶ ':''}${s.label}</div>
+        ${isActive||isDone?`<div style="font-size:.78rem;color:${detailCol};margin-top:.2rem;">${s.detail}</div>`:''}
+      </div>`;
+    });
+    html+='</div>';
+    document.getElementById('pipeline-viz').innerHTML=html;
+  }
+
+  render(-1);
+  document.getElementById('pipeline-btn').addEventListener('click',function(){
+    if(timer){clearInterval(timer);timer=null;step=-1;render(-1);this.textContent='▶ Run';return;}
+    this.textContent='⏸ Stop';step=0;
+    timer=setInterval(()=>{render(step);step++;if(step>=stages.length){clearInterval(timer);timer=null;document.getElementById('pipeline-btn').textContent='↺ Replay';step=-1;}},700);
+  });
+})();
+</script>
+</body>
+</html>
