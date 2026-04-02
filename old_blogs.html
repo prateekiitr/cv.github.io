@@ -29,33 +29,7 @@
       --text: #f0f0f8;
       --text-muted: #b0b0c8;
       --text-dim: #6a6a8a;
-      --progress-grad: linear-gradient(90deg, #7c6bff, #ff6b9d, #00d9b4);
       color-scheme: dark;
-    }
-
-    /* ── FINANCE THEME OVERRIDE ── */
-    body.finance {
-      --bg: #060d14;
-      --surface: #0c1a26;
-      --surface2: #122032;
-      --border: #1e3348;
-      --accent: #f0b429;
-      --accent2: #10b981;
-      --accent3: #f0b429;
-      --accent4: #ef4444;
-      --text: #f0f4f8;
-      --text-muted: #94a8be;
-      --text-dim: #4a6278;
-      --progress-grad: linear-gradient(90deg, #f0b429, #10b981, #f0b429);
-    }
-
-    /* smooth theme transition */
-    body, nav, .page-hero, .filter-bar, .post-card,
-    .featured-post, footer, .scroll-up, #progress {
-      transition:
-        background-color .5s ease,
-        border-color .5s ease,
-        color .5s ease;
     }
 
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -87,10 +61,10 @@
       position: fixed;
       top: 0; left: 0;
       height: 2px;
-      background: var(--progress-grad);
+      background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
       z-index: 1001;
       width: 0%;
-      transition: width .1s, background .5s ease;
+      transition: width .1s;
     }
 
     /* NAV */
@@ -550,72 +524,6 @@
     .scroll-up.visible { opacity: 1; pointer-events: auto; }
     .scroll-up:hover { border-color: var(--accent3); color: var(--accent3); }
 
-    /* ── MODE SWITCHER ── */
-    .mode-switcher {
-      display: flex;
-      align-items: center;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 100px;
-      padding: 3px;
-      gap: 2px;
-      transition: background .5s, border-color .5s;
-    }
-    .mode-btn {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: .6rem;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      padding: .35rem .85rem;
-      border-radius: 100px;
-      border: none;
-      cursor: pointer;
-      background: transparent;
-      color: var(--text-dim);
-      transition: all .3s;
-      white-space: nowrap;
-      display: flex;
-      align-items: center;
-      gap: .4rem;
-    }
-    .mode-btn.active {
-      color: #0a0a0f;
-      font-weight: 600;
-    }
-    .mode-btn.tech.active  { background: var(--accent3); color: #0a0a0f; }
-    .mode-btn.fin.active   { background: #f0b429; color: #060d14; }
-    .mode-btn:not(.active):hover { color: var(--text-muted); }
-
-    /* Finance-specific filter category colours */
-    body.finance .post-cat.markets    { color: #f0b429; }
-    body.finance .post-cat.personal   { color: #10b981; }
-    body.finance .post-cat.economics  { color: #60a5fa; }
-    body.finance .post-card[data-cat="markets"]::after   { background: #f0b429; }
-    body.finance .post-card[data-cat="personal"]::after  { background: #10b981; }
-    body.finance .post-card[data-cat="economics"]::after { background: #60a5fa; }
-
-    /* Finance hero bg */
-    body.finance .page-hero-bg {
-      background:
-        radial-gradient(ellipse 60% 70% at 80% 30%, rgba(240,180,41,.08) 0%, transparent 65%),
-        radial-gradient(ellipse 40% 50% at 20% 80%, rgba(16,185,129,.06) 0%, transparent 60%);
-    }
-    body.finance .page-title {
-      background: linear-gradient(135deg, #fff 0%, #fde68a 40%, #6ee7b7 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    body.finance .nav-logo { color: #f0b429; }
-    body.finance .nav-links a:hover,
-    body.finance .nav-links a.active { color: #f0b429; }
-    body.finance .scroll-up:hover { border-color: #f0b429; color: #f0b429; }
-    body.finance .section-divider-line { background: var(--border); }
-    body.finance .featured-post::before { background: linear-gradient(90deg, #f0b429, #10b981); }
-    body.finance .read-more { color: #f0b429; }
-    body.finance .filter-btn.active { border-color: #f0b429; color: #f0b429; background: rgba(240,180,41,.08); }
-    body.finance .post-card:hover .post-arrow { color: #f0b429; }
-
     /* RESPONSIVE */
     @media (max-width: 1024px) {
       .blog-grid { grid-template-columns: 1fr 1fr; }
@@ -639,17 +547,6 @@
   <!-- NAV -->
   <nav id="main-nav">
     <a href="index.html" class="nav-logo">Prateek<span>.Singh</span></a>
-
-    <!-- MODE SWITCHER -->
-    <div class="mode-switcher" id="mode-switcher">
-      <button class="mode-btn tech active" id="btn-tech">
-        <i class="fas fa-microchip"></i> Technical
-      </button>
-      <button class="mode-btn fin" id="btn-fin">
-        <i class="fas fa-chart-line"></i> Finance
-      </button>
-    </div>
-
     <ul class="nav-links">
       <li><a href="index.html">Portfolio</a></li>
       <li><a href="index.html#about">About</a></li>
@@ -682,37 +579,27 @@
         <span>/</span>
         <span>Blogs</span>
       </div>
-      <h1 class="page-title" id="hero-title">Technical<br>Writing</h1>
-      <p class="page-subtitle" id="hero-subtitle">Deep dives into LLMs, quantization, on-device AI, inference runtimes, and digital health — written for engineers who want the full picture.</p>
+      <h1 class="page-title">Technical<br>Writing</h1>
+      <p class="page-subtitle">Deep dives into LLMs, quantization, on-device AI, inference runtimes, and digital health — written for engineers who want the full picture.</p>
     </div>
     <div class="hero-count">14</div>
   </div>
 
   <!-- FILTER BAR -->
   <div class="filter-bar">
-    <div class="filter-inner" id="tech-filters">
+    <div class="filter-inner">
       <span class="filter-label">Filter:</span>
       <button class="filter-btn active" data-filter="all">All Posts</button>
       <button class="filter-btn" data-filter="foundations" data-color="teal">Foundations</button>
       <button class="filter-btn" data-filter="architecture" data-color="purple">Architecture</button>
       <button class="filter-btn" data-filter="compression" data-color="pink">Compression</button>
-      <button class="filter-btn" data-filter="rag" data-color="orange">RAG &amp; Retrieval</button>
-    </div>
-    <div class="filter-inner" id="fin-filters" style="display:none;">
-      <span class="filter-label">Filter:</span>
-      <button class="filter-btn active" data-filter="all-fin">All Posts</button>
-      <button class="filter-btn" data-filter="markets">Markets</button>
-      <button class="filter-btn" data-filter="personal">Personal Finance</button>
-      <button class="filter-btn" data-filter="economics">Economics</button>
+      <button class="filter-btn" data-filter="rag" data-color="orange">RAG & Retrieval</button>
     </div>
   </div>
 
   <!-- BLOG CONTENT -->
   <div class="blogs-section">
     <div class="container">
-
-      <!-- ══ TECH CONTENT ══ -->
-      <div id="tech-content">
 
       <!-- FEATURED -->
       <div class="section-divider">
@@ -891,108 +778,7 @@
         </a>
 
       </div>
-      <!-- END TECH GRID -->
-      </div><!-- /#tech-content -->
-
-      <!-- ══ FINANCE CONTENT ══ -->
-      <div id="fin-content" style="display:none;">
-
-        <!-- Finance Featured -->
-        <div class="section-divider">
-          <span class="section-divider-label">Featured</span>
-          <div class="section-divider-line"></div>
-        </div>
-
-        <a href="#" class="featured-post" data-cat-fin="markets">
-          <div class="featured-visual">
-            <div class="featured-visual-bg" style="background: radial-gradient(ellipse 80% 80% at 50% 50%, rgba(240,180,41,.14) 0%, rgba(16,185,129,.08) 50%, transparent 100%);"></div>
-            <div class="featured-visual-icon" style="color:#f0b429;">₹</div>
-            <span class="featured-badge" style="background:rgba(240,180,41,.12);color:#f0b429;border-color:rgba(240,180,41,.3);">Featured</span>
-          </div>
-          <div class="featured-content">
-            <div class="featured-content-top">
-              <div class="featured-tag" style="color:#f0b429;">Markets</div>
-              <div class="featured-title">Understanding Stock Market Cycles</div>
-              <div class="featured-excerpt">Bull runs, bear traps, and everything in between — a deep dive into how market cycles work, what drives them, and how to position yourself at each stage.</div>
-            </div>
-            <div class="featured-footer">
-              <span class="featured-date">Coming Soon</span>
-              <span class="read-more" style="color:#f0b429;">Read Article <i class="fas fa-arrow-right"></i></span>
-            </div>
-          </div>
-        </a>
-
-        <!-- Finance Posts Grid -->
-        <div class="section-divider">
-          <span class="section-divider-label">All Posts</span>
-          <div class="section-divider-line"></div>
-        </div>
-
-        <div class="blog-grid" id="fin-grid">
-
-          <a href="#" class="post-card" data-cat-fin="markets">
-            <div class="post-cat markets">Markets</div>
-            <div class="post-title">How to Read a Balance Sheet</div>
-            <div class="post-excerpt">Assets, liabilities, equity — and why the numbers that matter most are often the ones companies hide in the footnotes.</div>
-            <div class="post-footer">
-              <span class="post-date">Coming Soon</span>
-              <span class="post-arrow">↗</span>
-            </div>
-          </a>
-
-          <a href="#" class="post-card" data-cat-fin="personal">
-            <div class="post-cat personal">Personal Finance</div>
-            <div class="post-title">The 50/30/20 Rule — Does It Still Work?</div>
-            <div class="post-excerpt">The classic budgeting framework revisited for 2026 inflation, rising rent, and the reality of Indian middle-class cash flows.</div>
-            <div class="post-footer">
-              <span class="post-date">Coming Soon</span>
-              <span class="post-arrow">↗</span>
-            </div>
-          </a>
-
-          <a href="#" class="post-card" data-cat-fin="economics">
-            <div class="post-cat economics">Economics</div>
-            <div class="post-title">What the RBI Rate Decision Actually Means</div>
-            <div class="post-excerpt">Repo rate, reverse repo, CRR — cutting through the jargon to explain what a rate change actually does to your EMIs, savings, and the market.</div>
-            <div class="post-footer">
-              <span class="post-date">Coming Soon</span>
-              <span class="post-arrow">↗</span>
-            </div>
-          </a>
-
-          <a href="#" class="post-card" data-cat-fin="markets">
-            <div class="post-cat markets">Markets</div>
-            <div class="post-title">Index Funds vs Active Funds: The Data</div>
-            <div class="post-excerpt">After fees, taxes, and survivorship bias — what the 20-year performance data actually says about where retail investors should put their money.</div>
-            <div class="post-footer">
-              <span class="post-date">Coming Soon</span>
-              <span class="post-arrow">↗</span>
-            </div>
-          </a>
-
-          <a href="#" class="post-card" data-cat-fin="personal">
-            <div class="post-cat personal">Personal Finance</div>
-            <div class="post-title">Building a ₹1 Cr Emergency Fund Strategy</div>
-            <div class="post-excerpt">Liquid funds, FDs, arbitrage funds — the right allocation for a corpus that earns more than a savings account without sacrificing accessibility.</div>
-            <div class="post-footer">
-              <span class="post-date">Coming Soon</span>
-              <span class="post-arrow">↗</span>
-            </div>
-          </a>
-
-          <a href="#" class="post-card" data-cat-fin="economics">
-            <div class="post-cat economics">Economics</div>
-            <div class="post-title">India's GDP Growth: What the Numbers Don't Say</div>
-            <div class="post-excerpt">Headline GDP looks strong. But consumption data, job quality, and informal sector signals tell a more complex story worth understanding.</div>
-            <div class="post-footer">
-              <span class="post-date">Coming Soon</span>
-              <span class="post-arrow">↗</span>
-            </div>
-          </a>
-
-        </div><!-- /#fin-grid -->
-
-      </div><!-- /#fin-content -->
+      <!-- END GRID -->
 
     </div>
   </div>
@@ -1012,7 +798,7 @@
   <a href="#" class="scroll-up" id="scroll-up"><i class="fas fa-angle-up"></i></a>
 
   <script>
-    // ── Progress bar
+    // Progress
     const bar = document.getElementById('progress');
     window.addEventListener('scroll', () => {
       const scrolled = window.scrollY;
@@ -1021,7 +807,7 @@
       document.getElementById('scroll-up').classList.toggle('visible', scrolled > 400);
     }, { passive: true });
 
-    // ── Hamburger
+    // Hamburger
     const hb = document.getElementById('hamburger');
     const mm = document.getElementById('mobile-menu');
     hb.addEventListener('click', () => {
@@ -1033,69 +819,23 @@
       mm.classList.remove('open');
     }));
 
-    // ── MODE SWITCHER ──────────────────────────────────────
-    const btnTech = document.getElementById('btn-tech');
-    const btnFin  = document.getElementById('btn-fin');
-    const techContent = document.getElementById('tech-content');
-    const finContent  = document.getElementById('fin-content');
-    const techFilters = document.getElementById('tech-filters');
-    const finFilters  = document.getElementById('fin-filters');
-    const heroTitle   = document.getElementById('hero-title');
-    const heroSub     = document.getElementById('hero-subtitle');
+    // Filter
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const posts = document.querySelectorAll('.post-card, .featured-post');
 
-    const TECH_TITLE  = 'Technical<br>Writing';
-    const TECH_SUB    = 'Deep dives into LLMs, quantization, on-device AI, inference runtimes, and digital health — written for engineers who want the full picture.';
-    const FIN_TITLE   = 'Financial<br>Writing';
-    const FIN_SUB     = 'Markets, personal finance, and economics — explained clearly for anyone who wants to understand money better.';
-
-    function switchToTech() {
-      document.body.classList.remove('finance');
-      btnTech.classList.add('active');
-      btnFin.classList.remove('active');
-      techContent.style.display = '';
-      finContent.style.display = 'none';
-      techFilters.style.display = '';
-      finFilters.style.display = 'none';
-      heroTitle.innerHTML = TECH_TITLE;
-      heroSub.textContent = TECH_SUB;
-      document.title = 'Blogs — Prateek Singh';
-      localStorage.setItem('blogMode', 'tech');
-    }
-
-    function switchToFin() {
-      document.body.classList.add('finance');
-      btnFin.classList.add('active');
-      btnTech.classList.remove('active');
-      finContent.style.display = '';
-      techContent.style.display = 'none';
-      finFilters.style.display = '';
-      techFilters.style.display = 'none';
-      heroTitle.innerHTML = FIN_TITLE;
-      heroSub.textContent = FIN_SUB;
-      document.title = 'Finance Blogs — Prateek Singh';
-      localStorage.setItem('blogMode', 'fin');
-    }
-
-    btnTech.addEventListener('click', switchToTech);
-    btnFin.addEventListener('click', switchToFin);
-
-    // Restore last mode
-    if (localStorage.getItem('blogMode') === 'fin') switchToFin();
-
-    // ── Tech filter logic
-    const techFilterBtns = techFilters.querySelectorAll('.filter-btn');
-    const techPosts = document.querySelectorAll('#tech-content .post-card, #tech-content .featured-post');
-
-    techFilterBtns.forEach(btn => {
+    filterBtns.forEach(btn => {
       btn.addEventListener('click', () => {
-        techFilterBtns.forEach(b => b.classList.remove('active', 'purple', 'teal', 'pink', 'orange'));
+        filterBtns.forEach(b => {
+          b.classList.remove('active', 'purple', 'teal', 'pink', 'orange');
+        });
         btn.classList.add('active');
-        if (btn.dataset.color) btn.classList.add(btn.dataset.color);
+        const colorClass = btn.dataset.color;
+        if (colorClass) btn.classList.add(colorClass);
+
         const filter = btn.dataset.filter;
-        techPosts.forEach(post => {
-          const match = filter === 'all' || post.dataset.cat === filter;
-          post.classList.toggle('hidden', !match);
-          if (match) {
+        posts.forEach(post => {
+          if (filter === 'all' || post.dataset.cat === filter) {
+            post.classList.remove('hidden');
             post.style.opacity = '0';
             post.style.transform = 'translateY(16px)';
             requestAnimationFrame(() => {
@@ -1103,37 +843,14 @@
               post.style.opacity = '1';
               post.style.transform = 'translateY(0)';
             });
+          } else {
+            post.classList.add('hidden');
           }
         });
       });
     });
 
-    // ── Finance filter logic
-    const finFilterBtns = finFilters.querySelectorAll('.filter-btn');
-    const finPosts = document.querySelectorAll('#fin-content .post-card, #fin-content .featured-post');
-
-    finFilterBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        finFilterBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const filter = btn.dataset.filter;
-        finPosts.forEach(post => {
-          const match = filter === 'all-fin' || post.dataset.catFin === filter;
-          post.classList.toggle('hidden', !match);
-          if (match) {
-            post.style.opacity = '0';
-            post.style.transform = 'translateY(16px)';
-            requestAnimationFrame(() => {
-              post.style.transition = 'opacity .4s ease, transform .4s ease';
-              post.style.opacity = '1';
-              post.style.transform = 'translateY(0)';
-            });
-          }
-        });
-      });
-    });
-
-    // ── Fade in on load
+    // Fade in on load
     const allCards = document.querySelectorAll('.post-card, .featured-post');
     const obs = new IntersectionObserver((entries) => {
       entries.forEach((e, i) => {
