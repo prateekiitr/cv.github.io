@@ -1,165 +1,874 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DCEDZ55RDE"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-DCEDZ55RDE');
-    </script>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Blogs | Prateek Singh</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
-    <style>
-        /* Additional styles for the RAG blog card */
-        .blog-post.rag-special {
-            border-left: 5px solid #4361ee;
-            background: linear-gradient(to right, #f5f7ff, white);
-        }
-        .blog-post.rag-special h3 {
-            color: #4361ee;
-        }
-        .blog-post.rag-working {
-            border-left: 5px solid #4cc9f0;
-            background: linear-gradient(to right, #f0f9ff, white);
-        }
-        .blog-post.rag-working h3 {
-            color: #3f37c9;
-        }
-        .blog-post .tag {
-            display: inline-block;
-            background: #4895ef;
-            color: white;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            margin-left: 10px;
-            vertical-align: middle;
-        }
-    </style>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DCEDZ55RDE"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DCEDZ55RDE');
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0a0a0f">
+  <title>Blogs — Prateek Singh</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #12121a;
+      --surface2: #1a1a26;
+      --border: #2a2a3f;
+      --accent: #7c6bff;
+      --accent2: #ff6b9d;
+      --accent3: #00d9b4;
+      --accent4: #ffb347;
+      --text: #f0f0f8;
+      --text-muted: #b0b0c8;
+      --text-dim: #6a6a8a;
+      color-scheme: dark;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg) !important;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      line-height: 1.75;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+      opacity: .5;
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent3); }
+
+    #progress {
+      position: fixed;
+      top: 0; left: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+      z-index: 1001;
+      width: 0%;
+      transition: width .1s;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 3rem;
+      background: rgba(10,10,15,.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+    }
+    .nav-logo {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .72rem;
+      letter-spacing: .25em;
+      color: var(--accent3);
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+    .nav-logo span { color: var(--text-muted); }
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+      align-items: center;
+    }
+    .nav-links a {
+      font-size: .75rem;
+      letter-spacing: .1em;
+      color: var(--text-muted);
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: color .2s;
+    }
+    .nav-links a:hover, .nav-links a.active { color: var(--accent3); }
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: .5rem;
+    }
+    .hamburger span { display: block; width: 22px; height: 1.5px; background: var(--text-muted); transition: all .3s; }
+    .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(4.5px, 4.5px); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(4.5px, -4.5px); }
+    .mobile-menu {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10,10,15,.97);
+      z-index: 99;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2.5rem;
+    }
+    .mobile-menu.open { display: flex; }
+    .mobile-menu a { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--text-muted); text-decoration: none; transition: color .2s; }
+    .mobile-menu a:hover { color: var(--accent3); }
+
+    /* HERO */
+    .page-hero {
+      min-height: 50vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 10rem 3rem 4rem;
+      position: relative;
+      overflow: hidden;
+      border-bottom: 1px solid var(--border);
+    }
+    .page-hero-bg {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 70% at 80% 30%, rgba(124,107,255,.1) 0%, transparent 65%),
+        radial-gradient(ellipse 40% 50% at 20% 80%, rgba(0,217,180,.08) 0%, transparent 60%);
+    }
+    .page-hero-grid {
+      position: absolute; inset: 0;
+      opacity: .025;
+      background-image:
+        linear-gradient(var(--accent) 1px, transparent 1px),
+        linear-gradient(90deg, var(--accent) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+    .page-hero-content { position: relative; max-width: 1300px; margin: 0 auto; width: 100%; }
+    .hero-breadcrumb {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .65rem;
+      letter-spacing: .25em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+    }
+    .hero-breadcrumb a { color: var(--accent3); text-decoration: none; }
+    .hero-breadcrumb a:hover { text-decoration: underline; }
+    .hero-breadcrumb span { color: var(--text-dim); }
+    .page-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.5rem, 7vw, 5.5rem);
+      font-weight: 900;
+      line-height: 1;
+      background: linear-gradient(135deg, #fff 0%, #c0b8ff 50%, #a0f0e0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 1rem;
+    }
+    .page-subtitle {
+      font-size: 1rem;
+      color: var(--text-muted);
+      max-width: 560px;
+    }
+    .hero-count {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      font-family: 'Playfair Display', serif;
+      font-size: 8rem;
+      font-weight: 900;
+      color: rgba(255,255,255,.03);
+      line-height: 1;
+      user-select: none;
+    }
+
+    /* FILTER BAR */
+    .filter-bar {
+      position: sticky;
+      top: 62px;
+      z-index: 50;
+      background: rgba(10,10,15,.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 0;
+    }
+    .filter-inner {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 0 3rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .filter-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .6rem;
+      letter-spacing: .2em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-right: .5rem;
+    }
+    .filter-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .62rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: .35rem .9rem;
+      border-radius: 2px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .filter-btn:hover { border-color: var(--text-muted); color: var(--text-muted); }
+    .filter-btn.active { border-color: var(--accent3); color: var(--accent3); background: rgba(0,217,180,.08); }
+    .filter-btn.active.purple { border-color: var(--accent); color: var(--accent); background: rgba(124,107,255,.1); }
+    .filter-btn.active.teal { border-color: var(--accent3); color: var(--accent3); background: rgba(0,217,180,.08); }
+    .filter-btn.active.pink { border-color: var(--accent2); color: var(--accent2); background: rgba(255,107,157,.08); }
+    .filter-btn.active.orange { border-color: var(--accent4); color: var(--accent4); background: rgba(255,179,71,.08); }
+
+    /* MAIN GRID */
+    .container {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 0 3rem;
+    }
+    .blogs-section { padding: 4rem 0 6rem; }
+
+    /* FEATURED POST */
+    .featured-post {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      margin-bottom: 1px;
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+      transition: background .25s;
+      min-height: 300px;
+    }
+    .featured-post::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent3), var(--accent));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform .4s;
+    }
+    .featured-post:hover { background: var(--surface2); }
+    .featured-post:hover::before { transform: scaleX(1); }
+    .featured-visual {
+      position: relative;
+      overflow: hidden;
+      background: var(--code-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .featured-visual-bg {
+      position: absolute;
+      inset: 0;
+    }
+    .featured-visual-icon {
+      position: relative;
+      font-family: 'Playfair Display', serif;
+      font-size: 6rem;
+      font-weight: 900;
+      opacity: .08;
+      color: var(--accent3);
+      user-select: none;
+      z-index: 1;
+    }
+    .featured-badge {
+      position: absolute;
+      top: 1.5rem; left: 1.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .58rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      padding: .3rem .75rem;
+      background: rgba(0,217,180,.1);
+      color: var(--accent3);
+      border: 1px solid rgba(0,217,180,.3);
+      border-radius: 2px;
+      z-index: 2;
+    }
+    .featured-content {
+      padding: 3rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .featured-content-top {}
+    .featured-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .6rem;
+      letter-spacing: .2em;
+      color: var(--accent3);
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .featured-tag::before { content: ''; width: 16px; height: 1px; background: var(--accent3); }
+    .featured-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.5rem, 3vw, 2.2rem);
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.2;
+      margin-bottom: 1rem;
+    }
+    .featured-excerpt { font-size: .9rem; color: var(--text-muted); line-height: 1.75; margin-bottom: 1.5rem; }
+    .featured-footer { display: flex; justify-content: space-between; align-items: center; }
+    .featured-date {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .6rem;
+      letter-spacing: .15em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+    .read-more {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .62rem;
+      letter-spacing: .1em;
+      color: var(--accent3);
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      transition: gap .2s;
+    }
+    .featured-post:hover .read-more { gap: .75rem; }
+
+    /* BLOG GRID */
+    .blog-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-top: none;
+      margin-bottom: 4rem;
+    }
+    .post-card {
+      background: var(--surface);
+      padding: 2rem;
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+      transition: background .25s;
+      display: flex;
+      flex-direction: column;
+      min-height: 220px;
+    }
+    .post-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 2px;
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform .35s;
+    }
+    .post-card[data-cat="foundations"]::after { background: var(--accent3); }
+    .post-card[data-cat="architecture"]::after { background: var(--accent); }
+    .post-card[data-cat="compression"]::after { background: var(--accent2); }
+    .post-card[data-cat="rag"]::after { background: var(--accent4); }
+    .post-card:hover { background: var(--surface2); }
+    .post-card:hover::after { transform: scaleX(1); }
+
+    .post-cat {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .58rem;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      margin-bottom: .75rem;
+    }
+    .post-cat.foundations { color: var(--accent3); }
+    .post-cat.architecture { color: var(--accent); }
+    .post-cat.compression { color: var(--accent2); }
+    .post-cat.rag { color: var(--accent4); }
+
+    .post-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.35;
+      margin-bottom: .65rem;
+      flex: 1;
+    }
+    .post-excerpt { font-size: .8rem; color: var(--text-dim); line-height: 1.65; margin-bottom: 1.25rem; }
+    .post-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: auto;
+    }
+    .post-date {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .58rem;
+      letter-spacing: .1em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+    .post-arrow {
+      font-size: .75rem;
+      color: var(--text-dim);
+      transition: all .25s;
+    }
+    .post-card:hover .post-arrow { color: var(--accent3); transform: translate(3px,-3px); }
+
+    /* NEW badge */
+    .new-badge {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .52rem;
+      letter-spacing: .15em;
+      padding: .15rem .5rem;
+      background: rgba(255,107,157,.12);
+      color: var(--accent2);
+      border: 1px solid rgba(255,107,157,.3);
+      border-radius: 2px;
+      text-transform: uppercase;
+      vertical-align: middle;
+      margin-left: .5rem;
+    }
+
+    /* HIDDEN state */
+    .post-card.hidden { display: none; }
+    .featured-post.hidden { display: none; }
+
+    /* DIVIDER */
+    .section-divider {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 3rem 0 1.5rem;
+    }
+    .section-divider-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .62rem;
+      letter-spacing: .25em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .section-divider-line { flex: 1; height: 1px; background: var(--border); }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2.5rem 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .footer-left {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .62rem;
+      letter-spacing: .15em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+    .footer-left a { color: var(--accent3); text-decoration: none; }
+    .footer-right { display: flex; gap: 1.5rem; }
+    .footer-right a { font-size: .8rem; color: var(--text-dim); text-decoration: none; transition: color .2s; }
+    .footer-right a:hover { color: var(--accent3); }
+    .scroll-up {
+      position: fixed;
+      bottom: 2rem; right: 2rem;
+      width: 40px; height: 40px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted);
+      font-size: .8rem;
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transition: all .3s;
+      text-decoration: none;
+      z-index: 90;
+    }
+    .scroll-up.visible { opacity: 1; pointer-events: auto; }
+    .scroll-up:hover { border-color: var(--accent3); color: var(--accent3); }
+
+    /* RESPONSIVE */
+    @media (max-width: 1024px) {
+      .blog-grid { grid-template-columns: 1fr 1fr; }
+      .featured-post { grid-template-columns: 1fr; }
+      .featured-visual { min-height: 180px; }
+    }
+    @media (max-width: 768px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { display: none; }
+      .hamburger { display: flex; }
+      .page-hero { padding: 9rem 1.5rem 3rem; }
+      .container, .filter-inner { padding: 0 1.5rem; }
+      .blog-grid { grid-template-columns: 1fr; }
+      footer { padding: 2rem 1.5rem; flex-direction: column; }
+    }
+  </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="max-width">
-            <div class="logo"><a href="index.html">Back to <span>Portfolio</span></a></div>
+  <div id="progress"></div>
+
+  <!-- NAV -->
+  <nav id="main-nav">
+    <a href="index.html" class="nav-logo">Prateek<span>.Singh</span></a>
+    <ul class="nav-links">
+      <li><a href="index.html">Portfolio</a></li>
+      <li><a href="index.html#about">About</a></li>
+      <li><a href="index.html#experience">Experience</a></li>
+      <li><a href="index.html#publications">Research</a></li>
+      <li><a href="blogs.html" class="active">Blogs</a></li>
+      <li><a href="index.html#contact">Contact</a></li>
+    </ul>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- MOBILE MENU -->
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="index.html" class="mobile-link">Portfolio</a>
+    <a href="index.html#about" class="mobile-link">About</a>
+    <a href="index.html#publications" class="mobile-link">Research</a>
+    <a href="blogs.html" class="mobile-link">Blogs</a>
+    <a href="index.html#contact" class="mobile-link">Contact</a>
+  </div>
+
+  <!-- PAGE HERO -->
+  <div class="page-hero">
+    <div class="page-hero-bg"></div>
+    <div class="page-hero-grid"></div>
+    <div class="page-hero-content">
+      <div class="hero-breadcrumb">
+        <a href="index.html">Home</a>
+        <span>/</span>
+        <span>Blogs</span>
+      </div>
+      <h1 class="page-title">Technical<br>Writing</h1>
+      <p class="page-subtitle">Deep dives into LLMs, quantization, on-device AI, inference runtimes, and digital health — written for engineers who want the full picture.</p>
+    </div>
+    <div class="hero-count">14</div>
+  </div>
+
+  <!-- FILTER BAR -->
+  <div class="filter-bar">
+    <div class="filter-inner">
+      <span class="filter-label">Filter:</span>
+      <button class="filter-btn active" data-filter="all">All Posts</button>
+      <button class="filter-btn" data-filter="foundations" data-color="teal">Foundations</button>
+      <button class="filter-btn" data-filter="architecture" data-color="purple">Architecture</button>
+      <button class="filter-btn" data-filter="compression" data-color="pink">Compression</button>
+      <button class="filter-btn" data-filter="rag" data-color="orange">RAG & Retrieval</button>
+    </div>
+  </div>
+
+  <!-- BLOG CONTENT -->
+  <div class="blogs-section">
+    <div class="container">
+
+      <!-- FEATURED -->
+      <div class="section-divider">
+        <span class="section-divider-label">Featured</span>
+        <div class="section-divider-line"></div>
+      </div>
+
+      <a href="quantization-llms.html" class="featured-post" data-cat="compression">
+        <div class="featured-visual">
+          <div class="featured-visual-bg" style="background: radial-gradient(ellipse 80% 80% at 50% 50%, rgba(255,107,157,.12) 0%, rgba(124,107,255,.08) 50%, transparent 100%);"></div>
+          <div class="featured-visual-icon">W4</div>
+          <span class="featured-badge">Featured</span>
         </div>
-    </nav>
-
-    <section class="blogs" id="blogs">
-        <div class="max-width">
-            <h2 class="title">My Blogs</h2>
-            <div class="blog-content">
-                <!-- CNN Blog Post -->
-                <div class="blog-post">
-                    <h3>CNNs Demystified: From Image Recognition to ECG Analysis</h3>
-                    <p>Published on: <span>April 18, 2025</span></p>
-                    <p>Summary or introduction to the blog post...</p>
-                    <a href="blog-post-1.html">Read More <i class="fas fa-arrow-right"></i></a>
-                </div>
-
-                <div class="blog-post rag-documents">
-                    <h3>Feed Your OWN Documents to Local LLMs <span class="tag"></span></h3>
-                    <p>Published on: <span>May 30, 2025</span></p>
-                    <p>Learn how to integrate your documents with LLMs using retraining, RAG, and context window uploads.</p>
-                    <a href="llm-documents.html">Read More <i class="fas fa-arrow-right"></i></a>
-                </div>
-
-                <!-- RAG Visual Guide Post -->
-                <div class="blog-post rag-special">
-                    <h3>How RAG Makes AI Smarter: A Visual Guide <span class="tag"></span></h3>
-                    <p>Published on: <span>May 24, 2025</span></p>
-                    <p>Discover how Retrieval-Augmented Generation combines information retrieval with AI to create more accurate, up-to-date answers.</p>
-                    <a href="rag-blog.html">Read More <i class="fas fa-arrow-right"></i></a>
-                </div>
-
-                <!-- RAG SQLite Post -->
-                <div class="blog-post rag-working">
-                    <h3>Building a RAG System with SQLite <span class="tag"></span></h3>
-                    <p>Published on: <span>May 25, 2025</span></p>
-                    <p>From Concept to Implementation: A Comprehensive Guide to building RAG systems with SQLite.</p>
-                    <a href="rag-sqlite.html">Read More <i class="fas fa-arrow-right"></i></a>
-                </div>
-
-                <!-- RAG SQLite Post -->
-                <div class="blog-post rag-working">
-                    <h3>Vector Databases: The Complete Guide <span class="tag"></span></h3>
-                    <p>Published on: <span>June 06, 2025</span></p>
-                    <p>From Concept to Implementation: A Comprehensive Guide to building RAG systems with SQLite.</p>
-                    <a href="vectordb.html">Read More <i class="fas fa-arrow-right"></i></a>
-                </div>
-
-                <div class="blog-post" style="border-left: 5px solid #7209b7; background: linear-gradient(to right, #fdf4ff, white);">
-                    <h3 style="color: #7209b7;">The Big LLM Architecture Comparison <span class="tag" style="background: #7209b7;"></span></h3>
-                    <p>Published on: <span>March 07, 2026</span></p>
-                    <p>A deep dive into 20+ modern LLM architectures — from DeepSeek V3 to GLM-5 — comparing design choices like MoE, MLA, sliding window attention, and more.</p>
-                    <a href="llm-architecture1.html">Read More <i class="fas fa-arrow-right"></i></a>
-                </div>
-
-                <div class="blog-post" style="border-left: 5px solid #7209b7; background: linear-gradient(to right, #fdf4ff, white);">
-                    <h3 style="color: #7209b7;">Sarvam AI: India's Own LLMs <span class="tag" style="background: #7209b7;"></span></h3>
-                    <p>Published on: <span>March 09, 2026</span></p>
-                    <p>From a 2B parameter Indic language model to a sovereign 105B MoE flagship — the story of how Sarvam AI built India's first full-stack foundation models from scratch, in India, for India.</p>
-                    <a href="sarvam-ai.html">Read More <i class="fas fa-arrow-right"></i></a>
-                </div>
-
-                <div class="blog-post" style="border-left: 5px solid #7209b7; background: linear-gradient(to right, #fdf4ff, white);">
-                    <h3 style="color: #7209b7;">The Brain Behind ChatGPT: How AI Actually Learns <span class="tag" style="background: #7209b7;"></span></h3>
-                    <p>Published on: <span>March 11, 2026</span></p>
-                    <p>From a blank model to production AI — a plain-English deep dive into every concept, technique, and piece of hardware behind the models reshaping the world.</p>
-                    <a href="llm-training.html">Read More <i class="fas fa-arrow-right"></i></a>
-                </div>
-
-                <div class="blog-post" style="border-left: 5px solid #7209b7; background: linear-gradient(to right, #fdf4ff, white);">
-                    <h3 style="color: #7209b7;">SSM vs Mamba vs Transformers</h3>
-                    <p>Published on: <span>March 14, 2026</span></p>
-                    <p>Attention is quadratic. The world is sequential. Here's how three paradigms — self-attention, structured state spaces, and selective state spaces — each try to model time, and why it matters more than ever.</p>
-                    <a href="ssm-mamba-transformers.html">Read More <i class="fas fa-arrow-right"></i></a>
-                </div>
-                
-                <div class="blog-post" style="border-left: 5px solid #7209b7; background: linear-gradient(to right, #fdf4ff, white);">
-                    <h3 style="color: #7209b7;">Knowledge Distillation in LLMs</h3>
-                    <p>Published on: <span>March 14, 2026</span></p>
-                    <p>How do you fit a trillion-parameter mind into a phone? The answer involves temperature, soft labels, and one of the most elegant ideas in modern machine learning — teaching a small model to think like a large one.</p>
-                    <a href="distillation-llms.html">Read More <i class="fas fa-arrow-right"></i></a>
-                </div>
-
-                <div class="blog-post" style="border-left: 5px solid #0d9488; background: linear-gradient(to right, #f0fdfa, white);">
-                    <h3 style="color: #0d9488;">Quantization in LLMs<span class="tag" style="background: #0ea5e9;"/span></h3>
-                    <p>Published on: <span>March 21, 2026</span></p>
-                    <p>A 70B model needs 140 GB at float16. Your GPU has 24 GB. Quantization is the art of making models smaller without making them dumber — from the basics of bits and buckets to GPTQ, AWQ, NF4 and beyond.</p>
-                    <a href="quantization-llms.html">Read More <i class="fas fa-arrow-right"></i></a>
-                </div>
-
-                <div class="blog-post" style="border-left: 5px solid #0ea5e9; background: linear-gradient(to right, #f0f9ff, white);">
-                    <h3 style="color: #0ea5e9;">LLM Inference Runtimes <span class="tag" style="background: #0ea5e9;"/span></h3>
-                    <p>Published on: <span>March 22, 2026</span></p>
-                    <p>GGUF, TensorRT, QNN & everything in between. You've quantized your model — but where does it actually run? A deep dive into every major inference runtime across CPUs, NVIDIA GPUs, Qualcomm NPUs, and Apple Silicon.</p>
-                    <a href="inference-runtimes.html">Read More <i class="fas fa-arrow-right"></i></a>
-                </div>
-                <!-- Add more blog posts as needed -->
-                <div class="blog-post" style="border-left: 5px solid #0ea5e9; background: linear-gradient(to right, #f0f9ff, white);">
-                    <h3 style="color: #0ea5e9;">NemoClaw — Why NVIDIA Built a Security Layer for the World's Fastest-Growing Open Source Project <span class="tag" style="background: #0ea5e9;">NEW</span></h3>
-                    <p>Published on: <span>March 27, 2026</span></p>
-                    <p>OpenClaw became the fastest-growing open source project in history. Then the security incidents started. Then Gartner warned 40% of agent projects would fail. Then Jensen Huang called it the most important software release ever — and shipped a fix.</p>
-                    <a href="nemoclaw.html">Read More <i class="fas fa-arrow-right"></i></a>
-                </div>
-                <div class="blog-post" style="border-left: 5px solid #0ea5e9; background: linear-gradient(to right, #f0f9ff, white);">
-                    <h3 style="color: #0ea5e9;">TurboQuant <span class="tag" style="background: #0ea5e9;">NEW</span></h3>
-                    <p>Published on: <span>March 29, 2026</span></p>
-                    <p>Google just solved the KV cache memory bottleneck — the single biggest cost driver in LLM inference. 6× compression, 8× speedup, zero accuracy loss, no retraining. Here's the algorithm in full detail.</p>
-                    <a href="turboquant.html">Read More <i class="fas fa-arrow-right"></i></a>
-                </div>
-
-            </div>
+        <div class="featured-content">
+          <div class="featured-content-top">
+            <div class="featured-tag">Compression</div>
+            <div class="featured-title">Quantization in LLMs</div>
+            <div class="featured-excerpt">A 70B model needs 140 GB at float16. Your GPU has 24 GB. Quantization is the art of making models smaller without making them dumber — from the basics of bits and buckets to GPTQ, AWQ, NF4 and beyond.</div>
+          </div>
+          <div class="featured-footer">
+            <span class="featured-date">Mar 21, 2026</span>
+            <span class="read-more">Read Article <i class="fas fa-arrow-right"></i></span>
+          </div>
         </div>
-    </section>
+      </a>
 
-    <footer>
-        <span>Created By <a href="https://www.prateeksinghphd.com">Prateek Singh</a> | <span class="far fa-copyright"></span> 2026</span>
-    </footer>
+      <!-- ALL POSTS GRID -->
+      <div class="section-divider">
+        <span class="section-divider-label">All Posts</span>
+        <div class="section-divider-line"></div>
+      </div>
+
+      <div class="blog-grid" id="blog-grid">
+
+        <!-- TurboQuant -->
+        <a href="turboquant.html" class="post-card" data-cat="compression">
+          <div class="post-cat compression">Compression</div>
+          <div class="post-title">TurboQuant<span class="new-badge">New</span></div>
+          <div class="post-excerpt">Google solved the KV cache memory bottleneck — 6× compression, 8× speedup, zero accuracy loss, no retraining.</div>
+          <div class="post-footer">
+            <span class="post-date">Mar 29, 2026</span>
+            <span class="post-arrow">↗</span>
+          </div>
+        </a>
+
+        <!-- NemoClaw -->
+        <a href="nemoclaw.html" class="post-card" data-cat="foundations">
+          <div class="post-cat foundations">AI Safety</div>
+          <div class="post-title">NemoClaw — NVIDIA's Security Layer for LLM Agents<span class="new-badge">New</span></div>
+          <div class="post-excerpt">OpenClaw became the fastest-growing open source project in history. Then the security incidents started.</div>
+          <div class="post-footer">
+            <span class="post-date">Mar 27, 2026</span>
+            <span class="post-arrow">↗</span>
+          </div>
+        </a>
+
+        <!-- Inference Runtimes -->
+        <a href="inference-runtimes.html" class="post-card" data-cat="compression">
+          <div class="post-cat compression">Inference</div>
+          <div class="post-title">LLM Inference Runtimes</div>
+          <div class="post-excerpt">GGUF, TensorRT, QNN & everything in between. A deep dive into every major runtime across CPUs, NVIDIA GPUs, Qualcomm NPUs, and Apple Silicon.</div>
+          <div class="post-footer">
+            <span class="post-date">Mar 22, 2026</span>
+            <span class="post-arrow">↗</span>
+          </div>
+        </a>
+
+        <!-- Knowledge Distillation -->
+        <a href="distillation-llms.html" class="post-card" data-cat="compression">
+          <div class="post-cat compression">Compression</div>
+          <div class="post-title">Knowledge Distillation in LLMs</div>
+          <div class="post-excerpt">How do you fit a trillion-parameter mind into a phone? Temperature, soft labels, and teaching a small model to think like a large one.</div>
+          <div class="post-footer">
+            <span class="post-date">Mar 14, 2026</span>
+            <span class="post-arrow">↗</span>
+          </div>
+        </a>
+
+        <!-- SSM vs Mamba -->
+        <a href="ssm-mamba-transformers.html" class="post-card" data-cat="architecture">
+          <div class="post-cat architecture">Architecture</div>
+          <div class="post-title">SSM vs Mamba vs Transformers</div>
+          <div class="post-excerpt">Attention is quadratic. The world is sequential. How three paradigms try to model time, and why it matters more than ever.</div>
+          <div class="post-footer">
+            <span class="post-date">Mar 14, 2026</span>
+            <span class="post-arrow">↗</span>
+          </div>
+        </a>
+
+        <!-- LLM Training -->
+        <a href="llm-training.html" class="post-card" data-cat="foundations">
+          <div class="post-cat foundations">Foundations</div>
+          <div class="post-title">The Brain Behind ChatGPT: How AI Actually Learns</div>
+          <div class="post-excerpt">From a blank model to production AI — plain-English deep dive into every concept, technique, and piece of hardware behind modern LLMs.</div>
+          <div class="post-footer">
+            <span class="post-date">Mar 11, 2026</span>
+            <span class="post-arrow">↗</span>
+          </div>
+        </a>
+
+        <!-- Sarvam AI -->
+        <a href="sarvam-ai.html" class="post-card" data-cat="architecture">
+          <div class="post-cat architecture">Architecture</div>
+          <div class="post-title">Sarvam AI: India's Own LLMs</div>
+          <div class="post-excerpt">From a 2B parameter Indic language model to a sovereign 105B MoE flagship — how India built its first full-stack foundation models.</div>
+          <div class="post-footer">
+            <span class="post-date">Mar 09, 2026</span>
+            <span class="post-arrow">↗</span>
+          </div>
+        </a>
+
+        <!-- LLM Architecture Comparison -->
+        <a href="llm-architecture1.html" class="post-card" data-cat="architecture">
+          <div class="post-cat architecture">Architecture</div>
+          <div class="post-title">The Big LLM Architecture Comparison</div>
+          <div class="post-excerpt">A deep dive into 20+ modern LLM architectures — from DeepSeek V3 to GLM-5 — comparing MoE, MLA, sliding window attention, and more.</div>
+          <div class="post-footer">
+            <span class="post-date">Mar 07, 2026</span>
+            <span class="post-arrow">↗</span>
+          </div>
+        </a>
+
+        <!-- Vector DBs -->
+        <a href="vectordb.html" class="post-card" data-cat="rag">
+          <div class="post-cat rag">RAG & Retrieval</div>
+          <div class="post-title">Vector Databases: The Complete Guide</div>
+          <div class="post-excerpt">From concept to implementation: indexing strategies, similarity search, HNSW, IVF, and choosing the right vector store for your RAG pipeline.</div>
+          <div class="post-footer">
+            <span class="post-date">Jun 06, 2025</span>
+            <span class="post-arrow">↗</span>
+          </div>
+        </a>
+
+        <!-- RAG SQLite -->
+        <a href="rag-sqlite.html" class="post-card" data-cat="rag">
+          <div class="post-cat rag">RAG & Retrieval</div>
+          <div class="post-title">Building a RAG System with SQLite</div>
+          <div class="post-excerpt">From concept to implementation: a comprehensive guide to building retrieval-augmented generation systems with SQLite as the vector store.</div>
+          <div class="post-footer">
+            <span class="post-date">May 25, 2025</span>
+            <span class="post-arrow">↗</span>
+          </div>
+        </a>
+
+        <!-- RAG Visual -->
+        <a href="rag-blog.html" class="post-card" data-cat="rag">
+          <div class="post-cat rag">RAG & Retrieval</div>
+          <div class="post-title">How RAG Makes AI Smarter: A Visual Guide</div>
+          <div class="post-excerpt">Discover how Retrieval-Augmented Generation combines information retrieval with AI to create more accurate, up-to-date answers.</div>
+          <div class="post-footer">
+            <span class="post-date">May 24, 2025</span>
+            <span class="post-arrow">↗</span>
+          </div>
+        </a>
+
+        <!-- Feed Documents -->
+        <a href="llm-documents.html" class="post-card" data-cat="rag">
+          <div class="post-cat rag">RAG & Retrieval</div>
+          <div class="post-title">Feed Your Own Documents to Local LLMs</div>
+          <div class="post-excerpt">How to integrate your documents with LLMs using retraining, RAG pipelines, and context window uploads — trade-offs explained.</div>
+          <div class="post-footer">
+            <span class="post-date">May 30, 2025</span>
+            <span class="post-arrow">↗</span>
+          </div>
+        </a>
+
+        <!-- CNNs -->
+        <a href="blog-post-1.html" class="post-card" data-cat="foundations">
+          <div class="post-cat foundations">Foundations</div>
+          <div class="post-title">CNNs Demystified: From Image Recognition to ECG Analysis</div>
+          <div class="post-excerpt">How convolutional neural networks work, why they excel at spatial data, and how they translate to biomedical signal processing.</div>
+          <div class="post-footer">
+            <span class="post-date">Apr 18, 2025</span>
+            <span class="post-arrow">↗</span>
+          </div>
+        </a>
+
+      </div>
+      <!-- END GRID -->
+
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-left">
+      © 2026 <a href="https://www.prateeksinghphd.com">Prateek Singh</a>
+    </div>
+    <div class="footer-right">
+      <a href="https://www.linkedin.com/in/prateek29s/" target="_blank"><i class="fab fa-linkedin"></i></a>
+      <a href="https://scholar.google.com/citations?user=nYZhJaMAAAAJ&hl=en" target="_blank"><i class="fas fa-graduation-cap"></i></a>
+      <a href="index.html"><i class="fas fa-home"></i></a>
+    </div>
+  </footer>
+
+  <a href="#" class="scroll-up" id="scroll-up"><i class="fas fa-angle-up"></i></a>
+
+  <script>
+    // Progress
+    const bar = document.getElementById('progress');
+    window.addEventListener('scroll', () => {
+      const scrolled = window.scrollY;
+      const total = document.body.scrollHeight - window.innerHeight;
+      bar.style.width = (scrolled / total * 100) + '%';
+      document.getElementById('scroll-up').classList.toggle('visible', scrolled > 400);
+    }, { passive: true });
+
+    // Hamburger
+    const hb = document.getElementById('hamburger');
+    const mm = document.getElementById('mobile-menu');
+    hb.addEventListener('click', () => {
+      hb.classList.toggle('open');
+      mm.classList.toggle('open');
+    });
+    mm.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+      hb.classList.remove('open');
+      mm.classList.remove('open');
+    }));
+
+    // Filter
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const posts = document.querySelectorAll('.post-card, .featured-post');
+
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterBtns.forEach(b => {
+          b.classList.remove('active', 'purple', 'teal', 'pink', 'orange');
+        });
+        btn.classList.add('active');
+        const colorClass = btn.dataset.color;
+        if (colorClass) btn.classList.add(colorClass);
+
+        const filter = btn.dataset.filter;
+        posts.forEach(post => {
+          if (filter === 'all' || post.dataset.cat === filter) {
+            post.classList.remove('hidden');
+            post.style.opacity = '0';
+            post.style.transform = 'translateY(16px)';
+            requestAnimationFrame(() => {
+              post.style.transition = 'opacity .4s ease, transform .4s ease';
+              post.style.opacity = '1';
+              post.style.transform = 'translateY(0)';
+            });
+          } else {
+            post.classList.add('hidden');
+          }
+        });
+      });
+    });
+
+    // Fade in on load
+    const allCards = document.querySelectorAll('.post-card, .featured-post');
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach((e, i) => {
+        if (e.isIntersecting) {
+          setTimeout(() => {
+            e.target.style.opacity = '1';
+            e.target.style.transform = 'translateY(0)';
+          }, i * 50);
+          obs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.05 });
+    allCards.forEach(card => {
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(20px)';
+      card.style.transition = 'opacity .5s ease, transform .5s ease';
+      obs.observe(card);
+    });
+  </script>
 </body>
 </html>
