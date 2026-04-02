@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>Gemma 4: Google's Most Capable Open Model Family | Prateek Singh</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0d0d12;
+      --bg-card: #13131a;
+      --bg-card2: #1a1a24;
+      --teal: #00d9b4;
+      --purple: #7c6bff;
+      --pink: #ff6b9d;
+      --orange: #ffb347;
+      --text: #e2e2ef;
+      --muted: #8888aa;
+      --border: rgba(255,255,255,0.07);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg) !important;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 17px;
+      line-height: 1.75;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ────────────────────────────────── */
+    .site-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.4rem 2.5rem;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(13,13,18,0.92) !important;
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+    .site-logo {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: 1.15rem;
+      color: var(--teal);
+      text-decoration: none;
+      letter-spacing: 0.02em;
+    }
+    .site-nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-left: 1.8rem;
+      transition: color 0.2s;
+    }
+    .site-nav a:hover { color: var(--teal); }
+
+    /* ── HERO ──────────────────────────────────── */
+    .hero {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 5rem 2rem 3.5rem;
+    }
+    .hero-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.6rem;
+      flex-wrap: wrap;
+    }
+    .tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.3em 0.85em;
+      border-radius: 20px;
+      background: rgba(0,217,180,0.12);
+      color: var(--teal);
+      border: 1px solid rgba(0,217,180,0.25);
+    }
+    .tag.purple { background: rgba(124,107,255,0.12); color: var(--purple); border-color: rgba(124,107,255,0.25); }
+    .tag.orange { background: rgba(255,179,71,0.12); color: var(--orange); border-color: rgba(255,179,71,0.25); }
+    .hero-date {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      line-height: 1.15;
+      color: #fff;
+      margin-bottom: 1.2rem;
+      letter-spacing: -0.01em;
+    }
+    .hero h1 em {
+      font-style: italic;
+      color: var(--teal);
+    }
+    .hero-subtitle {
+      font-size: 1.15rem;
+      color: var(--muted);
+      font-weight: 300;
+      max-width: 640px;
+      line-height: 1.7;
+    }
+
+    /* ── DIVIDER ───────────────────────────────── */
+    .divider {
+      max-width: 820px;
+      margin: 0 auto 2.5rem;
+      padding: 0 2rem;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── ARTICLE ───────────────────────────────── */
+    .article {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 0 2rem 6rem;
+    }
+
+    /* ── MODEL CARDS ───────────────────────────── */
+    .model-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+      gap: 1rem;
+      margin: 2.5rem 0;
+    }
+    .model-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.4rem 1.2rem;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.25s, transform 0.2s;
+    }
+    .model-card:hover {
+      border-color: rgba(0,217,180,0.3);
+      transform: translateY(-2px);
+    }
+    .model-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: 14px 14px 0 0;
+    }
+    .model-card.e2b::before  { background: var(--teal); }
+    .model-card.e4b::before  { background: var(--purple); }
+    .model-card.moe::before  { background: var(--orange); }
+    .model-card.dense::before { background: var(--pink); }
+    .model-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .model-size {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1;
+      margin-bottom: 0.6rem;
+    }
+    .model-badge {
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .model-badge strong { color: var(--text); font-weight: 600; }
+
+    /* ── SECTION HEADINGS ──────────────────────── */
+    .article h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #fff;
+      margin: 3.2rem 0 1rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .article h3 {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--teal);
+      margin: 2rem 0 0.7rem;
+      letter-spacing: 0.01em;
+    }
+
+    /* ── BODY TEXT ─────────────────────────────── */
+    .article p { margin-bottom: 1.3rem; color: #c8c8e0; }
+    .article strong { color: var(--text); font-weight: 600; }
+    .article a { color: var(--teal); text-decoration: none; }
+    .article a:hover { text-decoration: underline; }
+
+    /* ── CALLOUT ───────────────────────────────── */
+    .callout {
+      background: var(--bg-card);
+      border-left: 3px solid var(--teal);
+      border-radius: 0 12px 12px 0;
+      padding: 1.2rem 1.5rem;
+      margin: 2rem 0;
+      font-size: 0.95rem;
+      color: #b0b0cc;
+      line-height: 1.7;
+    }
+    .callout.purple { border-color: var(--purple); }
+    .callout.orange { border-color: var(--orange); }
+
+    /* ── FEATURE TABLE ─────────────────────────── */
+    .feat-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 2rem 0;
+      font-size: 0.9rem;
+    }
+    .feat-table th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      background: var(--bg-card2);
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      border-bottom: 1px solid var(--border);
+    }
+    .feat-table td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: #c4c4dc;
+    }
+    .feat-table tr:hover td { background: rgba(255,255,255,0.025); }
+    .feat-table td:first-child { color: var(--text); font-weight: 500; }
+    .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
+    .dot-teal { background: var(--teal); }
+    .dot-purple { background: var(--purple); }
+
+    /* ── HIGHLIGHT BOX ─────────────────────────── */
+    .highlight-box {
+      background: linear-gradient(135deg, rgba(0,217,180,0.08), rgba(124,107,255,0.08));
+      border: 1px solid rgba(0,217,180,0.2);
+      border-radius: 16px;
+      padding: 2rem;
+      margin: 2.5rem 0;
+      text-align: center;
+    }
+    .highlight-box .big-stat {
+      font-family: 'Playfair Display', serif;
+      font-size: 3rem;
+      font-weight: 900;
+      color: var(--teal);
+      line-height: 1;
+      margin-bottom: 0.4rem;
+    }
+    .highlight-box .stat-label {
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .stats-row {
+      display: flex;
+      gap: 1.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .stat-item { text-align: center; }
+
+    /* ── INLINE CODE ───────────────────────────── */
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82em;
+      background: rgba(0,217,180,0.1);
+      color: var(--teal);
+      border-radius: 5px;
+      padding: 0.15em 0.5em;
+    }
+
+    /* ── CODE BLOCK ────────────────────────────── */
+    pre {
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      line-height: 1.7;
+      color: #c8c8e0;
+    }
+    pre .kw  { color: var(--purple); }
+    pre .fn  { color: var(--teal); }
+    pre .str { color: var(--orange); }
+    pre .cmt { color: var(--muted); font-style: italic; }
+
+    /* ── SECTION ACCENT ────────────────────────── */
+    .section-accent {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+    .section-accent .accent-line {
+      width: 28px;
+      height: 2px;
+      background: var(--teal);
+      border-radius: 2px;
+    }
+    .section-accent span {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--teal);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 600;
+    }
+
+    /* ── CHIP LIST ─────────────────────────────── */
+    .chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .chip {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      padding: 0.3em 0.75em;
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+    }
+
+    /* ── FOOTER ────────────────────────────────── */
+    .site-footer {
+      border-top: 1px solid var(--border);
+      padding: 2.5rem 2.5rem;
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+    .site-footer a { color: var(--teal); text-decoration: none; }
+
+    /* ── ANIMATIONS ────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .hero { animation: fadeUp 0.6s ease both; }
+    .article { animation: fadeUp 0.7s ease 0.1s both; }
+
+    /* ── RESPONSIVE ────────────────────────────── */
+    @media (max-width: 600px) {
+      .site-header { padding: 1rem 1.25rem; }
+      .site-nav { display: none; }
+      .hero, .article { padding-left: 1.25rem; padding-right: 1.25rem; }
+      .divider { padding: 0 1.25rem; }
+      .hero h1 { font-size: 2rem; }
+      .model-grid { grid-template-columns: 1fr 1fr; }
+      .stats-row { gap: 1rem; }
+      .highlight-box .big-stat { font-size: 2.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <a href="/" class="site-logo">Prateek Singh, PhD</a>
+  <nav class="site-nav">
+    <a href="/">Home</a>
+    <a href="/blog">Blog</a>
+    <a href="/research">Research</a>
+    <a href="/contact">Contact</a>
+  </nav>
+</header>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-meta">
+    <span class="tag">Open Models</span>
+    <span class="tag purple">On-Device AI</span>
+    <span class="tag orange">Breaking</span>
+    <span class="hero-date">April 02, 2026</span>
+  </div>
+  <h1>Gemma 4: <em>Byte for Byte,</em> the Most Capable Open Model Family</h1>
+  <p class="hero-subtitle">
+    Google just dropped Gemma 4 — frontier reasoning, native agentic support, audio + video multimodality, and a clean Apache 2.0 license. Here's everything you need to know.
+  </p>
+</section>
+
+<div class="divider"></div>
+
+<!-- ── ARTICLE ── -->
+<article class="article">
+
+  <!-- OPENING -->
+  <p>
+    Hot off the press this morning — Google DeepMind released <strong>Gemma 4</strong>, and it is arguably the most significant open model release since DeepSeek-R1 rattled the industry. Built directly from the research and architecture that powers <strong>Gemini 3</strong>, this family of four models spans everything from a sub-3B effective-parameter model that fits in your phone's RAM to a 31B dense flagship that currently sits <em>#3 on the Arena AI open model leaderboard</em> — beating models 20× its size.
+  </p>
+  <p>
+    As someone working daily at the intersection of on-device inference, LLM quantization, and Samsung's custom AI agent framework, I've been watching this release closely. Let's break it down.
+  </p>
+
+  <!-- CONTEXT -->
+  <div class="section-accent"><div class="accent-line"></div><span>Background</span></div>
+  <h2>From Gemma 1 to Gemma 4: A Two-Year Sprint</h2>
+  <p>
+    Google launched the original Gemma in <strong>February 2024</strong> as a lightweight open counterpart to Gemini, initially shipping 2B and 7B sizes. The reception was warmer than most expected — the community downloaded Gemma models over <strong>400 million times</strong> and built more than <strong>100,000 variants</strong> on Hugging Face. Gemma 2 followed in June 2024, and Gemma 3 shipped in March 2025 with multimodal support across 1B, 4B, 12B, and 27B sizes.
+  </p>
+  <p>
+    Gemma 4, announced today (April 2, 2026), is a ground-up redesign. Google describes it as "purpose-built for advanced reasoning and agentic workflows" — words we've heard before, but the benchmarks and architecture choices suggest they mean it this time.
+  </p>
+
+  <!-- MODEL FAMILY -->
+  <div class="section-accent"><div class="accent-line"></div><span>Model Family</span></div>
+  <h2>Four Models. One Cohesive Vision.</h2>
+  <p>Gemma 4 ships in four distinct sizes, each engineered for a different hardware tier:</p>
+
+  <div class="model-grid">
+    <div class="model-card e2b">
+      <div class="model-name">Edge</div>
+      <div class="model-size">E2B</div>
+      <div class="model-badge">
+        <strong>Effective 2B params</strong><br/>
+        128K context<br/>
+        Text + Image + Audio<br/>
+        Mobile / Raspberry Pi
+      </div>
+    </div>
+    <div class="model-card e4b">
+      <div class="model-name">Edge</div>
+      <div class="model-size">E4B</div>
+      <div class="model-badge">
+        <strong>Effective 4B params</strong><br/>
+        128K context<br/>
+        Text + Image + Audio<br/>
+        Phone / Jetson Nano
+      </div>
+    </div>
+    <div class="model-card moe">
+      <div class="model-name">Server</div>
+      <div class="model-size">26B</div>
+      <div class="model-badge">
+        <strong>MoE — 3.8B active</strong><br/>
+        256K context<br/>
+        Text + Image + Video<br/>
+        Consumer GPU / H100
+      </div>
+    </div>
+    <div class="model-card dense">
+      <div class="model-name">Flagship</div>
+      <div class="model-size">31B</div>
+      <div class="model-badge">
+        <strong>Dense — #3 Open Model</strong><br/>
+        256K context<br/>
+        Text + Image + Video<br/>
+        Single 80 GB H100
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>The MoE trick:</strong> The 26B model activates only <strong>3.8B parameters per token</strong> at inference time — delivering exceptional tokens-per-second while staying within RAM budgets of consumer GPUs. For latency-sensitive deployments, this is your weapon of choice.
+  </div>
+
+  <!-- BENCHMARK -->
+  <div class="highlight-box">
+    <div class="stats-row">
+      <div class="stat-item">
+        <div class="big-stat">#3</div>
+        <div class="stat-label">31B Dense on Arena AI<br/>Open Text Leaderboard</div>
+      </div>
+      <div class="stat-item">
+        <div class="big-stat">#6</div>
+        <div class="stat-label">26B MoE on the same<br/>leaderboard</div>
+      </div>
+      <div class="stat-item">
+        <div class="big-stat">20×</div>
+        <div class="stat-label">Larger models beaten<br/>by Gemma 4 31B</div>
+      </div>
+      <div class="stat-item">
+        <div class="big-stat">400M+</div>
+        <div class="stat-label">Total Gemma downloads<br/>across all generations</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KEY CAPABILITIES -->
+  <div class="section-accent"><div class="accent-line"></div><span>Capabilities</span></div>
+  <h2>What's Actually New</h2>
+
+  <h3>Native Agentic Support</h3>
+  <p>
+    This is the headline feature. Earlier Gemma generations required developer-side scaffolding to get tool-use working reliably. Gemma 4 bakes in <strong>native function-calling</strong>, structured <strong>JSON output</strong>, and <strong>native system instructions</strong> at the model level. This means you can point it at an API and trust the output schema without prompt engineering gymnastics. For multi-step agentic flows this is a qualitative leap.
+  </p>
+
+  <h3>Full Multimodality — Including Audio at the Edge</h3>
+  <p>
+    All four models understand <strong>images and video</strong> natively, with variable-resolution support and strong performance on OCR and chart reading. The two edge models (E2B, E4B) go further by adding <strong>native audio input</strong> for real-time speech understanding, all offline. This is significant: on-device speech-to-action pipelines no longer need a separate ASR model.
+  </p>
+
+  <h3>Extended Context Windows</h3>
+  <p>
+    Edge models get a <strong>128K token context window</strong>; the server models push to <strong>256K</strong>. At 256K you can load an entire mid-size codebase, a research paper corpus, or a long medical record in a single prompt. Context length has become a first-class differentiation axis in open models.
+  </p>
+
+  <h3>140+ Language Support</h3>
+  <p>
+    Natively trained across more than 140 languages, Gemma 4 has significantly better multilingual coverage than most open models at these sizes. Real-world deployments in non-English markets no longer require separate fine-tuning runs just to get baseline fluency.
+  </p>
+
+  <!-- FEATURE TABLE -->
+  <table class="feat-table">
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th>E2B</th>
+        <th>E4B</th>
+        <th>26B MoE</th>
+        <th>31B Dense</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Context Window</td><td>128K</td><td>128K</td><td>256K</td><td>256K</td></tr>
+      <tr><td>Image / Video</td><td><span class="dot dot-teal"></span> Yes</td><td><span class="dot dot-teal"></span> Yes</td><td><span class="dot dot-teal"></span> Yes</td><td><span class="dot dot-teal"></span> Yes</td></tr>
+      <tr><td>Audio Input</td><td><span class="dot dot-teal"></span> Yes</td><td><span class="dot dot-teal"></span> Yes</td><td>—</td><td>—</td></tr>
+      <tr><td>Function Calling</td><td><span class="dot dot-teal"></span> Native</td><td><span class="dot dot-teal"></span> Native</td><td><span class="dot dot-teal"></span> Native</td><td><span class="dot dot-teal"></span> Native</td></tr>
+      <tr><td>Target Hardware</td><td>Phone / RPi</td><td>Phone / Jetson</td><td>Consumer GPU</td><td>Single H100</td></tr>
+      <tr><td>Offline Code Gen</td><td><span class="dot dot-teal"></span> Yes</td><td><span class="dot dot-teal"></span> Yes</td><td><span class="dot dot-teal"></span> Yes</td><td><span class="dot dot-teal"></span> Yes</td></tr>
+      <tr><td>Languages</td><td>140+</td><td>140+</td><td>140+</td><td>140+</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ARCHITECTURE ANGLE -->
+  <div class="section-accent"><div class="accent-line"></div><span>Architecture</span></div>
+  <h2>Built from Gemini 3 Research</h2>
+  <p>
+    Google describes Gemma 4 as sharing architecture and training methodology with <strong>Gemini 3</strong>. While the full technical report hasn't landed yet, the efficiency numbers strongly suggest a modern grouped-query attention variant paired with MoE routing on the larger models. The edge models (E2B, E4B) appear to use an "effective parameter" framing — a sparse or conditional-compute design that keeps active FLOPS low while maintaining a larger total weight footprint for representational richness.
+  </p>
+
+  <div class="callout purple">
+    <strong>Quantization note:</strong> The unquantized bfloat16 31B fits on a single 80 GB H100. For those of us running W4 or W3 experiments — relevant if you're working on frameworks like RDQ — the 26B MoE at INT4 should fit comfortably on dual-consumer-GPU setups with the active-param efficiency working in your favor.
+  </div>
+
+  <!-- LICENSING -->
+  <div class="section-accent"><div class="accent-line"></div><span>Licensing</span></div>
+  <h2>Apache 2.0: The License Change That Matters</h2>
+  <p>
+    Previous Gemma generations shipped under a custom Gemma License that restricted certain commercial uses. <strong>Gemma 4 ships under Apache 2.0</strong> — a fully permissive OSI-approved open-source license. This means you can build products on top of Gemma 4, redistribute it, fine-tune it, quantize it, and deploy it commercially with no royalty or attribution obligations beyond basic Apache 2.0 requirements.
+  </p>
+  <p>
+    This directly addresses the #1 enterprise objection to previous Gemma releases. For sovereign deployments, on-device apps, and startups building products, the licensing friction is now gone.
+  </p>
+
+  <!-- ECOSYSTEM -->
+  <div class="section-accent"><div class="accent-line"></div><span>Ecosystem</span></div>
+  <h2>Day-One Tooling Support</h2>
+  <p>Google coordinated a wide day-one launch across the ML ecosystem. Notable integrations:</p>
+
+  <div class="chip-list">
+    <span class="chip">Hugging Face Transformers</span>
+    <span class="chip">llama.cpp</span>
+    <span class="chip">Ollama</span>
+    <span class="chip">vLLM</span>
+    <span class="chip">NVIDIA NIM</span>
+    <span class="chip">NVIDIA NeMo</span>
+    <span class="chip">LM Studio</span>
+    <span class="chip">MLX</span>
+    <span class="chip">Unsloth</span>
+    <span class="chip">SGLang</span>
+    <span class="chip">Keras</span>
+    <span class="chip">Vertex AI</span>
+    <span class="chip">Google Colab</span>
+    <span class="chip">Android ML Kit</span>
+    <span class="chip">LiteRT-LM</span>
+    <span class="chip">MaxText</span>
+  </div>
+
+  <p>
+    For Android developers specifically, the E2B and E4B models are available via the <strong>AICore Developer Preview</strong> and are forward-compatible with Gemini Nano 4 on Android. The ML Kit GenAI Prompt API also enables production deployment on Android today without waiting for AICore GA.
+  </p>
+
+  <h3>Getting Started in 60 Seconds</h3>
+  <pre><span class="cmt"># Ollama</span>
+ollama run gemma4
+
+<span class="cmt"># HuggingFace (31B Instruct)</span>
+<span class="kw">from</span> transformers <span class="kw">import</span> <span class="fn">AutoTokenizer</span>, <span class="fn">AutoModelForCausalLM</span>
+<span class="kw">import</span> torch
+
+model_id = <span class="str">"google/gemma-4-31B-it"</span>
+tokenizer = <span class="fn">AutoTokenizer</span>.from_pretrained(model_id)
+model = <span class="fn">AutoModelForCausalLM</span>.from_pretrained(
+    model_id, torch_dtype=torch.bfloat16, device_map=<span class="str">"auto"</span>
+)
+
+<span class="cmt"># vLLM (26B MoE - fast inference)</span>
+vllm serve google/gemma-4-26B-A4B-it --dtype bfloat16</pre>
+
+  <!-- REAL WORLD -->
+  <div class="section-accent"><div class="accent-line"></div><span>Impact</span></div>
+  <h2>What This Means in Practice</h2>
+
+  <h3>For On-Device AI Engineers</h3>
+  <p>
+    The E2B/E4B architecture is significant. These aren't just pruned-down server models — they were engineered from scratch with Qualcomm and MediaTek for NPU-aware inference paths. If you're building on Snapdragon (via QNN SDK) or MediaTek NPU stacks, Gemma 4 will likely have better hardware acceleration support out-of-the-box than any previous open model at this size.
+  </p>
+
+  <h3>For Agentic App Builders</h3>
+  <p>
+    Native function-calling with guaranteed structured output removes the need for "output parsers" or fragile JSON extraction logic. Pair this with the 128–256K context window and you have a solid foundation for production-grade agents that read documents, call APIs, and reason across long histories.
+  </p>
+
+  <h3>For the Research Community</h3>
+  <p>
+    Yale University's Cell2Sentence-Scale project used Gemma variants to discover new cancer therapy pathways. INSAIT built a Bulgarian-first language model. The Apache 2.0 license plus broad fine-tuning support (Unsloth, Vertex AI, Colab, gaming GPU) dramatically lowers the barrier for domain-specific research applications.
+  </p>
+
+  <div class="callout orange">
+    <strong>Quantization researchers take note:</strong> The 26B MoE activates only 3.8B parameters per forward pass — making per-layer weight distribution analysis (think activation outliers for GPTQ/AWQ/SpinQuant-style methods) quite different from a comparably-sized dense model. Expect interesting results when the PTQ community stress-tests this architecture.
+  </div>
+
+  <!-- COMPETITIVE CONTEXT -->
+  <div class="section-accent"><div class="accent-line"></div><span>Landscape</span></div>
+  <h2>Where Gemma 4 Fits in the Open Model Wars</h2>
+  <p>
+    The open model space has never been more competitive. Meta's Llama family, Mistral's offerings, Alibaba's Qwen, and the DeepSeek series have pushed quality to near-frontier levels. Gemma 4 enters this conversation with three concrete advantages:
+  </p>
+  <p>
+    <strong>1. Architecture parity with Gemini 3.</strong> This isn't a distilled or compressed version — it's trained on the same research pipeline as Google's best proprietary model. That matters for reasoning quality on complex tasks.
+  </p>
+  <p>
+    <strong>2. Edge-first design.</strong> No other model family at this quality level has been co-designed with Qualcomm, MediaTek, and Google Pixel for NPU inference. This is a real moat for on-device use cases.
+  </p>
+  <p>
+    <strong>3. Genuinely permissive licensing.</strong> Meta's Llama license restricts use above 700M monthly active users. Apache 2.0 has no such ceiling — important for companies planning at scale.
+  </p>
+  <p>
+    The weak spot? We're still waiting on the full technical report and independent benchmark replication. Arena AI leaderboard performance is real, but community benchmarking across coding, long-context reasoning, and multilingual tasks over the next few weeks will tell the full story.
+  </p>
+
+  <!-- CLOSING -->
+  <div class="section-accent"><div class="accent-line"></div><span>Verdict</span></div>
+  <h2>Final Thoughts</h2>
+  <p>
+    Gemma 4 is a genuinely impressive release. The combination of Gemini 3 architecture, aggressive edge optimization, native agentic capabilities, and Apache 2.0 licensing makes it arguably the most <em>deployable</em> frontier-class open model family available today. The 26B MoE in particular — frontier-quality reasoning at <3.8B active params per token — will be my first download this weekend.
+  </p>
+  <p>
+    For the Samsung AI / Android on-device ecosystem, this is an important moment. The Qualcomm QNN + Gemma 4 E2B/E4B path may just be the most compelling local inference story we've had for production Android apps.
+  </p>
+  <p>
+    Expect a follow-up post once I've had a chance to run some quantization experiments on the 26B MoE and compare against Llama 3.1 baselines.
+  </p>
+
+  <div class="callout">
+    <strong>Quick links:</strong><br/>
+    Google AI Studio (31B + 26B): <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a> ·
+    Hugging Face collection: <a href="https://huggingface.co/collections/google/gemma-4" target="_blank">google/gemma-4</a> ·
+    Model card + benchmarks: <a href="https://ai.google.dev/gemma/docs/core/model_card_4" target="_blank">ai.google.dev</a> ·
+    Kaggle Good Challenge: <a href="https://www.kaggle.com/competitions/gemma-4-good-hackathon" target="_blank">kaggle.com</a>
+  </div>
+
+</article>
+
+<!-- ── FOOTER ── -->
+<footer class="site-footer">
+  <p>Written by <strong>Prateek Singh</strong> · Senior Manager, GenAI &amp; Digital Health AI · Samsung Research Institute India</p>
+  <p style="margin-top:0.5rem;"><a href="https://prateeksinghphd.com">prateeksinghphd.com</a></p>
+</footer>
+
+</body>
+</html>
