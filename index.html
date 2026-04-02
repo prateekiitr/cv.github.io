@@ -1351,9 +1351,9 @@
       <h2 class="section-title">Let's <em>Collaborate</em></h2>
       <p class="section-sub">Open to AI leadership roles, research collaborations, consulting, and speaking invitations.</p>
       <div class="contact-links">
-        <a href="/cdn-cgi/l/email-protection#7d0d0f1c091818164f440e14131a153d1a101c1411531e1210" class="contact-link">
+        <a href="#" id="email-link" class="contact-link">
           <i class="fas fa-envelope"></i>
-          <span><span class="__cf_email__" data-cfemail="651517041100000e575c160c0b020d250208040c094b060a08">[email&#160;protected]</span></span>
+          <span id="email-text"></span>
         </a>
         <a href="https://www.linkedin.com/in/prateek29s/" target="_blank" class="contact-link">
           <i class="fab fa-linkedin"></i>
@@ -1392,7 +1392,20 @@
     <i class="fas fa-angle-up"></i>
   </a>
 
-  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  <script>
+    // ── Email anti-obfuscation
+    (function() {
+      var u = 'prateek29singh';
+      var d = 'gmail.com';
+      var el = document.getElementById('email-link');
+      var tx = document.getElementById('email-text');
+      if (el && tx) {
+        var addr = u + '@' + d;
+        el.href = 'mailto:' + addr;
+        tx.textContent = addr;
+      }
+    })();
+  </script><script>
     // ── Progress bar
     const bar = document.getElementById('progress');
     function updateProgress() {
