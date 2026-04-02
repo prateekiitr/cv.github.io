@@ -13,7 +13,60 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="dark">
   <meta name="theme-color" content="#0a0a0f">
-  <title>Prateek Singh — AI/ML Engineer & Researcher</title>
+
+  <!-- Primary SEO -->
+  <title>Prateek Singh — Senior AI Leader | GenAI &amp; Healthcare AI | Samsung</title>
+  <meta name="description" content="Senior AI leader specializing in GenAI, Healthcare AI, ECG &amp; PPG signal processing, and on-device LLM deployment. Building scalable AI systems at Samsung Research Institute, Noida. PhD IIT Roorkee.">
+  <meta name="keywords" content="Prateek Singh, AI Engineer, Healthcare AI, GenAI, ECG AI, PPG Signal Processing, Deep Learning, Edge AI, LLM Deployment, Samsung AI, Blood Pressure Prediction, on-device AI, Qualcomm QNN, IIT Roorkee">
+  <meta name="author" content="Prateek Singh">
+  <link rel="canonical" href="https://prateeksinghphd.in">
+
+  <!-- Open Graph (LinkedIn / WhatsApp / Facebook previews) -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://prateeksinghphd.in">
+  <meta property="og:title" content="Prateek Singh — Senior AI Leader | GenAI &amp; Healthcare AI">
+  <meta property="og:description" content="Senior AI leader at Samsung Research Institute, Noida. PhD IIT Roorkee. Specializing in GenAI, Healthcare AI, ECG/PPG signal processing, and on-device LLM deployment.">
+  <meta property="og:image" content="https://prateeksinghphd.in/images/banner1.JPG">
+
+  <!-- Twitter / X card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@prateek2987">
+  <meta name="twitter:title" content="Prateek Singh — Senior AI Leader | GenAI &amp; Healthcare AI">
+  <meta name="twitter:description" content="Senior AI leader at Samsung Research Institute, Noida. PhD IIT Roorkee. GenAI, Healthcare AI, on-device LLM deployment.">
+  <meta name="twitter:image" content="https://prateeksinghphd.in/images/banner1.JPG">
+
+  <!-- Structured Data — Person schema (Google Knowledge Panel signal) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Prateek Singh",
+    "url": "https://prateeksinghphd.in",
+    "image": "https://prateeksinghphd.in/images/profile-1.jpeg",
+    "jobTitle": "Senior Manager, GenAI & Digital Health AI",
+    "worksFor": {
+      "@type": "Organization",
+      "name": "Samsung Research Institute, Noida"
+    },
+    "alumniOf": {
+      "@type": "CollegeOrUniversity",
+      "name": "Indian Institute of Technology Roorkee"
+    },
+    "sameAs": [
+      "https://www.linkedin.com/in/prateek29s/",
+      "https://scholar.google.com/citations?user=nYZhJaMAAAAJ&hl=en",
+      "https://github.com/prateekiitr",
+      "https://orcid.org/0000-0002-8398-9867",
+      "https://twitter.com/prateek2987",
+      "https://www.researchgate.net/profile/Prateek-Singh-27"
+    ],
+    "knowsAbout": [
+      "GenAI", "Healthcare AI", "ECG Signal Processing", "PPG Signal Processing",
+      "LLM Deployment", "On-Device AI", "Quantization", "Qualcomm QNN",
+      "Deep Learning", "Biomedical Signal Processing", "FDA SaMD"
+    ]
+  }
+  </script>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
   <style>
@@ -838,8 +891,7 @@
       <li><a href="#publications">Research</a></li>
       <li><a href="blogs.html">Blogs</a></li>
       <li><a href="#contact">Contact</a></li>
-      <!-- <li><a href="https://drive.google.com/uc?export=download&id=1tVeXWipJAWXlDcdZ-KwmBigfUgjYlEXK" class="cta-link" target="_blank">Download CV</a></li> -->
-      <li><a href="https://drive.google.com/uc?export=download&id=10UBZPKmvUzdhw0u_w8rIar-oTGN5vzrN" class="cta-link" target="_blank">Download CV</a></li>
+      <li><a href="https://drive.google.com/uc?export=download&id=1tVeXWipJAWXlDcdZ-KwmBigfUgjYlEXK" class="cta-link" target="_blank">Download CV</a></li>
     </ul>
     <button class="hamburger" id="hamburger" aria-label="Menu">
       <span></span><span></span><span></span>
@@ -880,7 +932,7 @@
         </div>
         <div class="stat-divider"></div>
         <div class="stat-item">
-          <div class="stat-value">3</div>
+          <div class="stat-value">2</div>
           <div class="stat-label">Pending Patents</div>
         </div>
         <div class="stat-divider"></div>
@@ -1364,9 +1416,9 @@
           <i class="fas fa-graduation-cap"></i>
           <span>Google Scholar Profile</span>
         </a>
-        <a href="https://prateeksinghphd.in" target="_blank" class="contact-link">
+        <a href="https://prateeksinghphd.com" target="_blank" class="contact-link">
           <i class="fas fa-globe"></i>
-          <span>prateeksinghphd.in</span>
+          <span>prateeksinghphd.com</span>
         </a>
         <a href="https://drive.google.com/uc?export=download&id=1tVeXWipJAWXlDcdZ-KwmBigfUgjYlEXK" target="_blank" class="contact-link">
           <i class="fas fa-file-pdf"></i>
@@ -1462,4 +1514,13 @@
           e.target.style.transform = 'translateY(0)';
         }
       });
-    }, { th
+    }, { threshold: 0.1 });
+    fadeEls.forEach(el => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(20px)';
+      el.style.transition = 'opacity .6s ease, transform .6s ease';
+      fadeObs.observe(el);
+    });
+  </script>
+</body>
+</html>
