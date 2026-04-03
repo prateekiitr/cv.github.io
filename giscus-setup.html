@@ -1,0 +1,112 @@
+<!--
+=============================================================================
+  GISCUS COMMENTS — Setup guide + paste-in HTML snippet
+  For: prateeksinghphd.in blog posts
+=============================================================================
+
+SETUP STEPS (one-time, ~10 minutes):
+─────────────────────────────────────
+1. Go to github.com/prateekiitr
+   → Create a PUBLIC repo called "blog-comments"
+   → (or use your existing public repo)
+
+2. Enable Discussions on that repo:
+   → Settings → Features → check "Discussions" → Save
+
+3. Go to github.com/apps/giscus → click Install
+   → Select ONLY the "blog-comments" repo → Install
+
+4. Go to giscus.app
+   → Enter: prateekiitr/blog-comments
+   → Category: select "General" (or create "Blog Comments")
+   → Mapping: "pathname" (each page gets its own thread)
+   → Theme: select "transparent_dark" (matches your site)
+   → Copy the generated <script> tag
+
+5. Replace the data-repo-id and data-category-id values below
+   with the ones from giscus.app (they are unique to your repo)
+
+6. Paste the snippet below into EACH blog post HTML file,
+   just before the </body> tag
+
+=============================================================================
+-->
+
+<!-- ─── PASTE INTO EACH BLOG POST HTML — before </body> ─── -->
+
+<!-- Comments Section -->
+<section style="
+  max-width: 860px;
+  margin: 5rem auto 0;
+  padding: 0 2rem 5rem;
+  border-top: 1px solid #2a2a3f;
+">
+  <div style="
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .65rem;
+    letter-spacing: .3em;
+    color: #00d9b4;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    margin-bottom: 2rem;
+    margin-top: 3rem;
+  ">
+    <span style="display:inline-block;width:20px;height:1px;background:#00d9b4;"></span>
+    Discussion
+  </div>
+
+  <p style="font-size:.9rem;color:#b0b0c8;margin-bottom:2rem;line-height:1.7;">
+    Have a question or thought? Drop a comment below — it creates a GitHub Discussion thread,
+    so you'll need a free GitHub account. Your question might help someone else.
+  </p>
+
+  <!-- Giscus widget loads here -->
+  <!-- COMMENTS SECTION -->
+<div class="wrap" style="margin-top:80px;">
+  <h2 style="margin-bottom:20px;">💬 Comments</h2>
+
+  <script src="https://giscus.app/client.js"
+        data-repo="prateekiitr/cv.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnk0MDU3MDE4MTU="
+        data-category="General"
+        data-category-id="DIC_kwDOGC6Et84COwFr"
+        data-mapping="pathname"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="1"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+  </script>
+</div>
+
+</section>
+
+
+<!--
+=============================================================================
+  HOW IT WORKS AFTER SETUP:
+─────────────────────────────────────
+  • Each blog post URL automatically gets its own discussion thread
+  • Visitors log in with GitHub (no spam, real identities)
+  • Comments appear as GitHub Discussions in your repo
+  • You get a GitHub notification for every new comment
+  • Comments are indexed by Google → free SEO benefit
+  • Zero cost, zero ads, zero tracking of your visitors
+  • You can reply directly from GitHub or from the blog
+
+  WHY THIS IS BETTER THAN DISQUS:
+─────────────────────────────────────
+  • No ads injected into your site
+  • No third-party trackers
+  • Your audience (engineers) already have GitHub
+  • Comments become a searchable knowledge base
+  • Used by Vercel, Prisma, and major engineering blogs
+
+=============================================================================
+-->

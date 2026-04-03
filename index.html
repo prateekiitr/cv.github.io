@@ -510,6 +510,8 @@
     .svc-card:nth-child(2):hover { border-color: rgba(124,107,255,.35); }
     .svc-card:nth-child(3):hover { border-color: rgba(255,179,71,.35); }
     .svc-card:hover::before { transform: scaleX(1); }
+    /* Ensure buttons sit above card stacking context */
+    .svc-card a, .final-cta-actions a { position: relative; z-index: 2; }
     .svc-icon {
       font-size: 1.75rem;
       margin-bottom: 1.1rem;
@@ -1170,7 +1172,7 @@
         </div>
       </div>
       <div class="hero-actions">
-        <a href="https://cal.com/prateek-singh-la8jpj" target="_blank" class="btn-booking">
+        <a href="https://cal.com/prateek-singh-la8jpj" target="_blank" rel="noopener noreferrer" class="btn-booking">
           <i class="fas fa-calendar-check"></i> Book a Free Call
         </a>
         <a href="#services" class="btn-primary">
@@ -1525,8 +1527,8 @@
             <li>Clinical validation design</li>
             <li>Wearable AI architecture</li>
           </ul>
-          <a href="#contact" class="btn-primary" style="font-size:.7rem;padding:.65rem 1.25rem;">
-            <i class="fas fa-arrow-right"></i> Get in Touch
+          <a href="https://cal.com/prateek-singh-la8jpj" target="_blank" rel="noopener noreferrer" class="btn-booking" style="font-size:.7rem;padding:.65rem 1.25rem;">
+            <i class="fas fa-calendar-check"></i> Book a Call
           </a>
         </div>
 
@@ -1541,8 +1543,8 @@
             <li>GenAI for clinical data analytics</li>
             <li>Prompt engineering &amp; fine-tuning</li>
           </ul>
-          <a href="#contact" class="btn-primary" style="font-size:.7rem;padding:.65rem 1.25rem;">
-            <i class="fas fa-arrow-right"></i> Get in Touch
+          <a href="https://cal.com/prateek-singh-la8jpj" target="_blank" rel="noopener noreferrer" class="btn-booking" style="font-size:.7rem;padding:.65rem 1.25rem;">
+            <i class="fas fa-calendar-check"></i> Book a Call
           </a>
         </div>
 
@@ -1557,7 +1559,7 @@
             <li>Grant &amp; publication strategy</li>
             <li>Team mentoring &amp; workshops</li>
           </ul>
-          <a href="https://cal.com/prateeksingh" target="_blank" class="btn-booking" style="font-size:.7rem;padding:.65rem 1.25rem;">
+          <a href="https://cal.com/prateek-singh-la8jpj" target="_blank" rel="noopener noreferrer" class="btn-booking" style="font-size:.7rem;padding:.65rem 1.25rem;">
             <i class="fas fa-calendar-check"></i> Book a Call
           </a>
         </div>
@@ -1739,7 +1741,7 @@
         <h2>Ready to build AI that<br><em>actually works?</em></h2>
         <p>If you're working on AI in healthcare — whether it's a wearable product, a clinical decision tool, or an LLM deployment challenge — I can help you move from idea to real-world deployment.</p>
         <div class="final-cta-actions">
-          <a href="https://cal.com/prateeksingh" target="_blank" class="btn-booking">
+          <a href="https://cal.com/prateek-singh-la8jpj" target="_blank" rel="noopener noreferrer" class="btn-booking">
             <i class="fas fa-calendar-check"></i> Book a Free 30-Min Call
           </a>
           <a href="#" id="final-email-link" class="btn-primary">
