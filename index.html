@@ -15,23 +15,23 @@
   <meta name="theme-color" content="#0a0a0f">
 
   <!-- Primary SEO -->
-  <title>Dr. Prateek Singh — Senior AI Leader | GenAI &amp; Healthcare AI | Samsung</title>
+  <title>Prateek Singh — Senior AI Leader | GenAI &amp; Healthcare AI | Samsung</title>
   <meta name="description" content="Senior AI leader specializing in GenAI, Healthcare AI, ECG &amp; PPG signal processing, and on-device LLM deployment. Building scalable AI systems at Samsung Research Institute, Noida. PhD IIT Roorkee.">
-  <meta name="keywords" content="Dr. Prateek Singh, AI Engineer, Healthcare AI, GenAI, ECG AI, PPG Signal Processing, Deep Learning, Edge AI, LLM Deployment, Samsung AI, Blood Pressure Prediction, on-device AI, Qualcomm QNN, IIT Roorkee">
-  <meta name="author" content="Dr. Prateek Singh">
+  <meta name="keywords" content="Prateek Singh, AI Engineer, Healthcare AI, GenAI, ECG AI, PPG Signal Processing, Deep Learning, Edge AI, LLM Deployment, Samsung AI, Blood Pressure Prediction, on-device AI, Qualcomm QNN, IIT Roorkee">
+  <meta name="author" content="Prateek Singh">
   <link rel="canonical" href="https://prateeksinghphd.in">
 
   <!-- Open Graph (LinkedIn / WhatsApp / Facebook previews) -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://prateeksinghphd.in">
-  <meta property="og:title" content="Dr. Prateek Singh — Senior AI Leader | GenAI &amp; Healthcare AI">
+  <meta property="og:title" content="Prateek Singh — Senior AI Leader | GenAI &amp; Healthcare AI">
   <meta property="og:description" content="Senior AI leader at Samsung Research Institute, Noida. PhD IIT Roorkee. Specializing in GenAI, Healthcare AI, ECG/PPG signal processing, and on-device LLM deployment.">
   <meta property="og:image" content="https://prateeksinghphd.in/images/banner1.JPG">
 
   <!-- Twitter / X card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:site" content="@prateek2987">
-  <meta name="twitter:title" content="Dr. Prateek Singh — Senior AI Leader | GenAI &amp; Healthcare AI">
+  <meta name="twitter:title" content="Prateek Singh — Senior AI Leader | GenAI &amp; Healthcare AI">
   <meta name="twitter:description" content="Senior AI leader at Samsung Research Institute, Noida. PhD IIT Roorkee. GenAI, Healthcare AI, on-device LLM deployment.">
   <meta name="twitter:image" content="https://prateeksinghphd.in/images/banner1.JPG">
 
@@ -40,7 +40,7 @@
   {
     "@context": "https://schema.org",
     "@type": "Person",
-    "name": "Dr. Prateek Singh",
+    "name": "Prateek Singh",
     "url": "https://prateeksinghphd.in",
     "image": "https://prateeksinghphd.in/images/profile-1.jpeg",
     "jobTitle": "Senior Manager, GenAI & Digital Health AI",
@@ -443,6 +443,225 @@
     .section-title em { font-style: italic; color: var(--accent3); }
     .section-sub { font-size: 1rem; color: var(--text-muted); max-width: 600px; margin-bottom: 4rem; }
 
+    /* ── HERO PROBLEM HOOK ── */
+    .hero-problem {
+      font-size: clamp(.85rem, 1.5vw, 1rem);
+      color: rgba(255,255,255,.55);
+      max-width: 560px;
+      margin-bottom: 2rem;
+      line-height: 1.8;
+      font-weight: 300;
+      opacity: 0;
+      animation: fadeUp .8s .52s forwards;
+    }
+
+    /* ── BOOK A CALL BUTTON ── */
+    .btn-booking {
+      display: inline-flex;
+      align-items: center;
+      gap: .6rem;
+      background: linear-gradient(135deg, #f0b429, #f59e0b);
+      color: #0a0a0f;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .72rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      font-weight: 700;
+      padding: .85rem 1.75rem;
+      border-radius: 2px;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all .25s;
+      box-shadow: 0 4px 20px rgba(240,180,41,.35);
+    }
+    .btn-booking:hover { transform: translateY(-1px); box-shadow: 0 8px 30px rgba(240,180,41,.45); filter: brightness(1.08); }
+
+    /* ── SERVICES SECTION ── */
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 3rem;
+    }
+    .svc-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 2rem 1.75rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform .3s, box-shadow .3s, border-color .3s;
+    }
+    .svc-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform .35s;
+    }
+    .svc-card:nth-child(1)::before { background: var(--accent3); }
+    .svc-card:nth-child(2)::before { background: var(--accent); }
+    .svc-card:nth-child(3)::before { background: var(--accent4); }
+    .svc-card:hover { transform: translateY(-3px); box-shadow: 0 16px 40px rgba(0,0,0,.3); }
+    .svc-card:nth-child(1):hover { border-color: rgba(0,217,180,.35); }
+    .svc-card:nth-child(2):hover { border-color: rgba(124,107,255,.35); }
+    .svc-card:nth-child(3):hover { border-color: rgba(255,179,71,.35); }
+    .svc-card:hover::before { transform: scaleX(1); }
+    .svc-icon {
+      font-size: 1.75rem;
+      margin-bottom: 1.1rem;
+      display: block;
+    }
+    .svc-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: .5rem;
+    }
+    .svc-desc {
+      font-size: .85rem;
+      color: var(--text-muted);
+      line-height: 1.75;
+      margin-bottom: 1.25rem;
+    }
+    .svc-list {
+      list-style: none;
+      padding: 0;
+      margin-bottom: 1.5rem;
+    }
+    .svc-list li {
+      font-size: .8rem;
+      color: var(--text-dim);
+      padding: .3rem 0;
+      border-bottom: 1px solid rgba(255,255,255,.04);
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+    }
+    .svc-list li::before {
+      content: '✓';
+      font-size: .7rem;
+      flex-shrink: 0;
+    }
+    .svc-card:nth-child(1) .svc-list li::before { color: var(--accent3); }
+    .svc-card:nth-child(2) .svc-list li::before { color: var(--accent); }
+    .svc-card:nth-child(3) .svc-list li::before { color: var(--accent4); }
+
+    /* ── EMAIL CAPTURE ── */
+    .email-capture {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 2.5rem 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .email-capture::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 60% 80% at 90% 50%, rgba(0,217,180,.05) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .email-capture-text h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: .4rem;
+    }
+    .email-capture-text p {
+      font-size: .85rem;
+      color: var(--text-muted);
+    }
+    .email-capture-form {
+      display: flex;
+      gap: .75rem;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+    .email-capture-form input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .88rem;
+      padding: .7rem 1.1rem;
+      border-radius: 4px;
+      outline: none;
+      width: 240px;
+      transition: border-color .2s;
+    }
+    .email-capture-form input:focus { border-color: var(--accent3); }
+    .email-capture-form input::placeholder { color: var(--text-dim); }
+    .email-capture-status {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .7rem;
+      letter-spacing: .1em;
+      padding: .4rem .75rem;
+      border-radius: 4px;
+      display: none;
+      margin-top: .5rem;
+    }
+    .email-capture-status.success { background: rgba(0,217,180,.12); color: var(--accent3); border: 1px solid rgba(0,217,180,.25); display: block; }
+    .email-capture-status.error   { background: rgba(255,107,157,.1); color: var(--accent2); border: 1px solid rgba(255,107,157,.25); display: block; }
+
+    /* ── FINAL CTA ── */
+    .final-cta {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 4rem 3rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 0;
+    }
+    .final-cta::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 50% 80% at 50% 100%, rgba(0,217,180,.07) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 50% at 20% 20%, rgba(124,107,255,.06) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .final-cta h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.75rem, 4vw, 3rem);
+      font-weight: 900;
+      color: var(--text);
+      line-height: 1.2;
+      margin-bottom: 1rem;
+      position: relative;
+    }
+    .final-cta h2 em { font-style: italic; color: var(--accent3); }
+    .final-cta p {
+      font-size: 1rem;
+      color: var(--text-muted);
+      max-width: 520px;
+      margin: 0 auto 2.5rem;
+      line-height: 1.75;
+      position: relative;
+    }
+    .final-cta-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      position: relative;
+    }
+
     /* ─── ABOUT ─── */
     .about-grid {
       max-width: 820px;
@@ -759,11 +978,16 @@
     @media (max-width: 1024px) {
       .about-grid, .skills-grid { grid-template-columns: 1fr; gap: 3rem; }      .blog-preview-grid { grid-template-columns: 1fr 1fr; }
       .about-left { display: flex; justify-content: center; }
+      .services-grid { grid-template-columns: 1fr; }
+      .email-capture { flex-direction: column; align-items: flex-start; }
     }
     @media (max-width: 768px) {
       nav { padding: 1rem 1.5rem; }
       nav.scrolled { padding: .75rem 1.5rem; }
       .nav-links { display: none; }
+      .email-capture-form { width: 100%; }
+      .email-capture-form input { width: 100%; }
+      .final-cta { padding: 3rem 1.5rem; }
       .hamburger { display: flex; }
       .hero { padding: 7rem 1.5rem 4rem; background-position: 70% center; }
       .hero::after { background: linear-gradient(to right, rgba(10,10,15,.88) 0%, rgba(10,10,15,.75) 60%, rgba(10,10,15,.4) 100%); }
@@ -882,12 +1106,13 @@
 
   <!-- NAV -->
   <nav id="main-nav">
-    <a href="index.html" class="nav-logo">Dr.Prateek<span>Singh</span></a>
+    <a href="index.html" class="nav-logo">Prateek<span>.Singh</span></a>
     <ul class="nav-links">
       <li><a href="#about">About</a></li>
       <li><a href="#experience">Experience</a></li>
       <li><a href="#skills">Skills</a></li>
       <li><a href="#featured">Projects</a></li>
+      <li><a href="#services">Services</a></li>
       <li><a href="#publications">Research</a></li>
       <li><a href="blogs.html">Blogs</a></li>
       <li><a href="#contact">Contact</a></li>
@@ -915,10 +1140,13 @@
     <div class="hero-bg"></div>
     <div class="hero-grid"></div>
     <div class="hero-content">
-      <div class="hero-label">Senior Manager, GenAI &amp; Digital Health AI</div>
-      <h1 class="hero-name">Prateek<br>Singh</h1>
+      <div class="hero-label">Senior Manager, GenAI &amp; Digital Health AI · Samsung</div>
+      <h1 class="hero-name">Dr. Prateek<br>Singh</h1>
       <p class="hero-tagline">
-        Deploying AI from research to real-world healthcare — at Samsung scale.
+        Most AI models fail outside the lab. I build ones that don't.
+      </p>
+      <p class="hero-problem">
+        Production-ready AI for healthcare — wearable signal processing (ECG, PPG), on-device LLM deployment, and FDA-focused systems. Built and shipped at Samsung, Mercedes-Benz, and global health-tech startups.
       </p>
       <div class="hero-stats">
         <div class="stat-item">
@@ -942,18 +1170,18 @@
         </div>
       </div>
       <div class="hero-actions">
-        <a href="#about" class="btn-primary">
-          <i class="fas fa-arrow-down"></i> Explore My Work
+        <a href="https://cal.com/prateek-singh-la8jpj" target="_blank" class="btn-booking">
+          <i class="fas fa-calendar-check"></i> Book a Free Call
+        </a>
+        <a href="#services" class="btn-primary">
+          <i class="fas fa-briefcase"></i> Work With Me
         </a>
         <a href="blogs.html" class="btn-secondary">
-          <i class="fas fa-pen-nib"></i> Read My Blogs
-        </a>
-        <a href="https://www.linkedin.com/in/prateek29s/" target="_blank" class="btn-secondary">
-          <i class="fab fa-linkedin"></i> LinkedIn
+          <i class="fas fa-pen-nib"></i> Read Blogs
         </a>
       </div>
       <div class="hero-cta-line">
-        Open to AI Leadership Roles &nbsp;·&nbsp; Healthcare AI &nbsp;·&nbsp; GenAI Systems
+        Open to AI Leadership Roles &nbsp;·&nbsp; Healthcare AI Consulting &nbsp;·&nbsp; GenAI Systems
       </div>
     </div>
     <div class="scroll-hint">
@@ -1278,6 +1506,82 @@
     </div>
   </section>
 
+  <!-- SERVICES -->
+  <section class="section" id="services" style="background: var(--surface);">
+    <div class="container">
+      <div class="section-label orange">Work With Me</div>
+      <h2 class="section-title">Services &amp; <em>Consulting</em></h2>
+      <p class="section-sub">Whether you're a health-tech startup, a research team, or an enterprise building AI — I can accelerate your path from idea to deployment.</p>
+
+      <div class="services-grid">
+        <div class="svc-card">
+          <span class="svc-icon">🏥</span>
+          <div class="svc-title">Healthcare AI Consulting</div>
+          <div class="svc-desc">End-to-end advisory for health-tech products — from algorithm design to regulatory readiness.</div>
+          <ul class="svc-list">
+            <li>ECG / PPG signal processing pipelines</li>
+            <li>Blood pressure &amp; arrhythmia AI models</li>
+            <li>FDA 510(k) &amp; SaMD strategy</li>
+            <li>Clinical validation design</li>
+            <li>Wearable AI architecture</li>
+          </ul>
+          <a href="#contact" class="btn-primary" style="font-size:.7rem;padding:.65rem 1.25rem;">
+            <i class="fas fa-arrow-right"></i> Get in Touch
+          </a>
+        </div>
+
+        <div class="svc-card">
+          <span class="svc-icon">🤖</span>
+          <div class="svc-title">GenAI &amp; LLM Systems</div>
+          <div class="svc-desc">Production GenAI systems — from RAG pipelines to on-device LLM deployment on constrained hardware.</div>
+          <ul class="svc-list">
+            <li>RAG system design &amp; implementation</li>
+            <li>LLM quantization (GPTQ, AWQ, GGUF)</li>
+            <li>On-device inference (QNN, TensorRT)</li>
+            <li>GenAI for clinical data analytics</li>
+            <li>Prompt engineering &amp; fine-tuning</li>
+          </ul>
+          <a href="#contact" class="btn-primary" style="font-size:.7rem;padding:.65rem 1.25rem;">
+            <i class="fas fa-arrow-right"></i> Get in Touch
+          </a>
+        </div>
+
+        <div class="svc-card">
+          <span class="svc-icon">🚀</span>
+          <div class="svc-title">Startup &amp; Research Advisory</div>
+          <div class="svc-desc">Strategic advisory for early-stage health-tech startups and academic teams commercialising AI research.</div>
+          <ul class="svc-list">
+            <li>AI product strategy &amp; roadmap</li>
+            <li>Research-to-product gap analysis</li>
+            <li>Technical due diligence support</li>
+            <li>Grant &amp; publication strategy</li>
+            <li>Team mentoring &amp; workshops</li>
+          </ul>
+          <a href="https://cal.com/prateeksingh" target="_blank" class="btn-booking" style="font-size:.7rem;padding:.65rem 1.25rem;">
+            <i class="fas fa-calendar-check"></i> Book a Call
+          </a>
+        </div>
+      </div>
+
+      <!-- Email capture -->
+      <div class="email-capture" id="email-capture-box">
+        <div class="email-capture-text">
+          <h3>Stay Updated on Healthcare AI</h3>
+          <p>Get notified when I publish new research, blogs, or open consulting slots.</p>
+        </div>
+        <div>
+          <div class="email-capture-form">
+            <input type="email" id="capture-email" placeholder="your@email.com" autocomplete="email">
+            <button class="btn-primary" id="capture-submit" style="border:none;cursor:pointer;white-space:nowrap;">
+              <i class="fas fa-paper-plane"></i> Notify Me
+            </button>
+          </div>
+          <div class="email-capture-status" id="capture-status"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- PUBLICATIONS -->
   <section class="section" id="publications">
     <div class="container">
@@ -1428,10 +1732,31 @@
     </div>
   </section>
 
+  <!-- FINAL CTA -->
+  <section class="section" id="cta">
+    <div class="container">
+      <div class="final-cta">
+        <h2>Ready to build AI that<br><em>actually works?</em></h2>
+        <p>If you're working on AI in healthcare — whether it's a wearable product, a clinical decision tool, or an LLM deployment challenge — I can help you move from idea to real-world deployment.</p>
+        <div class="final-cta-actions">
+          <a href="https://cal.com/prateeksingh" target="_blank" class="btn-booking">
+            <i class="fas fa-calendar-check"></i> Book a Free 30-Min Call
+          </a>
+          <a href="#" id="final-email-link" class="btn-primary">
+            <i class="fas fa-envelope"></i> Send an Email
+          </a>
+          <a href="https://www.linkedin.com/in/prateek29s/" target="_blank" class="btn-secondary">
+            <i class="fab fa-linkedin"></i> Connect on LinkedIn
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- FOOTER -->
   <footer>
     <div class="footer-left">
-      © 2026 <a href="https://www.prateeksinghphd.com">Dr. Prateek Singh</a> · Built with precision
+      © 2026 <a href="https://www.prateeksinghphd.com">Prateek Singh</a> · Built with precision
     </div>
     <div class="footer-right">
       <a href="https://www.linkedin.com/in/prateek29s/" target="_blank"><i class="fab fa-linkedin"></i></a>
@@ -1450,13 +1775,60 @@
     (function() {
       var u = 'prateek29singh';
       var d = 'gmail.com';
+      var addr = u + '@' + d;
+      // contact section link
       var el = document.getElementById('email-link');
       var tx = document.getElementById('email-text');
-      if (el && tx) {
-        var addr = u + '@' + d;
-        el.href = 'mailto:' + addr;
-        tx.textContent = addr;
-      }
+      if (el && tx) { el.href = 'mailto:' + addr; tx.textContent = addr; }
+      // final CTA email link
+      var fel = document.getElementById('final-email-link');
+      if (fel) { fel.href = 'mailto:' + addr; }
+    })();
+
+    // ── Email capture form
+    (function() {
+      var btn = document.getElementById('capture-submit');
+      var inp = document.getElementById('capture-email');
+      var status = document.getElementById('capture-status');
+      if (!btn || !inp) return;
+
+      btn.addEventListener('click', async function() {
+        var email = inp.value.trim();
+        if (!email || !email.includes('@')) {
+          status.textContent = 'Please enter a valid email.';
+          status.className = 'email-capture-status error';
+          return;
+        }
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        try {
+          var res = await fetch('https://prateeksinghphd.in/api/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email })
+          });
+          if (res.ok) {
+            status.textContent = '✓ Subscribed! You\'ll hear from me soon.';
+            status.className = 'email-capture-status success';
+            inp.value = '';
+            document.getElementById('email-capture-box').style.opacity = '.7';
+          } else {
+            throw new Error('Server error');
+          }
+        } catch(e) {
+          // Fallback — mailto
+          status.textContent = '✓ Got it! Opening email as backup...';
+          status.className = 'email-capture-status success';
+          var u = 'prateek29singh', d = 'gmail.com';
+          window.location.href = 'mailto:' + u + '@' + d + '?subject=Subscribe: Healthcare AI Updates&body=Please add me to your mailing list.';
+        }
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check"></i> Done';
+      });
+
+      inp.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') btn.click();
+      });
     })();
   </script><script>
     // ── Progress bar
