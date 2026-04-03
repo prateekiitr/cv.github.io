@@ -928,7 +928,218 @@
     .contact-link:hover { border-color: var(--accent3); color: var(--accent3); background: rgba(0,217,180,.04); }
     .contact-link i { width: 1.25rem; text-align: center; font-size: .9rem; }
 
-    /* ─── FOOTER ─── */
+    /* ── NEWSLETTER SECTION ── */
+    .newsletter-section {
+      position: relative;
+      overflow: hidden;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .newsletter-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 55% 90% at 0% 50%, rgba(0,217,180,.07) 0%, transparent 65%),
+        radial-gradient(ellipse 45% 70% at 100% 50%, rgba(124,107,255,.07) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .newsletter-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: center;
+    }
+    .newsletter-left {}
+    .newsletter-eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .62rem;
+      letter-spacing: .3em;
+      color: var(--accent3);
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      margin-bottom: 1.25rem;
+    }
+    .newsletter-eyebrow::before {
+      content: '';
+      width: 20px;
+      height: 1px;
+      background: var(--accent3);
+    }
+    .newsletter-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.75rem, 3.5vw, 2.6rem);
+      font-weight: 900;
+      color: var(--text);
+      line-height: 1.15;
+      margin-bottom: 1rem;
+    }
+    .newsletter-title em { font-style: italic; color: var(--accent3); }
+    .newsletter-desc {
+      font-size: .95rem;
+      color: var(--text-muted);
+      line-height: 1.8;
+      margin-bottom: 2rem;
+    }
+    .newsletter-perks {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: .65rem;
+    }
+    .newsletter-perks li {
+      display: flex;
+      align-items: flex-start;
+      gap: .75rem;
+      font-size: .85rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+    .newsletter-perks li .perk-icon {
+      font-size: .9rem;
+      flex-shrink: 0;
+      margin-top: .05rem;
+    }
+    .newsletter-right {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .newsletter-right::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent3), var(--accent), var(--accent2));
+    }
+    .newsletter-preview {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.75rem;
+      font-size: .78rem;
+      color: var(--text-dim);
+      line-height: 1.7;
+    }
+    .newsletter-preview-subject {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .65rem;
+      color: var(--accent3);
+      letter-spacing: .1em;
+      margin-bottom: .6rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .newsletter-preview-subject::before {
+      content: 'PREVIEW';
+      background: rgba(0,217,180,.1);
+      border: 1px solid rgba(0,217,180,.2);
+      border-radius: 2px;
+      padding: .1rem .4rem;
+      font-size: .55rem;
+    }
+    .newsletter-preview p { margin-bottom: .35rem; }
+    .newsletter-preview .preview-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: .75rem 0;
+    }
+    .newsletter-preview .preview-item {
+      display: flex;
+      gap: .5rem;
+      align-items: flex-start;
+      margin-bottom: .3rem;
+    }
+    .newsletter-preview .preview-dot {
+      color: var(--accent3);
+      flex-shrink: 0;
+    }
+    .nl-form { display: flex; flex-direction: column; gap: .75rem; }
+    .nl-input-row { display: flex; gap: .6rem; }
+    .nl-input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .9rem;
+      padding: .8rem 1.1rem;
+      border-radius: 4px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .nl-input:focus { border-color: var(--accent3); }
+    .nl-input::placeholder { color: var(--text-dim); }
+    .nl-submit {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      background: var(--accent3);
+      color: #0a0a0f;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .68rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-weight: 700;
+      padding: .8rem 1.5rem;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all .25s;
+    }
+    .nl-submit:hover { background: #00f0c8; transform: translateY(-1px); }
+    .nl-submit:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+    .nl-privacy {
+      font-size: .72rem;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+    }
+    .nl-privacy i { color: var(--accent3); font-size: .65rem; }
+    .nl-status {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .68rem;
+      letter-spacing: .08em;
+      padding: .6rem 1rem;
+      border-radius: 4px;
+      display: none;
+    }
+    .nl-status.success {
+      background: rgba(0,217,180,.1);
+      color: var(--accent3);
+      border: 1px solid rgba(0,217,180,.25);
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .nl-status.error {
+      background: rgba(255,107,157,.1);
+      color: var(--accent2);
+      border: 1px solid rgba(255,107,157,.25);
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .nl-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .6rem;
+      letter-spacing: .15em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      text-align: center;
+      margin-top: 1rem;
+    }
+    .nl-count span { color: var(--accent3); }
+
+    /* ── FOOTER ── */
     footer {
       padding: 3rem;
       border-top: 1px solid var(--border);
@@ -990,6 +1201,8 @@
       .email-capture-form { width: 100%; }
       .email-capture-form input { width: 100%; }
       .final-cta { padding: 3rem 1.5rem; }
+      .newsletter-grid { grid-template-columns: 1fr; gap: 3rem; }
+      .nl-input-row { flex-direction: column; }
       .hamburger { display: flex; }
       .hero { padding: 7rem 1.5rem 4rem; background-position: 70% center; }
       .hero::after { background: linear-gradient(to right, rgba(10,10,15,.88) 0%, rgba(10,10,15,.75) 60%, rgba(10,10,15,.4) 100%); }
@@ -1117,6 +1330,7 @@
       <li><a href="#services">Services</a></li>
       <li><a href="#publications">Research</a></li>
       <li><a href="blogs.html">Blogs</a></li>
+      <li><a href="#newsletter">Newsletter</a></li>
       <li><a href="#contact">Contact</a></li>
       <li><a href="https://drive.google.com/uc?export=download&id=1tVeXWipJAWXlDcdZ-KwmBigfUgjYlEXK" class="cta-link" target="_blank">Download CV</a></li>
     </ul>
@@ -1565,21 +1779,11 @@
         </div>
       </div>
 
-      <!-- Email capture -->
-      <div class="email-capture" id="email-capture-box">
-        <div class="email-capture-text">
-          <h3>Stay Updated on Healthcare AI</h3>
-          <p>Get notified when I publish new research, blogs, or open consulting slots.</p>
-        </div>
-        <div>
-          <div class="email-capture-form">
-            <input type="email" id="capture-email" placeholder="your@email.com" autocomplete="email">
-            <button class="btn-primary" id="capture-submit" style="border:none;cursor:pointer;white-space:nowrap;">
-              <i class="fas fa-paper-plane"></i> Notify Me
-            </button>
-          </div>
-          <div class="email-capture-status" id="capture-status"></div>
-        </div>
+      <!-- Email nudge inside services -->
+      <div style="text-align:center;margin-top:1rem;">
+        <a href="#newsletter" class="btn-secondary" style="font-size:.72rem;">
+          <i class="fas fa-envelope"></i> Subscribe to Daily AI Newsletter
+        </a>
       </div>
     </div>
   </section>
@@ -1703,6 +1907,101 @@
     </div>
   </section>
 
+  <!-- NEWSLETTER -->
+  <section class="newsletter-section" id="newsletter">
+    <div class="newsletter-bg"></div>
+    <div class="container" style="padding-top:5rem;padding-bottom:5rem;">
+      <div class="newsletter-grid">
+
+        <!-- Left — pitch -->
+        <div class="newsletter-left">
+          <div class="newsletter-eyebrow">Daily AI Newsletter</div>
+          <h2 class="newsletter-title">
+            Your 9 AM<br><em>AI Briefing</em>
+          </h2>
+          <p class="newsletter-desc">
+            Every morning at 9 AM IST, my AI agent scans ArXiv, HuggingFace, GitHub, and top AI sources — then writes a 5-minute digest in plain English. Curated specifically around Healthcare AI, LLMs, and Edge AI.
+          </p>
+          <ul class="newsletter-perks">
+            <li>
+              <span class="perk-icon">🧠</span>
+              <span><strong style="color:var(--text);">Top story of the day</strong> — the one thing worth knowing, explained in 3 sentences</span>
+            </li>
+            <li>
+              <span class="perk-icon">❤️</span>
+              <span><strong style="color:var(--text);">Healthcare AI spotlight</strong> — papers, tools, and breakthroughs specific to clinical and wearable AI</span>
+            </li>
+            <li>
+              <span class="perk-icon">📄</span>
+              <span><strong style="color:var(--text);">3 papers worth reading</strong> — curated from ArXiv with a one-line summary each</span>
+            </li>
+            <li>
+              <span class="perk-icon">🚀</span>
+              <span><strong style="color:var(--text);">Tools & repos</strong> — new GitHub releases and models that actually matter</span>
+            </li>
+            <li>
+              <span class="perk-icon">✍️</span>
+              <span><strong style="color:var(--text);">From my desk</strong> — occasional thoughts from my own research and consulting work</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Right — form + preview -->
+        <div class="newsletter-right">
+          <!-- Email preview mockup -->
+          <div class="newsletter-preview">
+            <div class="newsletter-preview-subject">
+              🧠 AI Daily — Today · Healthcare AI + 3 Papers Worth Reading
+            </div>
+            <p>Good morning —</p>
+            <p>Here's your 5-minute AI briefing.</p>
+            <hr class="preview-divider">
+            <div class="preview-item">
+              <span class="preview-dot">▸</span>
+              <span><strong style="color:var(--text-muted);">Top Story:</strong> Google's new KV cache compression cuts memory 6× with zero accuracy loss...</span>
+            </div>
+            <div class="preview-item">
+              <span class="preview-dot">▸</span>
+              <span><strong style="color:var(--text-muted);">Healthcare AI:</strong> New PPG-based hypertension model hits 88% accuracy on wearable data...</span>
+            </div>
+            <div class="preview-item">
+              <span class="preview-dot">▸</span>
+              <span><strong style="color:var(--text-muted);">Papers:</strong> 3 ArXiv picks — Mamba2, On-device LLM survey, ECG foundation models</span>
+            </div>
+            <hr class="preview-divider">
+            <span style="color:var(--text-dim);font-size:.72rem;">Dr. Prateek Singh · Unsubscribe anytime</span>
+          </div>
+
+          <!-- Subscribe form -->
+          <div class="nl-form">
+            <div class="nl-input-row">
+              <input
+                type="email"
+                id="nl-email"
+                class="nl-input"
+                placeholder="your@email.com"
+                autocomplete="email"
+              >
+              <button class="nl-submit" id="nl-submit">
+                <i class="fas fa-paper-plane"></i> Subscribe
+              </button>
+            </div>
+            <div class="nl-privacy">
+              <i class="fas fa-lock"></i>
+              No spam. No ads. Unsubscribe with one click anytime.
+            </div>
+            <div class="nl-status" id="nl-status"></div>
+          </div>
+
+          <div class="nl-count">
+            Delivered every day at <span>9:00 AM IST</span> · Powered by AI agent
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
   <!-- CONTACT -->
   <section class="section" id="contact">
     <div class="container">
@@ -1773,6 +2072,57 @@
   </a>
 
   <script>
+    // ── Newsletter subscribe form
+    (function() {
+      var btn    = document.getElementById('nl-submit');
+      var inp    = document.getElementById('nl-email');
+      var status = document.getElementById('nl-status');
+      if (!btn || !inp) return;
+
+      async function subscribe() {
+        var email = inp.value.trim();
+        if (!email || !email.includes('@')) {
+          status.innerHTML = '<i class="fas fa-exclamation-circle"></i> Please enter a valid email.';
+          status.className = 'nl-status error';
+          return;
+        }
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subscribing...';
+        status.className = 'nl-status';
+
+        try {
+          var res = await fetch('https://prateeksinghphd.in/api/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, source: 'newsletter-section' })
+          });
+          if (res.ok) {
+            status.innerHTML = '<i class="fas fa-check-circle"></i> You\'re in! First email arrives tomorrow at 9 AM IST.';
+            status.className = 'nl-status success';
+            inp.value = '';
+            btn.innerHTML = '<i class="fas fa-check"></i> Subscribed';
+          } else { throw new Error(); }
+        } catch(e) {
+          // Fallback mailto
+          var u = 'prateek29singh', d = 'gmail.com';
+          window.open(
+            'mailto:' + u + '@' + d
+            + '?subject=Subscribe: Daily AI Newsletter'
+            + '&body=Please add me to your daily AI newsletter. My email: ' + email,
+            '_blank'
+          );
+          status.innerHTML = '<i class="fas fa-check-circle"></i> Opening email — send it to confirm your subscription!';
+          status.className = 'nl-status success';
+          btn.innerHTML = '<i class="fas fa-check"></i> Done';
+        }
+      }
+
+      btn.addEventListener('click', subscribe);
+      inp.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') subscribe();
+      });
+    })();
+
     // ── Email anti-obfuscation
     (function() {
       var u = 'prateek29singh';
