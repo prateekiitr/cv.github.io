@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Agent Wars: OpenClaw, NemoClaw, Hermes & the Rise of Agentic AI | Prateek Singh PhD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:    #070d1b;
+    --navy2:   #0d1526;
+    --navy3:   #111d33;
+    --card:    #0f1829;
+    --border:  rgba(255,255,255,0.07);
+    --teal:    #00e5cc;
+    --teal2:   #00b3a4;
+    --purple:  #a78bfa;
+    --purple2: #7c3aed;
+    --pink:    #f472b6;
+    --orange:  #fb923c;
+    --yellow:  #fbbf24;
+    --text:    #e2e8f0;
+    --muted:   #64748b;
+    --dim:     #94a3b8;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--navy);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 17px;
+    line-height: 1.8;
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE TEXTURE ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    opacity: 0.4;
+  }
+
+  /* ── GRID LINES ── */
+  .grid-bg {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(0,229,204,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,204,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  .wrap { max-width: 820px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* ── TOPBAR ── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(7,13,27,0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 0;
+  }
+  nav .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .nav-logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--teal);
+    letter-spacing: 0.08em;
+    text-decoration: none;
+  }
+  .nav-tag {
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .back-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--dim);
+    text-decoration: none;
+    padding: 7px 14px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: rgba(255,255,255,0.03);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+    white-space: nowrap;
+  }
+  .back-btn:hover {
+    color: var(--teal);
+    border-color: rgba(0,229,204,0.3);
+    background: rgba(0,229,204,0.05);
+  }
+  .back-btn svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 100px 0 70px;
+    position: relative;
+  }
+  .hero-kicker {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--teal);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+    padding: 6px 14px;
+    border: 1px solid rgba(0,229,204,0.25);
+    border-radius: 2px;
+    background: rgba(0,229,204,0.05);
+  }
+  .hero-kicker span { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); display: block; animation: blink 1.4s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.2rem, 6vw, 3.6rem);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 24px;
+  }
+  .grad-teal { background: linear-gradient(135deg, var(--teal), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .grad-pink { background: linear-gradient(135deg, var(--pink), var(--orange)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+  .hero-meta {
+    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  .avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--teal2), var(--purple2));
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px;
+    color: #fff; flex-shrink: 0;
+  }
+  .meta-text { font-size: 14px; color: var(--dim); }
+  .meta-text strong { color: var(--text); }
+  .tag-pill {
+    font-size: 11px; font-family: 'Space Mono', monospace;
+    padding: 4px 10px; border-radius: 2px;
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .tag-teal { background: rgba(0,229,204,0.1); color: var(--teal); border: 1px solid rgba(0,229,204,0.2); }
+  .tag-purple { background: rgba(167,139,250,0.1); color: var(--purple); border: 1px solid rgba(167,139,250,0.2); }
+  .tag-pink { background: rgba(244,114,182,0.1); color: var(--pink); border: 1px solid rgba(244,114,182,0.2); }
+  .tag-orange { background: rgba(251,146,60,0.1); color: var(--orange); border: 1px solid rgba(251,146,60,0.2); }
+
+  /* ── DIVIDER ── */
+  .divider { height: 1px; background: var(--border); margin: 60px 0; }
+
+  /* ── SECTION HEADERS ── */
+  .section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--teal);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: rgba(0,229,204,0.15); }
+
+  h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    letter-spacing: -0.01em;
+  }
+
+  p { margin-bottom: 20px; color: var(--dim); }
+  p strong { color: var(--text); }
+
+  /* ── CALLOUT BLOCKS ── */
+  .callout {
+    border-left: 3px solid;
+    padding: 20px 24px;
+    border-radius: 0 8px 8px 0;
+    margin: 32px 0;
+    background: var(--card);
+    position: relative;
+    overflow: hidden;
+  }
+  .callout::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 1px;
+    background: inherit;
+  }
+  .callout-teal { border-color: var(--teal); }
+  .callout-teal::after { content: ''; position: absolute; inset: 0; background: rgba(0,229,204,0.03); pointer-events: none; }
+  .callout-purple { border-color: var(--purple); }
+  .callout-purple::after { content: ''; position: absolute; inset: 0; background: rgba(167,139,250,0.03); pointer-events: none; }
+  .callout-pink { border-color: var(--pink); }
+  .callout-pink::after { content: ''; position: absolute; inset: 0; background: rgba(244,114,182,0.03); pointer-events: none; }
+  .callout-orange { border-color: var(--orange); }
+  .callout-orange::after { content: ''; position: absolute; inset: 0; background: rgba(251,146,60,0.03); pointer-events: none; }
+
+  .callout-icon { font-size: 20px; margin-bottom: 8px; display: block; }
+  .callout p { margin: 0; }
+  .callout p + p { margin-top: 10px; }
+
+  /* ── AGENT CARDS ── */
+  .agent-cards { display: grid; gap: 24px; margin: 40px 0; }
+
+  .agent-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s, transform 0.3s;
+  }
+  .agent-card:hover { transform: translateY(-3px); }
+  .agent-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .card-openclaw::before { background: linear-gradient(90deg, var(--teal), transparent); }
+  .card-openclaw:hover { border-color: rgba(0,229,204,0.3); }
+  .card-nemoclaw::before { background: linear-gradient(90deg, var(--purple), transparent); }
+  .card-nemoclaw:hover { border-color: rgba(167,139,250,0.3); }
+  .card-hermes::before { background: linear-gradient(90deg, var(--pink), transparent); }
+  .card-hermes:hover { border-color: rgba(244,114,182,0.3); }
+  .card-harness::before { background: linear-gradient(90deg, var(--orange), transparent); }
+  .card-harness:hover { border-color: rgba(251,146,60,0.3); }
+
+  .card-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px; }
+  .card-icon {
+    width: 48px; height: 48px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+  }
+  .icon-teal { background: rgba(0,229,204,0.1); border: 1px solid rgba(0,229,204,0.2); }
+  .icon-purple { background: rgba(167,139,250,0.1); border: 1px solid rgba(167,139,250,0.2); }
+  .icon-pink { background: rgba(244,114,182,0.1); border: 1px solid rgba(244,114,182,0.2); }
+  .icon-orange { background: rgba(251,146,60,0.1); border: 1px solid rgba(251,146,60,0.2); }
+
+  .card-title { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 700; margin-bottom: 4px; }
+  .card-subtitle { font-size: 13px; color: var(--muted); font-family: 'Space Mono', monospace; }
+
+  .feature-list { list-style: none; margin: 16px 0 0; display: flex; flex-direction: column; gap: 10px; }
+  .feature-list li {
+    display: flex; align-items: flex-start; gap: 12px;
+    font-size: 15px; color: var(--dim);
+  }
+  .feature-list li::before {
+    content: '→';
+    font-family: 'Space Mono', monospace;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .card-openclaw .feature-list li::before { color: var(--teal); }
+  .card-nemoclaw .feature-list li::before { color: var(--purple); }
+  .card-hermes .feature-list li::before { color: var(--pink); }
+  .card-harness .feature-list li::before { color: var(--orange); }
+
+  .card-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-family: 'Space Mono', monospace;
+    padding: 4px 10px; border-radius: 2px;
+    letter-spacing: 0.06em;
+    margin-top: 20px;
+  }
+
+  /* ── CITY ANALOGY BLOCK ── */
+  .city-block {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 36px;
+    margin: 40px 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .city-block::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--teal), var(--purple), var(--pink), var(--orange));
+  }
+  .city-header {
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .city-icon { font-size: 32px; }
+  .city-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.2rem; font-weight: 700;
+    margin-bottom: 3px;
+  }
+  .city-sub { font-size: 13px; color: var(--muted); font-family: 'Space Mono', monospace; }
+  .city-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  @media(max-width:580px) { .city-grid { grid-template-columns: 1fr; } }
+  .city-card {
+    border-radius: 10px;
+    padding: 20px;
+    border: 1px solid var(--border);
+  }
+  .city-card-1 { background: rgba(0,229,204,0.04); border-color: rgba(0,229,204,0.15); }
+  .city-card-2 { background: rgba(167,139,250,0.04); border-color: rgba(167,139,250,0.15); }
+  .city-card-3 { background: rgba(244,114,182,0.04); border-color: rgba(244,114,182,0.15); }
+  .city-card-4 { background: rgba(251,146,60,0.04); border-color: rgba(251,146,60,0.15); }
+  .city-card-icon { font-size: 24px; margin-bottom: 10px; }
+  .city-card-label { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 4px; }
+  .city-card-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 8px; }
+  .city-card-desc { font-size: 13px; color: var(--dim); line-height: 1.6; }
+  .city-bottom {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 16px 20px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .city-bottom-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+  /* ── DIAGRAM BLOCK ── */
+  .diagram-block {
+    background: var(--navy2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    margin: 36px 0;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    line-height: 1.9;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .diagram-block .dt { color: var(--teal); }
+  .diagram-block .dp { color: var(--purple); }
+  .diagram-block .dpi { color: var(--pink); }
+  .diagram-block .do { color: var(--orange); }
+  .diagram-block .dm { color: var(--muted); }
+
+  /* ── RASCHKA LINK ── */
+  .raschka-link {
+    display: flex; align-items: center; gap: 14px;
+    margin-top: 18px;
+    padding: 14px 18px;
+    border-radius: 8px;
+    border: 1px solid rgba(251,146,60,0.25);
+    background: rgba(251,146,60,0.06);
+    text-decoration: none;
+    transition: border-color 0.2s, background 0.2s, transform 0.2s;
+  }
+  .raschka-link:hover {
+    border-color: rgba(251,146,60,0.5);
+    background: rgba(251,146,60,0.11);
+    transform: translateX(3px);
+  }
+  .raschka-link-icon { font-size: 22px; flex-shrink: 0; }
+  .raschka-link-text { display: flex; flex-direction: column; gap: 2px; }
+  .raschka-link-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--orange);
+  }
+  .raschka-link-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  /* ── COMPARISON TABLE ── */
+  .table-wrap { overflow-x: auto; margin: 40px 0; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: var(--card); }
+  thead tr { background: var(--navy2); }
+  th {
+    padding: 16px 18px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--dim);
+    text-align: left;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 14px 18px;
+    font-size: 14px;
+    color: var(--dim);
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  .td-name { font-family: 'Syne', sans-serif; font-weight: 700; color: var(--text); white-space: nowrap; }
+  .yes { color: var(--teal); font-family: 'Space Mono', monospace; font-size: 13px; }
+  .no { color: var(--muted); font-family: 'Space Mono', monospace; font-size: 13px; }
+  .partial { color: var(--orange); font-family: 'Space Mono', monospace; font-size: 13px; }
+
+  /* ── QUOTE BLOCK ── */
+  .quote-block {
+    border: 1px solid var(--border);
+    background: var(--card);
+    border-radius: 12px;
+    padding: 32px 36px;
+    margin: 40px 0;
+    position: relative;
+  }
+  .quote-block::before {
+    content: '"';
+    position: absolute; top: -10px; left: 28px;
+    font-family: 'Syne', sans-serif;
+    font-size: 80px; line-height: 1;
+    color: var(--teal);
+    opacity: 0.3;
+  }
+  .quote-block blockquote {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    line-height: 1.6;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+  .quote-attr {
+    font-size: 13px;
+    font-family: 'Space Mono', monospace;
+    color: var(--muted);
+  }
+
+  /* ── LAYER VISUAL ── */
+  .layer-visual { margin: 40px 0; display: flex; flex-direction: column; gap: 0; }
+  .layer {
+    padding: 20px 28px;
+    display: flex; align-items: center; gap: 16px;
+    position: relative;
+  }
+  .layer:not(:last-child)::after {
+    content: '↓';
+    position: absolute; bottom: -14px; left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Space Mono', monospace;
+    color: var(--muted);
+    font-size: 16px;
+    z-index: 2;
+  }
+  .layer-1 { background: rgba(0,229,204,0.07); border: 1px solid rgba(0,229,204,0.2); border-radius: 10px 10px 0 0; }
+  .layer-2 { background: rgba(167,139,250,0.07); border: 1px solid rgba(167,139,250,0.2); border-left: 1px solid rgba(167,139,250,0.2); border-right: 1px solid rgba(167,139,250,0.2); border-top: none; border-bottom: none; margin: 4px 0; }
+  .layer-3 { background: rgba(244,114,182,0.07); border: 1px solid rgba(244,114,182,0.2); border-top: none; border-bottom: none; margin: 4px 0; }
+  .layer-4 { background: rgba(251,146,60,0.07); border: 1px solid rgba(251,146,60,0.2); border-radius: 0 0 10px 10px; }
+  .layer-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-weight: 700;
+  }
+  .ln-1 { background: rgba(0,229,204,0.15); color: var(--teal); }
+  .ln-2 { background: rgba(167,139,250,0.15); color: var(--purple); }
+  .ln-3 { background: rgba(244,114,182,0.15); color: var(--pink); }
+  .ln-4 { background: rgba(251,146,60,0.15); color: var(--orange); }
+  .layer-text { flex: 1; }
+  .layer-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; margin-bottom: 2px; }
+  .layer-sub { font-size: 13px; color: var(--muted); }
+
+  /* ── SIX COMPONENTS ── */
+  .components-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 32px 0; }
+  @media(max-width:600px) { .components-grid { grid-template-columns: 1fr; } }
+  .comp-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 22px;
+    transition: transform 0.2s;
+  }
+  .comp-card:hover { transform: translateY(-2px); }
+  .comp-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    margin-bottom: 10px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+  .comp-card h3 { font-size: 1rem; margin-bottom: 8px; }
+  .comp-card p { font-size: 14px; margin: 0; }
+
+  /* ── TAKEAWAY BOX ── */
+  .takeaway {
+    background: linear-gradient(135deg, rgba(0,229,204,0.07), rgba(167,139,250,0.07));
+    border: 1px solid rgba(0,229,204,0.2);
+    border-radius: 12px;
+    padding: 36px;
+    margin: 48px 0;
+    text-align: center;
+  }
+  .takeaway h2 { margin-bottom: 14px; }
+  .takeaway p { color: var(--dim); max-width: 560px; margin: 0 auto; }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 48px 0;
+    margin-top: 80px;
+    text-align: center;
+  }
+  footer p { font-size: 14px; color: var(--muted); margin: 0; }
+  footer a { color: var(--teal); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  /* ── READING PROGRESS ── */
+  #progress-bar {
+    position: fixed; top: 0; left: 0; height: 2px;
+    background: linear-gradient(90deg, var(--teal), var(--purple));
+    z-index: 999; width: 0%; transition: width 0.1s;
+  }
+
+  /* ── INLINE CODE ── */
+  code {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.82em;
+    background: rgba(0,229,204,0.08);
+    color: var(--teal);
+    padding: 2px 7px;
+    border-radius: 3px;
+    border: 1px solid rgba(0,229,204,0.15);
+  }
+
+  /* ── SCROLL ANIMATIONS ── */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+  .section { margin-bottom: 72px; }
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+<div class="grid-bg"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="wrap">
+    <a href="https://prateeksinghphd.in" class="nav-logo">prateeksinghphd.in</a>
+    <div class="nav-tag" style="display:none;" id="nav-label">AI Research &amp; Systems</div>
+    <a href="https://prateeksinghphd.in/blog" class="back-btn">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      Back to Blogs
+    </a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-kicker"><span></span>Deep Dive · April 2026</div>
+    <h1>The <span class="grad-teal">Agent Wars</span> —<br>OpenClaw, NemoClaw,<br>Hermes &amp; the <span class="grad-pink">New Agentic Stack</span></h1>
+    <p style="font-size:1.1rem; color:var(--dim); max-width:620px; margin-top:20px;">
+      From a single LLM answering questions to always-on agents that act, remember, and evolve — the past six months have fundamentally redrawn what "AI" means in practice. Here's the full picture.
+    </p>
+    <div class="hero-meta">
+      <div class="avatar">PS</div>
+      <div class="meta-text">
+        <strong>Prateek Singh, PhD</strong> <br>
+      </div>
+      <div style="margin-left:auto; display:flex; gap:8px; flex-wrap:wrap;">
+        <span class="tag-pill tag-teal">Agents</span>
+        <span class="tag-pill tag-purple">LLM Systems</span>
+        <span class="tag-pill tag-orange">Open Source</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+<div class="wrap">
+
+  <!-- SECTION 0: THE SHIFT -->
+  <section class="section fade-in">
+    <div class="section-label">Context</div>
+    <h2>From Chat Boxes to <span class="grad-teal">Autonomous Workers</span></h2>
+    <p>
+      For most of AI's recent history, the interaction model was simple: you type, the model responds. Impressive, but fundamentally <strong>passive</strong>. The model had no memory of yesterday, no ability to click a button, and no way to act on your behalf while you slept.
+    </p>
+    <p>
+      That model is being replaced — fast. What has emerged in 2025–2026 is an entirely new software layer: the <strong>agent harness</strong>. And the ecosystems being built around it — OpenClaw, NemoClaw, Hermes — are more consequential than any single model release.
+    </p>
+
+    <div class="callout callout-teal">
+      <span class="callout-icon">💡</span>
+      <p><strong>The key insight:</strong> Progress in practical AI is no longer only about better models. It's about better <em>systems</em> — how models are wrapped, given tools, fed context, and kept running autonomously over time.</p>
+    </div>
+
+    <!-- CITY ANALOGY -->
+    <div class="city-block">
+      <div class="city-header">
+        <div class="city-icon">🏙️</div>
+        <div>
+          <div class="city-title">The Big Picture: Think of It Like a City</div>
+          <div class="city-sub">A mental model for the entire agentic stack</div>
+        </div>
+      </div>
+      <p style="font-size:15px; color:var(--dim); margin-bottom:24px;">
+        Imagine building a city where <strong style="color:var(--text);">AI agents are workers</strong>. Every player in this space built a different piece of that city. Understanding who built what — and why — makes the whole landscape instantly clear.
+      </p>
+      <div class="city-grid">
+        <div class="city-card city-card-1">
+          <div class="city-card-icon">🏗️</div>
+          <div class="city-card-label" style="color:var(--teal);">The Roads &amp; Infrastructure</div>
+          <div class="city-card-name">OpenClaw</div>
+          <div class="city-card-desc">The basic city grid — streets, electricity, plumbing. Without it, nothing else runs. OpenClaw is the foundational OS on which every agent lives.</div>
+        </div>
+        <div class="city-card city-card-2">
+          <div class="city-card-icon">🏛️</div>
+          <div class="city-card-label" style="color:var(--purple);">The Police &amp; Legal System</div>
+          <div class="city-card-name">NemoClaw</div>
+          <div class="city-card-desc">Rules, enforcement, security cameras, walled districts. NemoClaw adds the safety layer that lets enterprises trust the city enough to actually move in.</div>
+        </div>
+        <div class="city-card city-card-3">
+          <div class="city-card-icon">🏠</div>
+          <div class="city-card-label" style="color:var(--pink);">Your Personal Home</div>
+          <div class="city-card-name">Hermes Agent</div>
+          <div class="city-card-desc">A home that learns your habits, rearranges itself, and gets smarter over time. Lives in the city, uses the roads, but evolves to fit you specifically.</div>
+        </div>
+        <div class="city-card city-card-4">
+          <div class="city-card-icon">🏢</div>
+          <div class="city-card-label" style="color:var(--orange);">Specialist Office Blocks</div>
+          <div class="city-card-name">Claude Code / Codex</div>
+          <div class="city-card-desc">Purpose-built workplaces optimised for one job — software engineering. Maximum productivity inside a narrow domain, by design.</div>
+        </div>
+      </div>
+      <div class="city-bottom">
+        <span class="city-bottom-icon">⚙️</span>
+        <span style="color:var(--dim); font-size:14px;">And the <strong style="color:var(--text);">LLM</strong> underneath all of this? That's the <strong style="color:var(--text);">electricity</strong> — essential, but invisible. The city determines what gets built. The power grid just makes it possible.</span>
+      </div>
+    </div>
+
+    <!-- ANALOGY -->
+    <div class="diagram-block">
+<span class="dm">// The stack, plainly stated</span>
+
+<span class="dt">LLM</span>              →  The engine. Generates tokens.
+<span class="dt">Reasoning Model</span>  →  A beefed-up engine. Thinks before it speaks.
+<span class="dt">Agent</span>            →  A loop. Model + tools + memory + environment.
+<span class="dt">Agent Harness</span>    →  The scaffold. Manages context, state, prompts, tools.
+<span class="dp">Coding Harness</span>   →  A specialized harness for software work.
+
+<span class="dm">// The analogy</span>
+<span class="dt">LLM</span>        =  a very smart person locked in a room with no tools
+<span class="dp">Agent</span>      =  that person + a phone + a laptop + a filing cabinet
+<span class="dpi">Harness</span>    =  the office building, rules, desk, and workflow around them
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 1: CODING HARNESSES -->
+  <section class="section fade-in">
+    <div class="section-label">Foundation</div>
+    <h2>The Six Pillars of a <span class="grad-pink">Coding Agent Harness</span></h2>
+    <p>
+      Sebastian Raschka's recent deep-dive into Claude Code and Codex CLI crystallised something important: what makes coding agents feel magical is <strong>not the model</strong>. It's the harness architecture. Here are the six components that separate a coding agent from a chat window.
+    </p>
+
+    <div class="components-grid">
+      <div class="comp-card">
+        <div class="comp-num" style="background:rgba(0,229,204,0.1);color:var(--teal);">01</div>
+        <h3>Live Repo Context</h3>
+        <p>Before any work starts, the agent builds a workspace snapshot — git branch, recent commits, AGENTS.md, directory layout. Never starting cold.</p>
+      </div>
+      <div class="comp-card">
+        <div class="comp-num" style="background:rgba(167,139,250,0.1);color:var(--purple);">02</div>
+        <h3>Prompt Cache Reuse</h3>
+        <p>Stable content (instructions, tool descriptions, workspace summary) is cached. Only the session-variable parts get rebuilt each turn. Cost efficiency at scale.</p>
+      </div>
+      <div class="comp-card">
+        <div class="comp-num" style="background:rgba(244,114,182,0.1);color:var(--pink);">03</div>
+        <h3>Structured Tool Use</h3>
+        <p>Pre-defined named tools with typed inputs. Every call goes through validation — known tool? valid args? needs approval? path inside workspace?</p>
+      </div>
+      <div class="comp-card">
+        <div class="comp-num" style="background:rgba(251,146,60,0.1);color:var(--orange);">04</div>
+        <h3>Context Bloat Control</h3>
+        <p>Clipping (no single output eats the budget) + transcript summarisation (recent = rich, old = compressed) + deduplication of repeated file reads.</p>
+      </div>
+      <div class="comp-card">
+        <div class="comp-num" style="background:rgba(0,229,204,0.1);color:var(--teal);">05</div>
+        <h3>Structured Session Memory</h3>
+        <p>Two distinct layers: a <strong>full transcript</strong> (durable, resumable JSON) and <strong>working memory</strong> (distilled, task-focused). Different jobs, different update rates.</p>
+      </div>
+      <div class="comp-card">
+        <div class="comp-num" style="background:rgba(167,139,250,0.1);color:var(--purple);">06</div>
+        <h3>Bounded Subagents</h3>
+        <p>The hard problem isn't spawning a subagent — it's bounding one. Subagents inherit enough context to be useful but run with constrained permissions.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-orange">
+      <span class="callout-icon">🔑</span>
+      <p><strong>Raschka's key claim:</strong> If you dropped a capable open-weight model into a Claude Code-style harness, it could likely match GPT-5 in Codex. The harness is often the differentiator — not the model weights.</p>
+      <a href="https://magazine.sebastianraschka.com/p/components-of-a-coding-agent" target="_blank" rel="noopener" class="raschka-link">
+        <span class="raschka-link-icon">📖</span>
+        <span class="raschka-link-text">
+          <span class="raschka-link-label">Recommended Read</span>
+          <span class="raschka-link-title">Components of a Coding Agent — Sebastian Raschka →</span>
+        </span>
+      </a>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 2: THE THREE PLATFORMS -->
+  <section class="section fade-in">
+    <div class="section-label">The Platforms</div>
+    <h2>OpenClaw, NemoClaw &amp; Hermes —<br><span class="grad-teal">What Each One Actually Is</span></h2>
+    <p>
+      Three distinct platforms now define the agentic landscape. They share DNA but serve fundamentally different purposes. Here's each one, plainly.
+    </p>
+
+    <div class="agent-cards">
+
+      <!-- OPENCLAW -->
+      <div class="agent-card card-openclaw">
+        <div class="card-header">
+          <div class="card-icon icon-teal">🐾</div>
+          <div>
+            <div class="card-title">OpenClaw</div>
+            <div class="card-subtitle">by Peter Steinberger · Acquired by OpenAI</div>
+          </div>
+        </div>
+        <p style="font-size:15px;">The foundational layer of the current agent ecosystem. OpenClaw is best described as the <strong>operating system for personal AI</strong> — Jensen Huang's exact framing at GTC 2026. It went from zero to the fastest-growing open-source project in history before its creator was hired by OpenAI.</p>
+        <ul class="feature-list">
+          <li>Always-on local agent that runs autonomously on your machine</li>
+          <li>Persistent file system, tool access, memory across sessions</li>
+          <li>Open agent protocol — any model, any tool backend</li>
+          <li>AGENTS.md, SOUL.md, TOOLS.md as workspace instruction files</li>
+          <li>JSONL session transcripts with compaction and resumption</li>
+          <li>Spawns helper sessions and subagents natively</li>
+        </ul>
+        <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border);">
+          <p style="font-size:14px; color:var(--muted); margin:0;"><strong style="color:var(--text);">The catch:</strong> A security incident — an unsecured database allowing agent impersonation — led Meta and several large enterprises to ban it from corporate machines. This created the opening for what came next.</p>
+        </div>
+        <span class="card-badge tag-teal">Foundation Layer</span>
+      </div>
+
+      <!-- NEMOCLAW -->
+      <div class="agent-card card-nemoclaw">
+        <div class="card-header">
+          <div class="card-icon icon-purple">🔐</div>
+          <div>
+            <div class="card-title">NemoClaw</div>
+            <div class="card-subtitle">by NVIDIA · Launched GTC 2026 · Open Source</div>
+          </div>
+        </div>
+        <p style="font-size:15px;">NemoClaw is not a replacement for OpenClaw. It is a <strong>security and privacy layer that installs on top of it in a single command</strong>. Think of OpenClaw as the worker and NemoClaw as the security badge, corporate policy handbook, and compliance officer combined.</p>
+        <ul class="feature-list">
+          <li><strong>OpenShell runtime</strong> — every agent runs in an isolated sandbox</li>
+          <li><strong>Privacy router</strong> — cloud model calls go through a proxy; your data doesn't leak</li>
+          <li><strong>Policy-based guardrails</strong> — define what each agent can access, execute, report</li>
+          <li>Hardware-agnostic — does not require NVIDIA GPUs</li>
+          <li>Supports local models (Nemotron) and cloud models in hybrid mode</li>
+          <li>Pitched to Salesforce, Cisco, Google, Adobe, CrowdStrike pre-launch</li>
+        </ul>
+        <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border);">
+          <p style="font-size:14px; color:var(--muted); margin:0;"><strong style="color:var(--text);">Strategic play:</strong> NVIDIA is following Meta's Llama playbook — give the software layer away freely, build the ecosystem, trust that accelerating enterprise AI workloads will drive GPU demand anyway.</p>
+        </div>
+        <span class="card-badge tag-purple">Enterprise Security Layer</span>
+      </div>
+
+      <!-- HERMES -->
+      <div class="agent-card card-hermes">
+        <div class="card-header">
+          <div class="card-icon icon-pink">⚕️</div>
+          <div>
+            <div class="card-title">Hermes Agent</div>
+            <div class="card-subtitle">by NousResearch · Released Feb 2026 · MIT License</div>
+          </div>
+        </div>
+        <p style="font-size:15px;">Where OpenClaw is a platform and NemoClaw is a security wrapper, Hermes is a <strong>personal agent that evolves with you</strong>. Built by NousResearch — the lab that pioneered tool-calling fine-tunes — it brings a different philosophy: the agent should grow more capable the longer it runs.</p>
+        <ul class="feature-list">
+          <li>Multi-level persistent memory — learns projects, preferences, workflows across sessions</li>
+          <li>Skills self-improve via GEPA optimizer (ICLR 2026 Oral) using execution traces</li>
+          <li>Single gateway: Telegram, Discord, Slack, WhatsApp, Signal, CLI simultaneously</li>
+          <li>Isolated subagents with their own terminals and Python RPC scripts</li>
+          <li>Model-agnostic — Nous Portal, OpenRouter, OpenAI, local endpoint; switch with one command</li>
+          <li>Can import full OpenClaw settings, memories, and skills via migration wizard</li>
+          <li>40+ built-in tools — web, browser automation, vision, TTS, cron scheduler, code execution</li>
+        </ul>
+        <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border);">
+          <p style="font-size:14px; color:var(--muted); margin:0;"><strong style="color:var(--text);">The differentiator:</strong> Hermes Agent is also a research platform — it exports tool-calling trajectories for fine-tuning, integrates with Atropos for RL experiments, and supports 11 tool-call parsers for training any model architecture.</p>
+        </div>
+        <span class="card-badge tag-pink">Personal Evolving Agent</span>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 3: HOW THEY STACK -->
+  <section class="section fade-in">
+    <div class="section-label">Architecture</div>
+    <h2>How the Stack <span class="grad-teal">Actually Fits Together</span></h2>
+    <p>
+      These aren't competing replacements for each other. They are complementary layers of a single emerging stack — each solving a different level of the same problem.
+    </p>
+
+    <div class="layer-visual">
+      <div class="layer layer-1">
+        <div class="layer-num ln-1">1</div>
+        <div class="layer-text">
+          <div class="layer-title" style="color:var(--teal);">Natural Language Goal</div>
+          <div class="layer-sub">"Order flowers for my parents" · "Summarise this repo" · "Monitor my server and alert me"</div>
+        </div>
+      </div>
+      <div class="layer layer-2">
+        <div class="layer-num ln-2">2</div>
+        <div class="layer-text">
+          <div class="layer-title" style="color:var(--purple);">Agent Platform — OpenClaw / Hermes</div>
+          <div class="layer-sub">ReAct loop · Tool use · Memory · Subagents · Session transcripts · Skill library</div>
+        </div>
+      </div>
+      <div class="layer layer-3">
+        <div class="layer-num ln-3">3</div>
+        <div class="layer-text">
+          <div class="layer-title" style="color:var(--pink);">Security Layer — NemoClaw (enterprise)</div>
+          <div class="layer-sub">Sandbox isolation · Policy enforcement · Privacy router · Egress control</div>
+        </div>
+      </div>
+      <div class="layer layer-4">
+        <div class="layer-num ln-4">4</div>
+        <div class="layer-text">
+          <div class="layer-title" style="color:var(--orange);">Model Backend</div>
+          <div class="layer-sub">Nemotron (local) · Claude / GPT (cloud via privacy router) · Any open-weight model</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-purple">
+      <span class="callout-icon">🧠</span>
+      <p>The model is Layer 4 — the foundation, not the ceiling. The agent's <strong>observable intelligence</strong> is mostly determined by Layers 2 and 3. A mediocre model in a great harness will routinely outperform a great model in a bare chat interface.</p>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 4: COMPARISON TABLE -->
+  <section class="section fade-in">
+    <div class="section-label">Comparison</div>
+    <h2>Side by Side — <span class="grad-pink">What Each System Does</span></h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Claude Code / Codex</th>
+            <th>OpenClaw</th>
+            <th>NemoClaw</th>
+            <th>Hermes Agent</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="td-name">Primary purpose</td>
+            <td>Coding assistant</td>
+            <td>General personal AI OS</td>
+            <td>Enterprise security layer</td>
+            <td>Self-evolving personal agent</td>
+          </tr>
+          <tr>
+            <td class="td-name">Always-on / persistent</td>
+            <td class="no">No</td>
+            <td class="yes">Yes</td>
+            <td class="yes">Yes (via OpenClaw)</td>
+            <td class="yes">Yes</td>
+          </tr>
+          <tr>
+            <td class="td-name">Persistent memory</td>
+            <td class="partial">Session only</td>
+            <td class="yes">Cross-session</td>
+            <td class="yes">Cross-session</td>
+            <td class="yes">Multi-level, evolving</td>
+          </tr>
+          <tr>
+            <td class="td-name">Self-improving skills</td>
+            <td class="no">No</td>
+            <td class="partial">Manual</td>
+            <td class="no">No</td>
+            <td class="yes">GEPA auto-optimizer</td>
+          </tr>
+          <tr>
+            <td class="td-name">Multi-platform messaging</td>
+            <td class="no">No</td>
+            <td class="partial">Limited</td>
+            <td class="partial">Via OpenClaw</td>
+            <td class="yes">TG · Discord · Slack · WA · Signal</td>
+          </tr>
+          <tr>
+            <td class="td-name">Subagent delegation</td>
+            <td class="yes">Yes</td>
+            <td class="yes">Yes</td>
+            <td class="yes">Yes (bounded)</td>
+            <td class="yes">Isolated RPC subagents</td>
+          </tr>
+          <tr>
+            <td class="td-name">Sandbox isolation</td>
+            <td class="partial">Partial</td>
+            <td class="no">No (was the problem)</td>
+            <td class="yes">OpenShell per agent</td>
+            <td class="yes">5 container backends</td>
+          </tr>
+          <tr>
+            <td class="td-name">Enterprise-ready</td>
+            <td class="yes">Yes</td>
+            <td class="no">No</td>
+            <td class="yes">Designed for it</td>
+            <td class="partial">Growing</td>
+          </tr>
+          <tr>
+            <td class="td-name">Model-agnostic</td>
+            <td class="no">Proprietary model</td>
+            <td class="yes">Yes</td>
+            <td class="yes">Yes (hardware-agnostic)</td>
+            <td class="yes">Any endpoint</td>
+          </tr>
+          <tr>
+            <td class="td-name">Open source</td>
+            <td class="no">No</td>
+            <td class="yes">Yes (MIT)</td>
+            <td class="yes">Yes (Apache)</td>
+            <td class="yes">Yes (MIT)</td>
+          </tr>
+          <tr>
+            <td class="td-name">Research / RL training</td>
+            <td class="no">No</td>
+            <td class="no">No</td>
+            <td class="no">No</td>
+            <td class="yes">Atropos · trajectory export</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 5: WHAT THIS MEANS -->
+  <section class="section fade-in">
+    <div class="section-label">Perspective</div>
+    <h2>The Three Tensions <span class="grad-teal">Driving Everything</span></h2>
+    <p>
+      Beneath the product names, three fundamental tensions are shaping how this space evolves. Understanding them is more useful than tracking any single release.
+    </p>
+
+    <div style="display:flex; flex-direction:column; gap:20px; margin:32px 0;">
+
+      <div class="callout callout-teal">
+        <h3 style="color:var(--teal); margin-bottom:8px;">① Capability vs. Safety</h3>
+        <p>OpenClaw proved you can build an extraordinarily capable local agent. The security incident proved that "open and powerful" without sandboxing is dangerous at enterprise scale. NemoClaw is the answer — but the tension between "do more" and "do safely" will never fully resolve. Every new capability creates a new attack surface.</p>
+      </div>
+
+      <div class="callout callout-purple">
+        <h3 style="color:var(--purple); margin-bottom:8px;">② General vs. Specialised</h3>
+        <p>Coding harnesses (Claude Code, Codex) are optimised for one workload. General platforms (OpenClaw, Hermes) try to be good at everything. History suggests specialised systems win early, then general systems win at scale — once the infrastructure matures. We're somewhere in the middle of that curve right now.</p>
+      </div>
+
+      <div class="callout callout-pink">
+        <h3 style="color:var(--pink); margin-bottom:8px;">③ Cloud vs. On-Device</h3>
+        <p>All three current platforms assume a persistent server or desktop machine. The next frontier — running always-on, capable agents on mobile and edge devices with NPU acceleration — is still largely unsolved. The constraints are brutal: smaller context windows, tighter memory budgets, intermittent connectivity, battery awareness. But the user value is enormous.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 6: QUOTE -->
+  <section class="section fade-in">
+    <div class="quote-block">
+      <blockquote>"Mac and Windows are the operating systems for the personal computer. OpenClaw is the operating system for personal AI. This is the moment the industry has been waiting for — the beginning of a new renaissance in software."</blockquote>
+      <div class="quote-attr">— Jensen Huang, CEO NVIDIA · GTC 2026 Keynote</div>
+    </div>
+
+    <p>
+      That framing matters. If OpenClaw is the <code>Linux</code> of personal AI — open, foundational, built upon by everyone — then NemoClaw is the enterprise distribution (think <code>Red Hat</code>), and Hermes is the power-user desktop environment (<code>Arch + custom WM</code>). The model underneath is just the kernel.
+    </p>
+
+    <p>
+      And if that analogy holds, we're in approximately 1995 of this arc. The primitives exist. The ecosystem is forming. The killer applications — the things that will make agentic AI feel as inevitable as the web browser — are still being discovered.
+    </p>
+  </section>
+
+  <!-- TAKEAWAY -->
+  <div class="takeaway fade-in">
+    <div class="section-label" style="justify-content:center; margin-bottom:16px;">Bottom Line</div>
+    <h2>The Model Is the Engine.<br><span class="grad-teal">The Harness Is the Car.</span></h2>
+    <p>
+      OpenClaw established the platform. NemoClaw made it enterprise-safe. Hermes made it personal and self-improving. The coding harnesses showed what a specialised, well-engineered scaffold can do to any model. The next decade of AI progress will be written at this layer — not in the transformer architecture itself.
+    </p>
+    <div style="margin-top:24px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+      <span class="tag-pill tag-teal">Agents &gt; Models</span>
+      <span class="tag-pill tag-purple">Harness = Differentiator</span>
+      <span class="tag-pill tag-pink">Edge is the Frontier</span>
+    </div>
+  </div>
+
+</div><!-- /wrap -->
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Written by <a href="https://prateeksinghphd.in">Prateek Singh,PhD</a></p>
+    <p style="margin-top:8px;">&nbsp;·&nbsp; <a href="https://prateeksinghphd.in/blog">Blog</a> &nbsp;·&nbsp; LinkedIn</p>
+  </div>
+</footer>
+
+<script>
+  // Reading progress
+  window.addEventListener('scroll', () => {
+    const el = document.documentElement;
+    const pct = (el.scrollTop / (el.scrollHeight - el.clientHeight)) * 100;
+    document.getElementById('progress-bar').style.width = pct + '%';
+  });
+
+  // Fade-in on scroll
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

@@ -427,6 +427,7 @@
     .post-card[data-cat="architecture"]::after { background: var(--accent); }
     .post-card[data-cat="compression"]::after { background: var(--accent2); }
     .post-card[data-cat="rag"]::after { background: var(--accent4); }
+    .post-card[data-cat="agents"]::after { background: var(--accent3); }
     .post-card:hover { background: var(--surface2); }
     .post-card:hover::after { transform: scaleX(1); }
 
@@ -441,6 +442,7 @@
     .post-cat.architecture { color: var(--accent); }
     .post-cat.compression { color: var(--accent2); }
     .post-cat.rag { color: var(--accent4); }
+    .post-cat.agents { color: var(--accent3); }
 
     .post-title {
       font-family: 'Playfair Display', serif;
@@ -685,7 +687,7 @@
       <h1 class="page-title" id="hero-title">Technical<br>Writing</h1>
       <p class="page-subtitle" id="hero-subtitle">Deep dives into LLMs, quantization, on-device AI, inference runtimes, and digital health — written for engineers who want the full picture.</p>
     </div>
-    <div class="hero-count">14</div>
+    <div class="hero-count">15</div>
   </div>
 
   <!-- FILTER BAR -->
@@ -697,6 +699,7 @@
       <button class="filter-btn" data-filter="architecture" data-color="purple">Architecture</button>
       <button class="filter-btn" data-filter="compression" data-color="pink">Compression</button>
       <button class="filter-btn" data-filter="rag" data-color="orange">RAG &amp; Retrieval</button>
+      <button class="filter-btn" data-filter="agents" data-color="teal">Agents</button>
     </div>
     <div class="filter-inner" id="fin-filters" style="display:none;">
       <span class="filter-label">Filter:</span>
@@ -739,7 +742,24 @@
         </div>
       </a>
 
-      <!-- ALL POSTS GRID -->
+      <a href="agentic.html" class="featured-post" data-cat="agents" style="border-top: none; margin-top: 1px;">
+        <div class="featured-visual">
+          <div class="featured-visual-bg" style="background: radial-gradient(ellipse 80% 80% at 50% 50%, rgba(0,217,180,.13) 0%, rgba(124,107,255,.09) 50%, transparent 100%);"></div>
+          <div class="featured-visual-icon" style="color:var(--accent3); font-size:5rem; letter-spacing:-0.03em;">🤖</div>
+          <span class="featured-badge" style="background:rgba(0,217,180,.1); color:var(--accent3); border-color:rgba(0,217,180,.3);">New · Apr 2026</span>
+        </div>
+        <div class="featured-content">
+          <div class="featured-content-top">
+            <div class="featured-tag" style="color:var(--accent3);">Agents &amp; Harnesses</div>
+            <div class="featured-title">The Agent Wars — OpenClaw, NemoClaw, Hermes &amp; the New Agentic Stack</div>
+            <div class="featured-excerpt">From a single LLM answering questions to always-on agents that act, remember, and evolve — the past six months have redrawn what "AI" means in practice. A deep dive into the six pillars of coding harnesses, the OpenClaw ecosystem, NVIDIA's NemoClaw, and Hermes Agent.</div>
+          </div>
+          <div class="featured-footer">
+            <span class="featured-date">Apr 04, 2026</span>
+            <span class="read-more">Read Article <i class="fas fa-arrow-right"></i></span>
+          </div>
+        </div>
+      </a>
       <div class="section-divider">
         <span class="section-divider-label">All Posts</span>
         <div class="section-divider-line"></div>
@@ -747,7 +767,16 @@
 
       <div class="blog-grid" id="blog-grid">
 
-        <!-- TurboQuant -->
+        <!-- Agentic -->
+        <a href="agentic.html" class="post-card" data-cat="agents">
+          <div class="post-cat foundations">Agents</div>
+          <div class="post-title">The Agent Wars: OpenClaw, NemoClaw &amp; Hermes<span class="new-badge">New</span></div>
+          <div class="post-excerpt">OpenClaw became the OS for personal AI. NemoClaw made it enterprise-safe. Hermes made it evolve. Here's the full agentic stack, explained.</div>
+          <div class="post-footer">
+            <span class="post-date">Apr 04, 2026</span>
+            <span class="post-arrow">↗</span>
+          </div>
+        </a>
         <a href="gemma4-blog.html" class="post-card" data-cat="compression">
           <div class="post-cat compression">Architecture</div>
           <div class="post-title">Gemma4<span class="new-badge">New</span></div>
