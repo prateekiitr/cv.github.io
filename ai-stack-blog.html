@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>The Modern AI Stack, Explained | Prateek Singh</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg:       #0d0d12;
+      --bg-card:  #13131a;
+      --bg-card2: #1a1a24;
+      --teal:     #00d9b4;
+      --purple:   #7c6bff;
+      --pink:     #ff6b9d;
+      --orange:   #ffb347;
+      --blue:     #50a0ff;
+      --text:     #e2e2ef;
+      --muted:    #8888aa;
+      --border:   rgba(255,255,255,0.07);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg) !important;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 17px; line-height: 1.75; min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    .site-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.4rem 2.5rem; border-bottom: 1px solid var(--border);
+      position: sticky; top: 0;
+      background: rgba(13,13,18,0.92) !important;
+      backdrop-filter: blur(12px); z-index: 100;
+    }
+    .site-logo { font-family: 'Playfair Display', serif; font-weight: 900; font-size: 1.15rem; color: var(--teal); text-decoration: none; letter-spacing: 0.02em; }
+    .site-nav a { color: var(--muted); text-decoration: none; font-size: 0.875rem; font-weight: 500; margin-left: 1.8rem; transition: color 0.2s; }
+    .site-nav a:hover { color: var(--teal); }
+
+    /* ── BACK BUTTON ── */
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
+      font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em;
+      color: var(--muted); text-decoration: none;
+      padding: 0.5em 1em; border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      transition: color 0.2s, border-color 0.2s, background 0.2s;
+      margin-bottom: 2rem; margin-top: 3.5rem;
+      display: inline-flex;
+    }
+    .back-btn:hover { color: var(--teal); border-color: rgba(0,217,180,0.35); background: rgba(0,217,180,0.06); text-decoration: none; }
+    .back-btn::before { content: '←'; font-size: 0.9rem; }
+
+    /* ── HERO ── */
+    .hero { max-width: 820px; margin: 0 auto; padding: 5rem 2rem 3.5rem; animation: fadeUp 0.6s ease both; }
+    .hero-meta { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.6rem; flex-wrap: wrap; }
+    .tag {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase; padding: 0.3em 0.85em; border-radius: 20px;
+      background: rgba(0,217,180,0.12); color: var(--teal); border: 1px solid rgba(0,217,180,0.25);
+    }
+    .tag.purple { background: rgba(124,107,255,0.12); color: var(--purple); border-color: rgba(124,107,255,0.25); }
+    .tag.orange { background: rgba(255,179,71,0.12);  color: var(--orange); border-color: rgba(255,179,71,0.25); }
+    .tag.pink   { background: rgba(255,107,157,0.12); color: var(--pink);   border-color: rgba(255,107,157,0.25); }
+    .hero-date  { font-size: 0.8rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+    .hero h1 { font-family: 'Playfair Display', serif; font-weight: 900; font-size: clamp(2.2rem, 5vw, 3.4rem); line-height: 1.15; color: #fff; margin-bottom: 1.2rem; letter-spacing: -0.01em; }
+    .hero h1 em { font-style: italic; color: var(--teal); }
+    .hero-subtitle { font-size: 1.15rem; color: var(--muted); font-weight: 300; max-width: 640px; line-height: 1.7; }
+
+    /* ── DIVIDER ── */
+    .divider { max-width: 820px; margin: 0 auto 2.5rem; padding: 0 2rem; height: 1px; background: var(--border); }
+
+    /* ── ARTICLE ── */
+    .article { max-width: 820px; margin: 0 auto; padding: 0 2rem 6rem; animation: fadeUp 0.7s ease 0.1s both; }
+    .article h2 { font-family: 'Playfair Display', serif; font-size: 1.75rem; font-weight: 700; color: #fff; margin: 3.2rem 0 1rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--border); }
+    .article h3 { font-family: 'DM Sans', sans-serif; font-size: 1.1rem; font-weight: 600; color: var(--teal); margin: 2rem 0 0.7rem; letter-spacing: 0.01em; }
+    .article p  { margin-bottom: 1.3rem; color: #c8c8e0; }
+    .article strong { color: var(--text); font-weight: 600; }
+    .article a  { color: var(--teal); text-decoration: none; }
+    .article a:hover { text-decoration: underline; }
+
+    /* ── SECTION ACCENT ── */
+    .section-accent { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; }
+    .section-accent .accent-line { width: 28px; height: 2px; background: var(--teal); border-radius: 2px; }
+    .section-accent span { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--teal); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; }
+
+    /* ── CALLOUT ── */
+    .callout { background: var(--bg-card); border-left: 3px solid var(--teal); border-radius: 0 12px 12px 0; padding: 1.2rem 1.5rem; margin: 2rem 0; font-size: 0.95rem; color: #b0b0cc; line-height: 1.7; }
+    .callout.purple { border-color: var(--purple); }
+    .callout.orange { border-color: var(--orange); }
+    .callout.pink   { border-color: var(--pink); }
+
+    /* ── PIPELINE STEPS ── */
+    .pipeline { display: flex; flex-direction: column; gap: 0; margin: 2.5rem 0; }
+    .pipeline-step { display: flex; align-items: flex-start; gap: 1.2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 0; padding: 1.4rem 1.5rem; position: relative; transition: border-color 0.2s; }
+    .pipeline-step:first-child { border-radius: 14px 14px 0 0; }
+    .pipeline-step:last-child  { border-radius: 0 0 14px 14px; }
+    .pipeline-step:not(:last-child) { border-bottom: none; }
+    .pipeline-step:hover { border-color: rgba(0,217,180,0.25); z-index: 1; }
+    .step-num { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; font-weight: 600; min-width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 8px; margin-top: 0.15rem; flex-shrink: 0; }
+    .step-num.teal   { background: rgba(0,217,180,0.15);  color: var(--teal); }
+    .step-num.purple { background: rgba(124,107,255,0.15); color: var(--purple); }
+    .step-num.orange { background: rgba(255,179,71,0.15);  color: var(--orange); }
+    .step-num.pink   { background: rgba(255,107,157,0.15); color: var(--pink); }
+    .step-num.blue   { background: rgba(80,160,255,0.15);  color: var(--blue); }
+    .step-body { flex: 1; }
+    .step-title { font-weight: 600; font-size: 1rem; color: var(--text); margin-bottom: 0.3rem; }
+    .step-desc  { font-size: 0.88rem; color: var(--muted); line-height: 1.6; }
+
+    /* ── CONCEPT CARDS ── */
+    .concept-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin: 2.5rem 0; }
+    .concept-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem 1.3rem; position: relative; overflow: hidden; transition: transform 0.2s, border-color 0.25s; }
+    .concept-card:hover { transform: translateY(-2px); border-color: rgba(0,217,180,0.25); }
+    .concept-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 14px 14px 0 0; }
+    .concept-card.c1::before { background: var(--teal); }
+    .concept-card.c2::before { background: var(--purple); }
+    .concept-card.c3::before { background: var(--orange); }
+    .concept-card.c4::before { background: var(--pink); }
+    .concept-card.c5::before { background: var(--blue); }
+    .concept-icon  { font-size: 1.5rem; margin-bottom: 0.75rem; }
+    .concept-name  { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin-bottom: 0.4rem; }
+    .concept-title { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.1rem; color: #fff; margin-bottom: 0.5rem; }
+    .concept-desc  { font-size: 0.83rem; color: var(--muted); line-height: 1.55; }
+
+    /* ── HIGHLIGHT BOX ── */
+    .highlight-box { background: linear-gradient(135deg, rgba(0,217,180,0.08), rgba(124,107,255,0.08)); border: 1px solid rgba(0,217,180,0.2); border-radius: 16px; padding: 2rem; margin: 2.5rem 0; }
+    .highlight-box p { margin-bottom: 0; }
+
+    /* ── ANALOGY BOX ── */
+    .analogy { background: var(--bg-card2); border: 1px dashed rgba(124,107,255,0.3); border-radius: 12px; padding: 1.4rem 1.5rem; margin: 1.5rem 0; }
+    .analogy-label { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--purple); margin-bottom: 0.5rem; font-weight: 600; }
+    .analogy p { color: #b0b0cc; margin: 0; font-size: 0.93rem; }
+
+    /* ── CODE ── */
+    code { font-family: 'JetBrains Mono', monospace; font-size: 0.82em; background: rgba(0,217,180,0.1); color: var(--teal); border-radius: 5px; padding: 0.15em 0.5em; }
+    pre { background: var(--bg-card2); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; overflow-x: auto; margin: 1.5rem 0; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.7; color: #c8c8e0; }
+    pre .kw  { color: var(--purple); }
+    pre .fn  { color: var(--teal); }
+    pre .str { color: var(--orange); }
+    pre .cmt { color: var(--muted); font-style: italic; }
+
+    /* ── CHIP LIST ── */
+    .chip-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0; }
+    .chip { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; padding: 0.3em 0.75em; background: var(--bg-card2); border: 1px solid var(--border); border-radius: 6px; color: var(--muted); }
+
+    /* ═══════════════════════════════════════════════════════
+       MULTI-AGENT ARCHITECTURE DIAGRAM
+    ═══════════════════════════════════════════════════════ */
+    .diagram-wrapper {
+      margin: 2.5rem 0;
+      background: #0a0a10;
+      border: 1px solid rgba(124,107,255,0.25);
+      border-radius: 20px;
+      padding: 2.5rem 2rem;
+      overflow: hidden;
+      position: relative;
+    }
+    .diagram-wrapper::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(124,107,255,0.07) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .diagram-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem; text-transform: uppercase;
+      letter-spacing: 0.12em; color: var(--purple);
+      text-align: center; margin-bottom: 2rem; font-weight: 600;
+    }
+
+    /* grid layout: user | orchestrator | agents+memory | tools */
+    .diagram-grid {
+      display: grid;
+      grid-template-columns: 60px 100px 1fr 130px;
+      grid-template-rows: auto;
+      gap: 0;
+      align-items: center;
+      position: relative;
+      min-height: 360px;
+    }
+
+    /* ── node base ── */
+    .d-node {
+      display: flex; flex-direction: column;
+      align-items: center; text-align: center;
+      position: relative;
+    }
+    .d-icon {
+      width: 48px; height: 48px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem;
+      border: 1px solid;
+      margin-bottom: 0.5rem;
+      position: relative;
+    }
+    .d-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem; color: var(--muted);
+      line-height: 1.3; max-width: 72px;
+    }
+    .d-label strong { color: var(--text); display: block; font-size: 0.7rem; margin-bottom: 0.1rem; }
+
+    /* ── user ── */
+    .d-user { grid-column: 1; grid-row: 2; }
+    .d-user .d-icon { background: rgba(0,217,180,0.1); border-color: rgba(0,217,180,0.3); color: var(--teal); }
+
+    /* ── orchestrator ── */
+    .d-orch { grid-column: 2; grid-row: 2; }
+    .d-orch .d-icon { background: rgba(124,107,255,0.12); border-color: rgba(124,107,255,0.4); color: var(--purple); width: 56px; height: 56px; border-radius: 50%; font-size: 1.5rem; }
+
+    /* ── agents panel ── */
+    .d-agents-panel {
+      grid-column: 3; grid-row: 1 / 4;
+      border: 1.5px solid rgba(124,107,255,0.35);
+      border-radius: 18px; padding: 1rem 0.75rem;
+      background: rgba(124,107,255,0.04);
+      display: flex; flex-direction: column;
+      gap: 0.8rem; position: relative;
+      margin: 0 1rem;
+    }
+    .agents-panel-label {
+      position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+      background: #0a0a10;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--purple); padding: 0 0.5rem; white-space: nowrap;
+      display: flex; align-items: center; gap: 0.4rem;
+    }
+
+    /* individual agent cards */
+    .d-agent {
+      background: var(--bg-card2);
+      border-radius: 12px;
+      padding: 0.7rem 0.85rem;
+      display: flex; align-items: center; gap: 0.65rem;
+      border: 1px solid var(--border);
+      transition: border-color 0.25s, background 0.25s;
+      cursor: default;
+    }
+    .d-agent:hover { border-color: rgba(0,217,180,0.3); background: rgba(0,217,180,0.04); }
+    .d-agent-icon { font-size: 1.2rem; flex-shrink: 0; }
+    .d-agent-body { flex: 1; }
+    .d-agent-name {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+      font-weight: 600; color: var(--text); margin-bottom: 0.2rem;
+    }
+    .d-agent-desc { font-size: 0.68rem; color: var(--muted); line-height: 1.4; }
+
+    /* ── memory ── */
+    .d-memory { grid-column: 4; grid-row: 1; }
+    .d-memory .d-icon { background: rgba(80,160,255,0.1); border-color: rgba(80,160,255,0.3); color: var(--blue); width: 44px; height: 44px; font-size: 1.2rem; }
+
+    /* ── tools ── */
+    .d-tools-panel {
+      grid-column: 4; grid-row: 2 / 4;
+      border: 1.5px solid rgba(80,160,255,0.25);
+      border-radius: 14px; padding: 0.85rem 0.75rem;
+      background: rgba(80,160,255,0.03);
+      position: relative; margin-top: 0.5rem;
+    }
+    .tools-panel-label {
+      position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+      background: #0a0a10;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.07em;
+      color: var(--blue); padding: 0 0.45rem; white-space: nowrap;
+      display: flex; align-items: center; gap: 0.35rem;
+    }
+    .tool-item {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.45rem 0.5rem; border-radius: 8px;
+      margin-bottom: 0.35rem;
+      background: var(--bg-card2); border: 1px solid var(--border);
+      transition: border-color 0.2s;
+    }
+    .tool-item:hover { border-color: rgba(80,160,255,0.3); }
+    .tool-item:last-child { margin-bottom: 0; }
+    .tool-icon { font-size: 0.9rem; }
+    .tool-name { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; color: var(--muted); }
+
+    /* ── SVG ARROWS OVERLAY ── */
+    .diagram-svg {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      overflow: visible;
+    }
+    .arr-main   { stroke: var(--teal);   stroke-width: 1.5; fill: none; stroke-dasharray: none; }
+    .arr-plan   { stroke: var(--purple); stroke-width: 1.5; fill: none; }
+    .arr-verify { stroke: var(--pink);   stroke-width: 1.5; fill: none; }
+    .arr-exec   { stroke: var(--orange); stroke-width: 1.5; fill: none; }
+    .arr-mem    { stroke: var(--blue);   stroke-width: 1.3; fill: none; stroke-dasharray: 4 3; }
+    .arr-tools  { stroke: var(--orange); stroke-width: 1.3; fill: none; stroke-dasharray: 4 3; }
+
+    /* ── FLOW LEGEND ── */
+    .flow-legend {
+      display: flex; flex-wrap: wrap; gap: 0.7rem 1.4rem;
+      margin-top: 1.8rem; padding-top: 1.2rem;
+      border-top: 1px solid var(--border);
+      justify-content: center;
+    }
+    .legend-item {
+      display: flex; align-items: center; gap: 0.4rem;
+      font-size: 0.72rem; color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .legend-line {
+      width: 22px; height: 2px; border-radius: 2px;
+    }
+    .legend-line.dashed { background: repeating-linear-gradient(90deg, currentColor 0, currentColor 4px, transparent 4px, transparent 7px); }
+
+    /* ── FLOW MESSAGES (animated labels on arrows) ── */
+    .flow-labels {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.5rem; margin: 1.5rem 0 0;
+    }
+    .flow-label {
+      background: var(--bg-card);
+      border-radius: 8px; padding: 0.55rem 0.7rem;
+      border-left: 2px solid;
+      font-size: 0.75rem;
+    }
+    .flow-label .fl-msg { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: var(--muted); }
+    .flow-label .fl-from { font-size: 0.65rem; color: var(--muted); margin-top: 0.15rem; }
+    .flow-label.teal-fl  { border-color: var(--teal); }
+    .flow-label.purple-fl{ border-color: var(--purple); }
+    .flow-label.pink-fl  { border-color: var(--pink); }
+    .flow-label.orange-fl{ border-color: var(--orange); }
+    .flow-label.blue-fl  { border-color: var(--blue); }
+
+    /* ── FOOTER ── */
+    .site-footer { border-top: 1px solid var(--border); padding: 2.5rem; text-align: center; font-size: 0.82rem; color: var(--muted); }
+    .site-footer a { color: var(--teal); text-decoration: none; }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .d-orch .d-icon { animation: pulse 3s ease-in-out infinite; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 700px) {
+      .site-header { padding: 1rem 1.25rem; }
+      .site-nav { display: none; }
+      .hero, .article { padding-left: 1.25rem; padding-right: 1.25rem; }
+      .divider { padding: 0 1.25rem; }
+      .hero h1 { font-size: 2rem; }
+      .concept-grid { grid-template-columns: 1fr; }
+      .diagram-grid { grid-template-columns: 1fr; grid-template-rows: auto; gap: 1rem; min-height: unset; }
+      .d-user, .d-orch { grid-column: 1; }
+      .d-agents-panel { grid-column: 1; grid-row: auto; margin: 0; }
+      .d-memory, .d-tools-panel { grid-column: 1; grid-row: auto; }
+      .flow-labels { grid-template-columns: 1fr 1fr; }
+      .diagram-svg { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <a href="/" class="site-logo">Prateek Singh, PhD</a>
+  <nav class="site-nav">
+    <a href="/">Home</a>
+    <a href="/blog">Blog</a>
+    <a href="/research">Research</a>
+    <a href="/contact">Contact</a>
+  </nav>
+</header>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-meta">
+    <span class="tag">AI Infrastructure</span>
+    <span class="tag purple">RAG</span>
+    <span class="tag orange">Agents</span>
+    <span class="tag pink">MCP</span>
+    <span class="hero-date">April 14, 2026</span>
+  </div>
+  <h1>Embeddings, RAG, Agents & MCP —<br/><em>One Stack to Rule Them All</em></h1>
+  <p class="hero-subtitle">
+    You've heard these buzzwords a hundred times. But do you actually know how Embeddings feed Vector DBs, how RAG grounds your agents, and where MCP fits in? Here's the full picture — no fluff.
+  </p>
+</section>
+
+<div class="divider"></div>
+
+<!-- ── ARTICLE ── -->
+<article class="article">
+
+  <a href="/blog" class="back-btn">Back to Blog</a>
+
+  <p>
+    Here's the uncomfortable truth about building AI products in 2026: most teams are shipping on top of infrastructure they neither own nor fully understand. Calls go to OpenAI for embeddings, Pinecone for vector search, Anthropic or Google for generation — and when any one of them hiccups, production goes down with it.
+  </p>
+  <p>
+    But the bigger risk isn't the outages. It's building without a coherent mental model of what each piece actually does. So let's map it out — layer by layer, from raw text all the way to autonomous agents calling your Calendar API.
+  </p>
+
+  <!-- OVERVIEW CARDS -->
+  <div class="concept-grid">
+    <div class="concept-card c1">
+      <div class="concept-icon">🔢</div>
+      <div class="concept-name">Layer 1</div>
+      <div class="concept-title">Embeddings</div>
+      <div class="concept-desc">Turning meaning into numbers. The foundation of semantic AI systems.</div>
+    </div>
+    <div class="concept-card c2">
+      <div class="concept-icon">🗄️</div>
+      <div class="concept-name">Layer 2</div>
+      <div class="concept-title">Vector Databases</div>
+      <div class="concept-desc">Long-term memory for AI — storing and retrieving by meaning, not keywords.</div>
+    </div>
+    <div class="concept-card c3">
+      <div class="concept-icon">🤖</div>
+      <div class="concept-name">Layer 3</div>
+      <div class="concept-title">Agent Orchestration</div>
+      <div class="concept-desc">The reasoning-and-acting loop that elevates AI from chatbot to co-worker.</div>
+    </div>
+    <div class="concept-card c4">
+      <div class="concept-icon">🔍</div>
+      <div class="concept-name">Layer 4</div>
+      <div class="concept-title">RAG</div>
+      <div class="concept-desc">Grounding AI answers in real data instead of parametric guesswork.</div>
+    </div>
+    <div class="concept-card c5">
+      <div class="concept-icon">🔌</div>
+      <div class="concept-name">Layer 5</div>
+      <div class="concept-title">MCP</div>
+      <div class="concept-desc">A universal connector standard — USB-C for AI agents.</div>
+    </div>
+  </div>
+
+  <!-- EMBEDDINGS -->
+  <div class="section-accent"><div class="accent-line"></div><span>Layer 1</span></div>
+  <h2>Embeddings: Your AI Doesn't Read Words — It Reads Coordinates</h2>
+  <p>
+    Before an AI system can do anything useful with your data, it needs to turn language into something it can compute on. That's precisely what <strong>embeddings</strong> do — they transform text (or images, audio, code — almost anything) into a dense list of numbers called a <em>vector</em>. What makes this powerful isn't the numbers themselves, but what they represent: <strong>meaning</strong>.
+  </p>
+  <div class="analogy">
+    <div class="analogy-label">Why this matters</div>
+    <p>Take <em>"write project report"</em> and <em>"draft team summary."</em> Zero words in common — yet an embedding model will position both vectors extremely close together in space, because they describe the same intent. The AI isn't pattern-matching strings; it's navigating a high-dimensional map where <em>geometric closeness equals conceptual similarity</em>.</p>
+  </div>
+  <p>
+    This is also how cross-modal intelligence works. A calendar event, a code snippet, an email thread, and a design mockup can all be projected into the same vector space. Once they share a coordinate system, you can ask questions that cut across all of them — purely by proximity. No keyword matching, no brittle regex, no hand-rolled logic.
+  </p>
+  <div class="callout">
+    <strong>Embeddings are the bedrock.</strong> Every other layer in this stack — vector search, RAG, agent memory — depends on the quality of your embeddings. A weak embedding model upstream degrades everything downstream.
+  </div>
+
+  <!-- VECTOR DBS -->
+  <div class="section-accent"><div class="accent-line"></div><span>Layer 2</span></div>
+  <h2>Vector Databases: Where Embeddings Go to Live (and Be Found)</h2>
+  <p>
+    Generating embeddings is step one. But once you have millions of them, you need a system that can store them and — critically — answer <em>"what's most similar to this?"</em> in under a millisecond. That's the job of a <strong>vector database</strong>. It's purpose-built for one thing that traditional relational databases do terribly: <strong>nearest-neighbor search in high-dimensional space</strong>.
+  </p>
+  <div class="pipeline">
+    <div class="pipeline-step">
+      <div class="step-num teal">1</div>
+      <div class="step-body"><div class="step-title">Embed the query</div><div class="step-desc">The incoming question is passed through the same encoder model used during ingestion — producing a query vector in the same space as the stored data.</div></div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num purple">2</div>
+      <div class="step-body"><div class="step-title">Approximate nearest-neighbor search</div><div class="step-desc">ANN algorithms (HNSW, IVF, etc.) scan the index to find the K vectors geometrically closest to the query — far faster than exhaustive search.</div></div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num orange">3</div>
+      <div class="step-body"><div class="step-title">Return ranked matches</div><div class="step-desc">The corresponding source documents, tasks, or notes are surfaced and ranked by semantic similarity — regardless of whether a single keyword matched.</div></div>
+    </div>
+  </div>
+  <div class="chip-list">
+    <span class="chip">Pinecone</span><span class="chip">Weaviate</span><span class="chip">Milvus</span>
+    <span class="chip">FAISS</span><span class="chip">Qdrant</span><span class="chip">Chroma</span><span class="chip">pgvector</span>
+  </div>
+  <div class="callout">
+    <strong>Think of it as the AI's long-term memory.</strong> The LLM itself forgets everything between calls — it's inherently stateless. The vector database is what gives your AI system a persistent, queryable memory that grows with your data.
+  </div>
+
+  <!-- AGENT ORCHESTRATION -->
+  <div class="section-accent"><div class="accent-line"></div><span>Layer 3</span></div>
+  <h2>Agent Orchestration: When Your AI Stops Talking and Starts Doing</h2>
+  <p>
+    Having memory is great. But the real unlock is when an AI system stops being reactive — waiting for prompts — and starts being <em>agentic</em>: perceiving a high-level goal, decomposing it into steps, calling tools, and course-correcting when things go sideways. That's <strong>agent orchestration</strong>.
+  </p>
+  <p>
+    In practice, no single agent handles everything. Production systems split responsibility across specialized roles that coordinate through a shared state layer — typically backed by a Vector DB. The architecture below captures exactly how this plays out:
+  </p>
+
+  <!-- ═══ MULTI-AGENT DIAGRAM ═══ -->
+  <div class="diagram-wrapper">
+    <div class="diagram-title">🤖 Multi-Agent Orchestration Architecture</div>
+
+    <div class="diagram-grid" id="diagramGrid">
+
+      <!-- USER -->
+      <div class="d-node d-user">
+        <div class="d-icon">👤</div>
+        <div class="d-label"><strong>User</strong>makes a request</div>
+      </div>
+
+      <!-- ORCHESTRATOR -->
+      <div class="d-node d-orch">
+        <div class="d-icon">⚙️</div>
+        <div class="d-label"><strong>Orchestrator</strong>Coordinator</div>
+      </div>
+
+      <!-- AGENTS PANEL -->
+      <div class="d-agents-panel">
+        <div class="agents-panel-label">🤖 AGENTS</div>
+
+        <div class="d-agent">
+          <div class="d-agent-icon">📋</div>
+          <div class="d-agent-body">
+            <div class="d-agent-name">Planner Agent</div>
+            <div class="d-agent-desc">Receives goal → builds step-by-step plan. Reads &amp; writes shared memory.</div>
+          </div>
+        </div>
+
+        <div class="d-agent">
+          <div class="d-agent-icon">✅</div>
+          <div class="d-agent-body">
+            <div class="d-agent-name">Verifier Agent</div>
+            <div class="d-agent-desc">Validates task results against acceptance criteria before final delivery.</div>
+          </div>
+        </div>
+
+        <div class="d-agent">
+          <div class="d-agent-icon">⚡</div>
+          <div class="d-agent-body">
+            <div class="d-agent-name">Executor Agent</div>
+            <div class="d-agent-desc">Runs the actual tasks — calls external APIs, updates task history.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SHARED MEMORY -->
+      <div class="d-node d-memory" style="grid-column:4;grid-row:1;align-self:start;padding-top:0.5rem;">
+        <div class="d-icon">🗄️</div>
+        <div class="d-label"><strong>Shared Memory</strong>Vector DB</div>
+      </div>
+
+      <!-- EXTERNAL TOOLS -->
+      <div class="d-tools-panel" style="grid-column:4;grid-row:2/4;align-self:start;margin-top:0.75rem;">
+        <div class="tools-panel-label">🔧 EXTERNAL TOOLS/APIS</div>
+        <div class="tool-item"><span class="tool-icon">📅</span><span class="tool-name">Calendar API</span></div>
+        <div class="tool-item"><span class="tool-icon">✉️</span><span class="tool-name">Email API</span></div>
+        <div class="tool-item"><span class="tool-icon">📁</span><span class="tool-name">Project Mgmt API</span></div>
+      </div>
+
+    </div><!-- /diagram-grid -->
+
+    <!-- FLOW MESSAGE LABELS -->
+    <div class="flow-labels">
+      <div class="flow-label teal-fl">
+        <div class="fl-msg">request →</div>
+        <div class="fl-from">User → Orchestrator</div>
+      </div>
+      <div class="flow-label purple-fl">
+        <div class="fl-msg">delegate goal →</div>
+        <div class="fl-from">Orchestrator → Planner</div>
+      </div>
+      <div class="flow-label purple-fl">
+        <div class="fl-msg">plan →</div>
+        <div class="fl-from">Planner → Orchestrator</div>
+      </div>
+      <div class="flow-label pink-fl">
+        <div class="fl-msg">verify results →</div>
+        <div class="fl-from">Orchestrator → Verifier</div>
+      </div>
+      <div class="flow-label orange-fl">
+        <div class="fl-msg">execute tasks →</div>
+        <div class="fl-from">Orchestrator → Executor</div>
+      </div>
+      <div class="flow-label blue-fl">
+        <div class="fl-msg">store/retrieve context</div>
+        <div class="fl-from">Agents ↔ Vector DB</div>
+      </div>
+      <div class="flow-label orange-fl">
+        <div class="fl-msg">call tools →</div>
+        <div class="fl-from">Executor → External APIs</div>
+      </div>
+      <div class="flow-label blue-fl">
+        <div class="fl-msg">update task history</div>
+        <div class="fl-from">Executor → Vector DB</div>
+      </div>
+      <div class="flow-label teal-fl">
+        <div class="fl-msg">← deliver final output</div>
+        <div class="fl-from">Orchestrator → User</div>
+      </div>
+    </div>
+
+    <!-- LEGEND -->
+    <div class="flow-legend">
+      <div class="legend-item"><div class="legend-line" style="background:var(--teal)"></div>User flow</div>
+      <div class="legend-item"><div class="legend-line" style="background:var(--purple)"></div>Planning</div>
+      <div class="legend-item"><div class="legend-line" style="background:var(--pink)"></div>Verification</div>
+      <div class="legend-item"><div class="legend-line" style="background:var(--orange)"></div>Execution</div>
+      <div class="legend-item"><div class="legend-line dashed" style="color:var(--blue)"></div>Memory I/O</div>
+    </div>
+  </div><!-- /diagram-wrapper -->
+
+  <h3>Three Agents, One Goal, Zero Confusion</h3>
+  <p>
+    The <strong>Orchestrator</strong> is the traffic controller — it never touches external APIs directly. Its entire job is decomposing the user's intent and routing work to the right specialist. Three agents handle the actual work:
+  </p>
+  <div class="pipeline">
+    <div class="pipeline-step">
+      <div class="step-num purple">📋</div>
+      <div class="step-body">
+        <div class="step-title">Planner Agent</div>
+        <div class="step-desc">Gets the high-level goal, pulls relevant history from the shared Vector DB, and returns a sequenced task list back to the Orchestrator. Its reasoning is written back to shared memory — so the Executor doesn't need to re-derive context from scratch.</div>
+      </div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num orange">⚡</div>
+      <div class="step-body">
+        <div class="step-title">Executor Agent</div>
+        <div class="step-desc">The hands of the system. Picks up individual tasks, fires the necessary external API calls — Calendar, Email, Project Management — logs each result to the Vector DB as task history, and surfaces outputs for the next stage.</div>
+      </div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num pink">✅</div>
+      <div class="step-body">
+        <div class="step-title">Verifier Agent</div>
+        <div class="step-desc">The quality gate. Cross-references the Executor's outputs against the original goal criteria. A failure signal sends the loop back to retry; a pass signal releases the final response to the user.</div>
+      </div>
+    </div>
+  </div>
+
+  <p>
+    At the individual agent level, the <strong>ReAct</strong> (Reason + Act) pattern governs behaviour — each agent alternates between generating a reasoning trace and taking a concrete action, observing the result before deciding the next step. LangGraph, CrewAI, and AutoGen are the popular frameworks managing this coordination layer in production.
+  </p>
+
+  <div class="callout purple">
+    <strong>The Vector DB pulling double duty.</strong> It's not just the retrieval layer for RAG — it's also the shared scratchpad that keeps agents coordinated without tight coupling. The Planner writes its task decomposition, the Executor appends results, the Verifier reads both. Each agent stays focused on its role while remaining in sync through one common state layer.
+  </div>
+
+  <!-- RAG -->
+  <div class="section-accent"><div class="accent-line"></div><span>Layer 4</span></div>
+  <h2>RAG: Stop Letting Your LLM Hallucinate — Feed It Real Data</h2>
+  <p>
+    Every LLM has a hard knowledge boundary: training cutoff date, and whatever fits in the context window. Ask it about last Tuesday's design review and it will make something up — convincingly. <strong>Retrieval-Augmented Generation (RAG)</strong> closes this gap by wiring the model to your actual data at inference time, not at training time.
+  </p>
+  <p>
+    The architecture is a two-system handoff:
+  </p>
+  <div class="highlight-box">
+    <p>
+      <strong>Retrieve first</strong> — use embeddings + a Vector DB to pull the most semantically relevant chunks of your real data for the given query.<br/><br/>
+      <strong>Generate second</strong> — pass those chunks as grounding context into the LLM, which synthesizes a response from evidence rather than estimation.<br/><br/>
+      The outcome: answers that are <em>tethered to your actual data</em>, not the model's probabilistic reconstruction of it.
+    </p>
+  </div>
+  <div class="pipeline">
+    <div class="pipeline-step">
+      <div class="step-num teal">1</div>
+      <div class="step-body"><div class="step-title">Query arrives</div><div class="step-desc">"What action items are still open from the last design review?"</div></div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num purple">2</div>
+      <div class="step-body"><div class="step-title">Embed the query → search the Vector DB</div><div class="step-desc">The query becomes a vector; the top-K closest chunks are pulled from your indexed meeting notes, documents, or task history.</div></div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num orange">3</div>
+      <div class="step-body"><div class="step-title">Inject retrieved chunks into the prompt</div><div class="step-desc">The retrieved context is prepended to the LLM prompt alongside the original question — giving the model real evidence to work from.</div></div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num pink">4</div>
+      <div class="step-body"><div class="step-title">Model generates a grounded response</div><div class="step-desc">The answer is synthesized from your documents — not the model's weights. Hallucination rate drops sharply because there's nothing to invent.</div></div>
+    </div>
+  </div>
+  <div class="callout orange">
+    <strong>RAG doesn't make LLMs infallible</strong> — a model can still misread or misattribute retrieved content. But it eliminates the worst failure mode: confident fabrication from zero evidence. For production AI, that's a non-negotiable improvement.
+  </div>
+
+  <!-- MCP -->
+  <div class="section-accent"><div class="accent-line"></div><span>Layer 5</span></div>
+  <h2>MCP: One Protocol to Connect Every Tool Your Agent Will Ever Need</h2>
+  <p>
+    The Executor Agent in the architecture above needs to reach Calendar, Email, and Project Management APIs. Every new tool means a new custom integration — different auth flows, different schemas, different error handling. It compounds fast.
+  </p>
+  <p>
+    <strong>Model Context Protocol (MCP)</strong> is the emerging open standard that cuts through this. It defines a single, consistent interface through which any AI agent can discover and invoke any tool that implements the protocol — without bespoke connector code per service. The analogy that sticks: MCP is USB-C for your agent's toolbox. One port, every peripheral.
+  </p>
+  <pre><span class="cmt"># Example: registering a tool server under MCP</span>
+<span class="kw">from</span> mcp <span class="kw">import</span> <span class="fn">MCPServer</span>, <span class="fn">tool</span>
+
+server = <span class="fn">MCPServer</span>(<span class="str">"calendar-integration"</span>)
+
+<span class="kw">@</span><span class="fn">tool</span>(server)
+<span class="kw">def</span> <span class="fn">get_today_events</span>():
+    <span class="str">"""Return today's calendar events."""</span>
+    <span class="kw">return</span> calendar_api.<span class="fn">list_events</span>(date=<span class="str">"today"</span>)
+
+<span class="cmt"># Any MCP-compatible agent can now discover and call this</span>
+<span class="cmt"># without knowing anything about the underlying Calendar API</span></pre>
+
+  <!-- OWNERSHIP -->
+  <div class="section-accent"><div class="accent-line"></div><span>The Hard Question</span></div>
+  <h2>Your Embeddings Are on Someone Else's Server. Is That Okay?</h2>
+  <p>
+    Now that the five layers are clear, here's the question most architecture talks quietly skip: <strong>who actually controls all of this?</strong> For a large majority of shipping teams, the answer in 2026 is still: a handful of cloud vendors do.
+  </p>
+  <p>
+    Embedding generation runs through OpenAI or Cohere. Vector storage lives on Pinecone's managed cloud. Generation goes to Anthropic or Google. Each one is a hard external dependency — and when any of them goes down, your product follows. You have no SLA leverage, no visibility into root cause, and no ETA on recovery.
+  </p>
+  <div class="callout purple">
+    <strong>The case for an in-house stack:</strong> A growing number of engineering orgs are reclaiming control — running models on private GPU clusters, self-hosting FAISS or Qdrant for vector search, keeping embedding pipelines fully internal. The return on investment isn't just uptime. It's data sovereignty, cost predictability, and the ability to tune every layer for your specific use case.
+  </div>
+  <p>
+    The tradeoff is real — self-hosting means owning the operational burden. But for regulated industries, latency-critical applications, or any product where user data sensitivity is high, the case for a more sovereign stack strengthens considerably. At minimum, know which layers you can swap out, and have a fallback path mapped before the next outage catches you off guard.
+  </p>
+
+  <!-- RECAP -->
+  <div class="section-accent"><div class="accent-line"></div><span>Recap</span></div>
+  <h2>From Raw Text to Autonomous Action — The Full Stack in Five Layers</h2>
+  <p>Buzzwords demystified. Here's the clean mental model:</p>
+  <div class="pipeline">
+    <div class="pipeline-step">
+      <div class="step-num teal">1</div>
+      <div class="step-body"><div class="step-title">Embeddings</div><div class="step-desc">Transform text, images, audio, and code into vectors that encode semantic meaning. The primitive layer — without this, everything else falls apart.</div></div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num purple">2</div>
+      <div class="step-body"><div class="step-title">Vector Databases</div><div class="step-desc">Persistent, queryable memory. Store millions of embeddings and return the most semantically relevant ones in milliseconds via ANN search.</div></div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num orange">3</div>
+      <div class="step-body"><div class="step-title">Agent Orchestration</div><div class="step-desc">A coordinator + specialized agents (Planner, Executor, Verifier) that collaborate through shared Vector DB state to take a goal from intent to completed action.</div></div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num pink">4</div>
+      <div class="step-body"><div class="step-title">RAG</div><div class="step-desc">Retrieves relevant chunks from your real data at inference time, grounds the LLM's response in evidence, and cuts hallucinations at the root.</div></div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num blue">5</div>
+      <div class="step-body"><div class="step-title">MCP</div><div class="step-desc">A universal tool interface. Any MCP-compliant agent can discover and call any MCP-compliant service — one standard, every integration, no custom connectors.</div></div>
+    </div>
+  </div>
+  <p>
+    These five layers aren't isolated modules — they stack. Embeddings feed the Vector DB. The Vector DB powers both RAG and agent memory. RAG grounds your LLM's outputs. MCP connects your agents to the real world. Pull any layer out and the whole thing degrades. <strong>Understand the stack. Own as much of it as you can. Build for the outage before it happens.</strong>
+  </p>
+  <div class="callout">
+    <strong>Go deeper:</strong><br/>
+    RAG — Lewis et al., 2020: <em>Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks</em> ·
+    ReAct — Yao et al., 2022: <em>Synergizing Reasoning and Acting in Language Models</em> ·
+    MCP spec: <a href="https://modelcontextprotocol.io" target="_blank">modelcontextprotocol.io</a> ·
+    FAISS (self-hosted vector search): <a href="https://github.com/facebookresearch/faiss" target="_blank">github.com/facebookresearch/faiss</a>
+  </div>
+
+</article>
+
+<footer class="site-footer">
+  <p>Written by <strong>Prateek Singh</strong> · Senior Manager, GenAI &amp; Digital Health AI · Samsung Research Institute Noida</p>
+  <p style="margin-top:0.5rem;"><a href="https://prateeksinghphd.in">prateeksinghphd.in</a></p>
+</footer>
+
+</body>
+</html>

@@ -760,12 +760,114 @@
           </div>
         </div>
       </a>
+
+      <!-- ★ AI STACK FEATURED — HIGHLIGHTED ★ -->
+      <a href="ai-stack-blog.html" class="featured-post" data-cat="agents" style="border-top: none; margin-top: 1px; outline: 1.5px solid rgba(0,217,180,0.35); outline-offset: -1px; position:relative;">
+        <!-- glow pulse ring -->
+        <div style="position:absolute;inset:0;pointer-events:none;z-index:3;border-radius:0;">
+          <div style="
+            position:absolute;inset:0;
+            background: linear-gradient(120deg, rgba(0,217,180,0.06) 0%, rgba(124,107,255,0.05) 50%, rgba(255,107,157,0.04) 100%);
+            animation: hlPulse 3s ease-in-out infinite alternate;
+          "></div>
+        </div>
+        <style>
+          @keyframes hlPulse {
+            from { opacity: 0.6; }
+            to   { opacity: 1; }
+          }
+          .stack-highlight-badge {
+            position:absolute; top:1.5rem; left:1.5rem;
+            font-family:'JetBrains Mono',monospace;
+            font-size:.54rem; letter-spacing:.14em; text-transform:uppercase;
+            padding:.28rem .7rem;
+            background: linear-gradient(90deg,rgba(0,217,180,.18),rgba(124,107,255,.18));
+            color:#fff; border:1px solid rgba(0,217,180,.45);
+            border-radius:2px; z-index:4;
+            display:flex; align-items:center; gap:.45rem;
+          }
+          .stack-highlight-badge::before {
+            content:''; display:inline-block;
+            width:6px; height:6px; border-radius:50%;
+            background:var(--accent3);
+            box-shadow:0 0 6px var(--accent3);
+            animation: dotPulse 1.4s ease-in-out infinite;
+          }
+          @keyframes dotPulse {
+            0%,100%{opacity:1;transform:scale(1);}
+            50%{opacity:.4;transform:scale(.7);}
+          }
+        </style>
+        <div class="featured-visual" style="position:relative;">
+          <div class="featured-visual-bg" style="background: radial-gradient(ellipse 80% 80% at 50% 50%, rgba(0,217,180,.15) 0%, rgba(124,107,255,.1) 40%, rgba(255,107,157,.06) 80%, transparent 100%);"></div>
+          <!-- tech term waterfall -->
+          <div style="
+            position:absolute; inset:0; display:flex; flex-direction:column;
+            align-items:center; justify-content:center; gap:.45rem;
+            font-family:'JetBrains Mono',monospace; font-size:.72rem;
+            letter-spacing:.12em; opacity:.22; user-select:none; overflow:hidden;
+          ">
+            <span style="color:var(--accent3);">EMBEDDINGS</span>
+            <span style="color:var(--accent);">VECTOR DB</span>
+            <span style="color:var(--accent4);">RAG PIPELINE</span>
+            <span style="color:var(--accent2);">AGENT LOOP</span>
+            <span style="color:var(--accent3);">MCP PROTOCOL</span>
+          </div>
+          <div class="stack-highlight-badge">🔥 Editor's Pick · Apr 14, 2026</div>
+        </div>
+        <div class="featured-content">
+          <div class="featured-content-top">
+            <div class="featured-tag" style="color:var(--accent3); display:flex; align-items:center; gap:.5rem;">
+              <span>Embeddings · RAG · Agents · MCP</span>
+            </div>
+            <div class="featured-title">
+              Embeddings, RAG, Agents &amp; MCP —
+              <span style="font-style:italic; color:var(--accent3);">One Stack to Rule Them All</span>
+            </div>
+            <div class="featured-excerpt">
+              You've seen these terms everywhere. But do you know how Embeddings feed Vector DBs, how RAG grounds your agents, where MCP fits in — and who actually controls it all? Complete first-principles breakdown with a full multi-agent architecture diagram.
+            </div>
+            <!-- inline tag pills -->
+            <div style="display:flex; flex-wrap:wrap; gap:.4rem; margin-top:1rem; margin-bottom:.5rem;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:.58rem;padding:.2em .6em;border-radius:2px;background:rgba(0,217,180,.1);color:var(--accent3);border:1px solid rgba(0,217,180,.25);">Embeddings</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:.58rem;padding:.2em .6em;border-radius:2px;background:rgba(124,107,255,.1);color:var(--accent);border:1px solid rgba(124,107,255,.25);">Vector DB</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:.58rem;padding:.2em .6em;border-radius:2px;background:rgba(255,179,71,.1);color:var(--accent4);border:1px solid rgba(255,179,71,.25);">RAG</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:.58rem;padding:.2em .6em;border-radius:2px;background:rgba(255,107,157,.1);color:var(--accent2);border:1px solid rgba(255,107,157,.25);">Agent Orchestration</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:.58rem;padding:.2em .6em;border-radius:2px;background:rgba(0,217,180,.1);color:var(--accent3);border:1px solid rgba(0,217,180,.25);">MCP</span>
+            </div>
+          </div>
+          <div class="featured-footer" style="margin-top:1.25rem;">
+            <span class="featured-date">Apr 14, 2026</span>
+            <span class="read-more" style="color:var(--accent3);">Read Article <i class="fas fa-arrow-right"></i></span>
+          </div>
+        </div>
+      </a>
       <div class="section-divider">
         <span class="section-divider-label">All Posts</span>
         <div class="section-divider-line"></div>
       </div>
 
       <div class="blog-grid" id="blog-grid">
+
+        <!-- ★ AI STACK HIGHLIGHTED CARD ★ -->
+        <a href="ai-stack-blog-v2.html" class="post-card" data-cat="agents" style="
+          background: linear-gradient(135deg, rgba(0,217,180,0.07) 0%, rgba(124,107,255,0.06) 100%);
+          border-left: 2px solid var(--accent3);
+          position: relative;
+        ">
+          <!-- live dot -->
+          <div style="position:absolute;top:1.1rem;right:1.1rem;display:flex;align-items:center;gap:.35rem;">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--accent3);box-shadow:0 0 6px var(--accent3);display:inline-block;animation:dotPulse 1.4s ease-in-out infinite;"></span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:.52rem;color:var(--accent3);letter-spacing:.1em;text-transform:uppercase;">New</span>
+          </div>
+          <div class="post-cat" style="color:var(--accent3);">Embeddings · RAG · Agents · MCP</div>
+          <div class="post-title">Embeddings, RAG, Agents &amp; MCP — One Stack to Rule Them All</div>
+          <div class="post-excerpt">A complete first-principles walkthrough of every layer powering modern AI systems — with a full multi-agent architecture diagram.</div>
+          <div class="post-footer">
+            <span class="post-date">Apr 14, 2026</span>
+            <span class="post-arrow" style="color:var(--accent3);">↗</span>
+          </div>
+        </a>
 
         <!-- Agentic -->
         <a href="agentic.html" class="post-card" data-cat="agents">
