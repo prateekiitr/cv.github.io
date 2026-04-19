@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Everyone's Quantizing the Wrong Half of Their LLM — Prateek Singh</title>
+<meta name="description" content="GPTQ, AWQ, W4, W3 — the weight quantization race is practically over. Meanwhile, the actual memory hog at inference time is sitting quietly in the background."/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #16161f;
+    --border: #1e1e2e;
+    --teal: #2dd4bf;
+    --purple: #a78bfa;
+    --pink: #f472b6;
+    --orange: #fb923c;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --code-bg: #0d1117;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.8;
+    padding: 0;
+    min-height: 100vh;
+  }
+
+  .nav-back {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 32px 40px 0;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    text-decoration: none;
+    border: none;
+    letter-spacing: 0.05em;
+    transition: color 0.2s;
+    padding: 6px 0;
+  }
+  .back-link:hover { color: var(--teal); }
+  .back-link .arrow { display: inline-block; transition: transform 0.2s; }
+  .back-link:hover .arrow { transform: translateX(-3px); }
+
+  .hero {
+    padding: 32px 40px 48px;
+    max-width: 760px;
+    margin: 0 auto;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tag-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid;
+  }
+  .tag-teal { color: var(--teal); border-color: rgba(45,212,191,0.3); background: rgba(45,212,191,0.06); }
+  .tag-purple { color: var(--purple); border-color: rgba(167,139,250,0.3); background: rgba(167,139,250,0.06); }
+  .tag-orange { color: var(--orange); border-color: rgba(251,146,60,0.3); background: rgba(251,146,60,0.06); }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(30px, 4.5vw, 48px);
+    font-weight: 700;
+    line-height: 1.15;
+    color: #f1f5f9;
+    margin-bottom: 20px;
+    letter-spacing: -0.01em;
+  }
+
+  h1 .accent { font-style: italic; color: var(--orange); }
+
+  .subtitle {
+    font-size: 18px;
+    color: var(--muted);
+    font-weight: 300;
+    margin-bottom: 28px;
+    line-height: 1.55;
+  }
+
+  .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .meta span { display: flex; align-items: center; gap: 6px; }
+  .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--border); }
+
+  .content {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 48px 40px 80px;
+  }
+
+  .lede {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    line-height: 1.55;
+    color: #cbd5e1;
+    font-style: italic;
+    padding: 20px 0 28px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 32px;
+  }
+  .lede strong { font-style: normal; color: var(--teal); font-weight: 700; }
+
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin: 48px 0 16px;
+    padding-top: 8px;
+    line-height: 1.3;
+  }
+
+  h3 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--teal);
+    margin: 28px 0 10px;
+    letter-spacing: 0.02em;
+  }
+
+  p { margin-bottom: 18px; font-size: 16px; color: #cbd5e1; }
+
+  strong { color: #f1f5f9; font-weight: 500; }
+
+  em { font-family: 'Playfair Display', serif; font-style: italic; color: var(--purple); }
+
+  a { color: var(--teal); text-decoration: none; border-bottom: 1px solid rgba(45,212,191,0.3); }
+  a:hover { border-color: var(--teal); }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    background: var(--code-bg);
+    color: var(--teal);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin: 24px 0;
+    overflow-x: auto;
+  }
+
+  pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #94a3b8;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  pre code .kw { color: var(--purple); }
+  pre code .cm { color: var(--muted); font-style: italic; }
+  pre code .num { color: var(--orange); }
+  pre code .str { color: var(--teal); }
+
+  .callout {
+    border-left: 3px solid var(--teal);
+    background: rgba(45,212,191,0.05);
+    padding: 16px 20px;
+    border-radius: 0 8px 8px 0;
+    margin: 28px 0;
+  }
+
+  .callout.orange { border-color: var(--orange); background: rgba(251,146,60,0.05); }
+  .callout.purple { border-color: var(--purple); background: rgba(167,139,250,0.05); }
+  .callout.pink { border-color: var(--pink); background: rgba(244,114,182,0.05); }
+
+  .callout p { margin-bottom: 0; font-size: 15px; }
+  .callout-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .callout-label.teal { color: var(--teal); }
+  .callout-label.orange { color: var(--orange); }
+  .callout-label.purple { color: var(--purple); }
+  .callout-label.pink { color: var(--pink); }
+
+  .related-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: linear-gradient(135deg, rgba(167,139,250,0.08), rgba(45,212,191,0.04));
+    border: 1px solid rgba(167,139,250,0.2);
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin: 28px 0;
+    text-decoration: none !important;
+    border-bottom: 1px solid rgba(167,139,250,0.2) !important;
+    transition: all 0.25s ease;
+  }
+  .related-card:hover {
+    border-color: rgba(167,139,250,0.5) !important;
+    background: linear-gradient(135deg, rgba(167,139,250,0.12), rgba(45,212,191,0.06));
+    transform: translateX(2px);
+  }
+  .related-icon {
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    background: rgba(167,139,250,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--purple);
+    font-size: 16px;
+    font-weight: 500;
+  }
+  .related-text { flex: 1; }
+  .related-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--purple);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+  }
+  .related-title {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    color: #f1f5f9;
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+  .related-sub {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .related-arrow {
+    color: var(--purple);
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    margin: 32px 0;
+  }
+
+  .diagram-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 20px;
+  }
+
+  .mem-bar-wrap { display: flex; flex-direction: column; gap: 12px; }
+  .mem-row { display: flex; align-items: center; gap: 12px; }
+  .mem-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    width: 90px;
+    flex-shrink: 0;
+  }
+  .bar-outer {
+    flex: 1;
+    height: 24px;
+    background: var(--surface2);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+  .bar-inner {
+    height: 100%;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: width 1.2s ease;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-size: 14px;
+  }
+  th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(30,30,46,0.6);
+    color: #94a3b8;
+    vertical-align: top;
+  }
+  td:first-child { color: var(--text); font-weight: 400; }
+  tr:last-child td { border-bottom: none; }
+
+  .highlight-row td { background: rgba(45,212,191,0.04); }
+
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 40px 0;
+  }
+
+  .tldr {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    margin: 48px 0 32px;
+  }
+  .tldr-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--orange);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 16px;
+  }
+  .tldr ul { list-style: none; padding: 0; }
+  .tldr li {
+    font-size: 15px;
+    color: #94a3b8;
+    padding: 6px 0;
+    display: flex;
+    gap: 10px;
+  }
+  .tldr li::before { content: "→"; color: var(--teal); flex-shrink: 0; }
+
+  ul.body-list { padding-left: 0; list-style: none; margin-bottom: 18px; }
+  ul.body-list li {
+    padding: 5px 0 5px 18px;
+    position: relative;
+    font-size: 16px;
+    color: #cbd5e1;
+  }
+  ul.body-list li::before {
+    content: "·";
+    color: var(--teal);
+    position: absolute;
+    left: 0;
+    font-size: 20px;
+    line-height: 1.4;
+  }
+
+  @media (max-width: 640px) {
+    .nav-back, .hero, .content { padding-left: 24px; padding-right: 24px; }
+    h1 { font-size: 30px; }
+    h2 { font-size: 22px; }
+    .lede { font-size: 17px; }
+    pre { font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="nav-back">
+  <a href="/blog" class="back-link">
+    <span class="arrow">←</span>
+    <span>back to blogs</span>
+  </a>
+</div>
+
+<div class="hero">
+  <div class="tag-row">
+    <span class="tag tag-teal">LLM Inference</span>
+    <span class="tag tag-purple">Quantization</span>
+    <span class="tag tag-orange">Memory Optimization</span>
+  </div>
+  <h1>Everyone's Quantizing the <span class="accent">Wrong Half</span> of Their LLM</h1>
+  <p class="subtitle">GPTQ, AWQ, W4, W3 — the weight quantization race is practically over. Meanwhile, the actual memory hog at inference time is sitting quietly in the background, doubling every time context length goes up.</p>
+  <div class="meta">
+    <span>Prateek Singh</span>
+    <span class="dot"></span>
+    <span>April 2026</span>
+    <span class="dot"></span>
+    <span>~10 min read</span>
+  </div>
+</div>
+
+<div class="content">
+
+  <p class="lede">
+    Here's a question that should bother you more than it does: if your 70B model is quantized to 4-bit and your VRAM is still melting at long context — <strong>what exactly is eating it?</strong>
+  </p>
+
+  <p>
+    The LLM quantization conversation has been almost entirely dominated by <strong>weight quantization</strong> — W8, W4, W3, GPTQ, AWQ, QuaRot, SpinQuant, the whole lot. And for good reason: weights are big, they live in VRAM, and compressing them gives obvious wins in memory footprint and load time.
+  </p>
+  <p>
+    The KV cache has been the quieter story — until recently. Google's TurboQuant (which I broke down in an earlier post) was one of the first methods to bring rotation-based quantization specifically to the KV cache, with headline numbers of 6× compression and 8× speedup. This post zooms out: what the problem actually is, why it's different from weight quantization, and the full landscape of techniques tackling it.
+  </p>
+
+  <a href="https://prateeksinghphd.in/turboquant.html" class="related-card">
+    <div class="related-icon">⚡</div>
+    <div class="related-text">
+      <div class="related-label">Companion Read</div>
+      <div class="related-title">TurboQuant — Google's Rotation-Based KV Cache Breakthrough</div>
+      <div class="related-sub">A deep dive on one specific solution. This post is the full landscape it sits inside.</div>
+    </div>
+    <div class="related-arrow">→</div>
+  </a>
+
+  <p>
+    But once you actually start generating tokens, the thing eating your VRAM isn't the weights anymore. <em>It's the KV cache.</em>
+  </p>
+  <p>
+    And almost nobody is talking about it.
+  </p>
+
+  <div class="divider"></div>
+
+  <h2>What is the KV cache, exactly?</h2>
+
+  <p>
+    In a transformer, every attention layer computes three projections for each token: Query (Q), Key (K), and Value (V). During autoregressive decoding, when generating token <code>t</code>, you need the K and V tensors from <strong>all previous tokens</strong> — not just the current one — to compute attention.
+  </p>
+  <p>
+    Re-computing those K and V projections from scratch at every step would be catastrophically expensive. So instead, you <em>cache</em> them. Every generated token appends new K and V vectors to a growing buffer. That buffer is the KV cache.
+  </p>
+  <p>
+    The problem is that it grows linearly with sequence length. For a model like LLaMA-3 70B with 80 layers, 8 KV heads, and a head dimension of 128, the math looks like this:
+  </p>
+
+  <pre><code><span class="cm"># KV cache size estimate (FP16)</span>
+layers     = <span class="num">80</span>
+kv_heads   = <span class="num">8</span>       <span class="cm"># GQA reduces this from 64</span>
+head_dim   = <span class="num">128</span>
+seq_len    = <span class="num">4096</span>
+bytes_fp16 = <span class="num">2</span>
+
+kv_cache_bytes = <span class="num">2</span> * layers * kv_heads * head_dim * seq_len * bytes_fp16
+<span class="cm"># → ~671 MB for 4096 tokens, just the cache</span>
+<span class="cm"># → ~10.7 GB at 65K context</span>
+<span class="cm"># → ~21 GB at 128K context</span></code></pre>
+
+  <p>
+    Scale that to 128K context — increasingly common with models like Mistral, Gemini, Claude, and Command R+ — and you're looking at tens of gigabytes just for the cache. On a single A100 with 80GB VRAM, serving long-context requests at scale becomes a juggling act.
+  </p>
+
+  <div class="diagram">
+    <div class="diagram-title">Memory Breakdown — LLaMA-3 70B, Batch=1 (FP16)</div>
+    <div class="mem-bar-wrap">
+      <div class="mem-row">
+        <span class="mem-label">Weights</span>
+        <div class="bar-outer">
+          <div class="bar-inner" style="width:60%; background: linear-gradient(90deg, rgba(167,139,250,0.7), rgba(167,139,250,0.4)); color:#e2e8f0;">~140 GB</div>
+        </div>
+      </div>
+      <div class="mem-row">
+        <span class="mem-label">KV @ 8K</span>
+        <div class="bar-outer">
+          <div class="bar-inner" style="width:12%; background: linear-gradient(90deg, rgba(45,212,191,0.7), rgba(45,212,191,0.4)); color:#e2e8f0;">~1.3 GB</div>
+        </div>
+      </div>
+      <div class="mem-row">
+        <span class="mem-label">KV @ 32K</span>
+        <div class="bar-outer">
+          <div class="bar-inner" style="width:25%; background: linear-gradient(90deg, rgba(45,212,191,0.8), rgba(45,212,191,0.5)); color:#e2e8f0;">~5.2 GB</div>
+        </div>
+      </div>
+      <div class="mem-row">
+        <span class="mem-label">KV @ 128K</span>
+        <div class="bar-outer">
+          <div class="bar-inner" style="width:50%; background: linear-gradient(90deg, rgba(251,146,60,0.8), rgba(251,146,60,0.5)); color:#1a1a2e;">~21 GB</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p>
+    At 128K context, the KV cache is no longer a footnote. It's competing directly with the model weights for the same VRAM budget.
+  </p>
+
+  <div class="divider"></div>
+
+  <h2>Why not just quantize it like weights?</h2>
+
+  <p>
+    This is the obvious question. You compress weights to W4 and things mostly work. Why can't you just apply INT8 or INT4 to the KV cache?
+  </p>
+  <p>
+    You can — but the distribution of KV tensors is fundamentally different from weight tensors, and that changes what works.
+  </p>
+
+  <h3>The Key and Value tensors are not the same animal</h3>
+
+  <p>
+    Research across multiple papers — notably <strong>KVQuant</strong> (Hooper et al., 2024) and <strong>KIVI</strong> (Liu et al., 2024) — consistently finds that <strong>Keys and Values have very different quantization sensitivities</strong>.
+  </p>
+
+  <ul class="body-list">
+    <li><strong>Key tensors</strong> exhibit heavy-tailed distributions with persistent outlier channels that appear across tokens. These outliers don't go away with calibration — they're structural.</li>
+    <li><strong>Value tensors</strong> are comparatively well-behaved. Their distributions are smoother, and simple per-channel quantization at INT4 introduces minimal degradation.</li>
+  </ul>
+
+  <div class="callout orange">
+    <div class="callout-label orange">Key Insight</div>
+    <p>Treating K and V with the same quantization scheme is a mistake. Keys need more bits or more careful handling. Values can tolerate aggressive compression. Most naive KV quantization ignores this asymmetry entirely.</p>
+  </div>
+
+  <h3>The outlier channel problem</h3>
+
+  <p>
+    A small fraction of channels in the Key cache carry disproportionately large magnitudes — and they're the same channels across different tokens. This means a per-token quantization approach (where you compute scale/zero-point independently per token) misses them. Per-channel quantization handles this better but adds overhead during cache writes.
+  </p>
+  <p>
+    KVQuant addresses this directly by isolating outlier channels and storing them at higher precision, while compressing the rest to INT4. The result is a non-uniform mixed-precision cache that reduces average memory footprint while preserving the structure that attention actually depends on.
+  </p>
+
+  <div class="divider"></div>
+
+  <h2>The main approaches in the literature</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Method</th>
+        <th>Strategy</th>
+        <th>Key Idea</th>
+        <th>Bits</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>KIVI</td>
+        <td>Asymmetric K/V</td>
+        <td>V at INT2, K at INT4 with residual</td>
+        <td>2–4</td>
+      </tr>
+      <tr class="highlight-row">
+        <td>KVQuant</td>
+        <td>Outlier isolation</td>
+        <td>Per-channel + outlier FP16 channels</td>
+        <td>3–4</td>
+      </tr>
+      <tr>
+        <td>FlexGen</td>
+        <td>Offloading + quant</td>
+        <td>INT4 with CPU offload for throughput</td>
+        <td>4</td>
+      </tr>
+      <tr>
+        <td>MagR / Coupled Quant</td>
+        <td>Rotation pre-processing</td>
+        <td>Smooth outliers via rotation before quant</td>
+        <td>4</td>
+      </tr>
+      <tr>
+        <td>Q-GEN</td>
+        <td>Grouped quantization</td>
+        <td>Small group sizes per token-block</td>
+        <td>4</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>KIVI — asymmetric precision done right</h3>
+
+  <p>
+    KIVI's central observation is that Value tensors tolerate INT2 quantization far better than Keys do. Their solution: store V at 2-bit with a grouped scheme, and K at 4-bit. They also keep a small "residual cache" — the most recent tokens in full precision — which prevents quality collapse at the beginning of generation where statistical estimates are noisy.
+  </p>
+
+  <div class="callout">
+    <div class="callout-label teal">From the literature</div>
+    <p>KIVI reports near-lossless performance on LLaMA-2 at 2-bit Values + 4-bit Keys, with up to 2.35× memory reduction in practical serving scenarios.</p>
+  </div>
+
+  <h3>KVQuant — going to 3-bit with surgical precision</h3>
+
+  <p>
+    KVQuant targets sub-4-bit quantization and actually gets there without catastrophic quality loss. The key tricks: pre-RoPE quantization of Keys (before rotary embeddings are applied, the distribution is more uniform), non-uniform quantization using learned codebooks calibrated on a small dataset, and channelwise outlier handling.
+  </p>
+  <p>
+    The result is a 3-bit average cache that, on tasks like LongBench, maintains quality close to FP16 — which at this bit-width is genuinely impressive.
+  </p>
+
+  <h3>Rotation-based smoothing</h3>
+
+  <p>
+    This is an area borrowed directly from weight quantization: methods like QuaRot and SpinQuant apply random orthogonal rotations to activations to redistribute outliers before quantization. The same idea applied to KV tensors (pre-quantization rotation) meaningfully reduces the dynamic range problem in Key channels.
+  </p>
+  <p>
+    <a href="https://prateeksinghphd.in/turboquant.html">TurboQuant</a> is the most prominent recent entry in this family — a rotation-based KV cache quantization method from Google achieving 6× compression with minimal accuracy loss. I covered it in depth separately; it pairs well with KIVI and KVQuant as the three techniques actually pushing the sub-4-bit KV frontier.
+  </p>
+  <p>
+    This is an active research area, and the results are promising — particularly for sub-4-bit Key quantization where outliers are the limiting factor.
+  </p>
+
+  <div class="divider"></div>
+
+  <h2>Architectural changes that reduce the problem at the source</h2>
+
+  <p>
+    It's worth noting that some of the KV cache pressure is being addressed architecturally, not just algorithmically.
+  </p>
+
+  <h3>Grouped Query Attention (GQA)</h3>
+  <p>
+    GQA, used in LLaMA-3, Mistral, and Gemma, reduces the number of KV heads (often from 32 or 64 down to 8) while keeping full query heads. This directly shrinks the KV cache by a factor equal to the grouping ratio — before any quantization is applied. At 8 KV heads vs 64 query heads, you get an 8× reduction in cache size from architecture alone.
+  </p>
+
+  <h3>Multi-head Latent Attention (MLA)</h3>
+  <p>
+    DeepSeek V2/V3 took this further with MLA — a low-rank compression of the KV projection that reduces the per-token cache size by storing a compressed latent vector instead of full K and V tensors. This is fundamentally different from post-hoc quantization; it bakes cache compression into the attention mechanism itself.
+  </p>
+
+  <div class="callout purple">
+    <div class="callout-label purple">Worth noting</div>
+    <p>MLA and GQA don't eliminate the need for KV quantization — they just shift the problem. At 128K+ contexts, even compressed KV representations become large enough that quantization on top of architectural compression is still valuable.</p>
+  </div>
+
+  <div class="divider"></div>
+
+  <h2>The practical considerations nobody talks about</h2>
+
+  <h3>Quantization during writing vs. reading</h3>
+  <p>
+    KV cache quantization happens in the hot path of inference — every token generation involves writing new K/V entries and reading the entire cache for attention. The quantize-on-write / dequantize-on-read overhead needs to be cheap enough to not erase the throughput gains from reduced memory bandwidth. This is where kernel-level implementation matters enormously, and why most academic proposals don't translate directly to wall-clock speedups without careful engineering.
+  </p>
+
+  <h3>Calibration data dependency</h3>
+  <p>
+    Methods like KVQuant that use non-uniform quantization require calibration on representative data. Unlike weight quantization where you calibrate once at model load time, the optimal KV quantization can vary with input domain. A cache quantized for code generation might behave differently for long legal documents. This is a practical deployment consideration that's often glossed over.
+  </p>
+
+  <h3>Interaction with speculative decoding</h3>
+  <p>
+    Speculative decoding maintains a draft model's KV cache alongside the target model's. KV quantization applied to both introduces compounding approximation errors in the verification step. This hasn't been systematically studied yet and is an open question.
+  </p>
+
+  <div class="divider"></div>
+
+  <h2>Where this is heading</h2>
+
+  <p>
+    KV cache quantization is graduating from a research curiosity to a production necessity. A few signals:
+  </p>
+
+  <ul class="body-list">
+    <li><strong>vLLM and TGI</strong> are actively integrating INT8 and FP8 KV cache support. FP8 is attractive because it's hardware-native on H100s and avoids the calibration complexity of INT4.</li>
+    <li><strong>Context windows are only getting longer.</strong> 1M-token models aren't theoretical anymore. At that length, even with GQA, the KV cache dwarfs the weights.</li>
+    <li><strong>The INT4 KV frontier</strong> is still rough. Getting clean results below 4 bits across diverse tasks and model architectures without per-model tuning is an unsolved problem.</li>
+    <li><strong>Joint weight + KV quantization</strong> is underexplored. Most papers optimize one in isolation. Interactions between quantized weights and quantized activations (the KV cache is an activation, not a weight) are non-trivial.</li>
+  </ul>
+
+  <div class="callout pink">
+    <div class="callout-label pink">The open question</div>
+    <p>Can you push KV cache quantization to INT3 or below — matching the frontier of weight quantization — without either per-task calibration or architectural changes? That answer doesn't cleanly exist yet.</p>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="tldr">
+    <div class="tldr-title">// TL;DR</div>
+    <ul>
+      <li>At long contexts, the KV cache dominates memory — not the weights.</li>
+      <li>Keys and Values have different quantization sensitivity. Treat them differently.</li>
+      <li>Key tensors have structural outlier channels; per-channel quantization or outlier isolation is necessary below INT8.</li>
+      <li>KVQuant and KIVI are the strongest INT4/sub-4-bit results in the current literature.</li>
+      <li>GQA and MLA reduce cache size architecturally; quantization compounds those gains.</li>
+      <li>FP8 KV cache is becoming the pragmatic production choice. INT4 KV is still a research frontier.</li>
+    </ul>
+  </div>
+
+  <p style="color: var(--muted); font-size: 14px; font-family: 'JetBrains Mono', monospace;">
+    // If you found this useful, the next post in this series will cover joint weight + KV quantization — and why the interaction is messier than it looks.
+  </p>
+
+</div>
+</body>
+</html>
