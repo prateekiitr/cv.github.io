@@ -33,6 +33,56 @@
     min-height: 100vh;
   }
 
+  /* ── SITE HEADER (from gemma4 template, adapted to kv-cache palette) ── */
+  .site-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.4rem 2.5rem;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: rgba(10, 10, 15, 0.92);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+  }
+  .site-logo {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: 1.15rem;
+    color: var(--teal);
+    text-decoration: none;
+    letter-spacing: 0.02em;
+  }
+  .site-nav a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-left: 1.8rem;
+    transition: color 0.2s;
+  }
+  .site-nav a:hover { color: var(--teal); }
+
+  /* ── SITE FOOTER (gemma4 style, kv-cache colors) ── */
+  .site-footer {
+    border-top: 1px solid var(--border);
+    padding: 2.5rem 2.5rem;
+    text-align: center;
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-top: 2rem;
+  }
+  .site-footer a {
+    color: var(--teal);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(45,212,191,0.3);
+  }
+  .site-footer a:hover {
+    border-color: var(--teal);
+  }
+
+  /* ── ORIGINAL KV-CACHE STYLES (unchanged) ── */
   .nav-back {
     max-width: 760px;
     margin: 0 auto;
@@ -402,16 +452,31 @@
   }
 
   @media (max-width: 640px) {
+    .site-header { padding: 1rem 1.25rem; }
+    .site-nav a { margin-left: 1rem; }
     .nav-back, .hero, .content { padding-left: 24px; padding-right: 24px; }
     h1 { font-size: 30px; }
     h2 { font-size: 22px; }
     .lede { font-size: 17px; }
     pre { font-size: 12px; }
+    .site-footer { padding: 2rem 1.5rem; }
   }
 </style>
 </head>
 <body>
 
+<!-- ── SITE HEADER (gemma4 template style) ── -->
+<header class="site-header">
+  <a href="/" class="site-logo">Prateek Singh, PhD</a>
+  <nav class="site-nav">
+    <a href="/">Home</a>
+    <a href="/blog">Blog</a>
+    <a href="/research">Research</a>
+    <a href="/contact">Contact</a>
+  </nav>
+</header>
+
+<!-- ORIGINAL CONTENT (unchanged, including nav-back, hero, tags, article, etc) -->
 <div class="nav-back">
   <a href="/blog" class="back-link">
     <span class="arrow">←</span>
@@ -724,7 +789,13 @@ kv_cache_bytes = <span class="num">2</span> * layers * kv_heads * head_dim * seq
   <p style="color: var(--muted); font-size: 14px; font-family: 'JetBrains Mono', monospace;">
     // If you found this useful, the next post in this series will cover joint weight + KV quantization — and why the interaction is messier than it looks.
   </p>
-
 </div>
+
+<!-- ── SITE FOOTER (gemma4 template style) ── -->
+<footer class="site-footer">
+  <p>Written by <strong>Prateek Singh</strong> · Senior Manager, GenAI &amp; Digital Health AI · Samsung Research Institute Noida</p>
+  <p style="margin-top:0.5rem;"><a href="https://prateeksinghphd.in">prateeksinghphd.com</a></p>
+</footer>
+
 </body>
 </html>
