@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>Gemma 4 vs GPT-5.5: The Comparison That Actually Matters | Prateek Singh</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0d0d12;
+      --bg-card: #13131a;
+      --bg-card2: #1a1a24;
+      --teal: #00d9b4;
+      --purple: #7c6bff;
+      --pink: #ff6b9d;
+      --orange: #ffb347;
+      --text: #e2e2ef;
+      --muted: #8888aa;
+      --border: rgba(255,255,255,0.07);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 17px;
+      line-height: 1.75;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    .site-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.4rem 2.5rem;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(13,13,18,0.92);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+    .site-logo {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: 1.15rem;
+      color: var(--teal);
+      text-decoration: none;
+      letter-spacing: 0.02em;
+    }
+    .site-nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-left: 1.8rem;
+      transition: color 0.2s;
+    }
+    .site-nav a:hover { color: var(--teal); }
+
+    /* ── HERO ── */
+    .hero {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 5rem 2rem 3.5rem;
+      animation: fadeUp 0.6s ease both;
+    }
+    .hero-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.6rem;
+      flex-wrap: wrap;
+    }
+    .tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.3em 0.85em;
+      border-radius: 20px;
+      background: rgba(0,217,180,0.12);
+      color: var(--teal);
+      border: 1px solid rgba(0,217,180,0.25);
+    }
+    .tag.purple { background: rgba(124,107,255,0.12); color: var(--purple); border-color: rgba(124,107,255,0.25); }
+    .tag.orange { background: rgba(255,179,71,0.12); color: var(--orange); border-color: rgba(255,179,71,0.25); }
+    .tag.pink   { background: rgba(255,107,157,0.12); color: var(--pink);   border-color: rgba(255,107,157,0.25); }
+    .hero-date {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      line-height: 1.15;
+      color: #fff;
+      margin-bottom: 1.2rem;
+      letter-spacing: -0.01em;
+    }
+    .hero h1 em { font-style: italic; color: var(--teal); }
+    .hero-subtitle {
+      font-size: 1.15rem;
+      color: var(--muted);
+      font-weight: 300;
+      max-width: 640px;
+      line-height: 1.7;
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      max-width: 820px;
+      margin: 0 auto 2.5rem;
+      padding: 0 2rem;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── ARTICLE ── */
+    .article {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 0 2rem 6rem;
+      animation: fadeUp 0.7s ease 0.1s both;
+    }
+    .article h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #fff;
+      margin: 3.2rem 0 1rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .article h3 {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--teal);
+      margin: 2rem 0 0.7rem;
+      letter-spacing: 0.01em;
+    }
+    .article p { margin-bottom: 1.3rem; color: #c8c8e0; }
+    .article strong { color: var(--text); font-weight: 600; }
+    .article a { color: var(--teal); text-decoration: none; }
+    .article a:hover { text-decoration: underline; }
+    .article em { font-style: italic; color: var(--pink); }
+
+    /* ── CALLOUT ── */
+    .callout {
+      background: var(--bg-card);
+      border-left: 3px solid var(--teal);
+      border-radius: 0 12px 12px 0;
+      padding: 1.2rem 1.5rem;
+      margin: 2rem 0;
+      font-size: 0.95rem;
+      color: #b0b0cc;
+      line-height: 1.7;
+    }
+    .callout.purple { border-color: var(--purple); }
+    .callout.orange { border-color: var(--orange); }
+    .callout.pink   { border-color: var(--pink); }
+
+    /* ── SECTION ACCENT ── */
+    .section-accent {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+    .section-accent .accent-line {
+      width: 28px; height: 2px;
+      background: var(--teal);
+      border-radius: 2px;
+    }
+    .section-accent span {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--teal);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 600;
+    }
+
+    /* ── VS BANNER ── */
+    .vs-banner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+      margin: 2.5rem 0;
+      padding: 2rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+    .vs-side {
+      text-align: center;
+      flex: 1;
+    }
+    .vs-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.4rem;
+    }
+    .vs-model {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      font-weight: 900;
+      line-height: 1.1;
+    }
+    .vs-model.google { color: var(--teal); }
+    .vs-model.openai { color: var(--purple); }
+    .vs-sub {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 0.3rem;
+    }
+    .vs-divider {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: var(--border);
+      flex-shrink: 0;
+    }
+
+    /* ── HIGHLIGHT BOX ── */
+    .highlight-box {
+      background: linear-gradient(135deg, rgba(0,217,180,0.08), rgba(124,107,255,0.08));
+      border: 1px solid rgba(0,217,180,0.2);
+      border-radius: 16px;
+      padding: 2rem;
+      margin: 2.5rem 0;
+      text-align: center;
+    }
+    .highlight-box .big-stat {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.6rem;
+      font-weight: 900;
+      color: var(--teal);
+      line-height: 1;
+      margin-bottom: 0.4rem;
+    }
+    .highlight-box .big-stat.purple { color: var(--purple); }
+    .highlight-box .big-stat.orange { color: var(--orange); }
+    .highlight-box .stat-label {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .stats-row {
+      display: flex;
+      gap: 1.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .stat-item { text-align: center; }
+
+    /* ── COMPARISON TABLE ── */
+    .feat-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 2rem 0;
+      font-size: 0.9rem;
+    }
+    .feat-table th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      background: var(--bg-card2);
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      border-bottom: 1px solid var(--border);
+    }
+    .feat-table th.google-col { color: var(--teal); }
+    .feat-table th.openai-col { color: var(--purple); }
+    .feat-table td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: #c4c4dc;
+    }
+    .feat-table tr:hover td { background: rgba(255,255,255,0.025); }
+    .feat-table td:first-child { color: var(--text); font-weight: 500; }
+    .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+    .dot-teal   { background: var(--teal); }
+    .dot-purple { background: var(--purple); }
+    .dot-orange { background: var(--orange); }
+    .dot-muted  { background: var(--muted); }
+    .winner { font-weight: 600; }
+    .winner.g { color: var(--teal); }
+    .winner.o { color: var(--purple); }
+    .winner.tie { color: var(--orange); }
+
+    /* ── BENCHMARK GRID ── */
+    .bench-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+    .bench-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.2rem 1.4rem;
+    }
+    .bench-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 0.8rem;
+    }
+    .bench-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.88rem;
+    }
+    .bench-model {
+      width: 80px;
+      flex-shrink: 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+    .bench-model.g { color: var(--teal); }
+    .bench-model.o { color: var(--purple); }
+    .bench-bar-wrap {
+      flex: 1;
+      height: 6px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .bench-bar {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.5s ease;
+    }
+    .bench-bar.g { background: var(--teal); }
+    .bench-bar.o { background: var(--purple); }
+    .bench-score {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--text);
+      width: 46px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    /* ── CHIP LIST ── */
+    .chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .chip {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      padding: 0.3em 0.75em;
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+    }
+
+    /* ── VERDICT CARDS ── */
+    .verdict-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+    .verdict-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.4rem;
+    }
+    .verdict-card.google { border-top: 3px solid var(--teal); }
+    .verdict-card.openai { border-top: 3px solid var(--purple); }
+    .verdict-heading {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.5rem;
+    }
+    .verdict-heading.g { color: var(--teal); }
+    .verdict-heading.o { color: var(--purple); }
+    .verdict-card ul {
+      list-style: none;
+      padding: 0;
+    }
+    .verdict-card ul li {
+      font-size: 0.88rem;
+      color: #b8b8d4;
+      padding: 0.3rem 0;
+      border-bottom: 1px solid var(--border);
+      line-height: 1.5;
+    }
+    .verdict-card ul li:last-child { border-bottom: none; }
+    .verdict-card ul li::before { content: "→ "; color: var(--muted); }
+
+    /* ── FOOTER ── */
+    .site-footer {
+      border-top: 1px solid var(--border);
+      padding: 2.5rem;
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+    .site-footer a { color: var(--teal); text-decoration: none; }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      .site-header { padding: 1rem 1.25rem; }
+      .site-nav { display: none; }
+      .hero, .article { padding-left: 1.25rem; padding-right: 1.25rem; }
+      .divider { padding: 0 1.25rem; }
+      .hero h1 { font-size: 2rem; }
+      .bench-grid { grid-template-columns: 1fr; }
+      .verdict-grid { grid-template-columns: 1fr; }
+      .vs-banner { flex-direction: column; gap: 0.5rem; }
+      .vs-divider { font-size: 1.5rem; }
+      .stats-row { gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <a href="/" class="site-logo">Prateek Singh, PhD</a>
+  <nav class="site-nav">
+    <a href="/">Home</a>
+    <a href="/blog">Blog</a>
+    <a href="/research">Research</a>
+    <a href="/contact">Contact</a>
+  </nav>
+</header>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-meta">
+    <span class="tag">Model Comparison</span>
+    <span class="tag purple">Breaking</span>
+    <span class="tag orange">April 2026</span>
+    <span class="hero-date">April 26, 2026</span>
+  </div>
+  <h1>Gemma 4 vs GPT-5.5: <em>Open Weights vs. Closed Power</em></h1>
+  <p class="hero-subtitle">
+    GPT-5.5 just landed on April 23rd. Gemma 4 dropped three weeks earlier. The gap between proprietary frontier models and open-weights alternatives has never been more interesting — or more complicated — than it is right now.
+  </p>
+</section>
+
+<div class="divider"></div>
+
+<!-- ── ARTICLE ── -->
+<article class="article">
+
+  <p>
+    Two model releases. Three weeks apart. Completely different design philosophies. And yet the comparison keeps coming up in every Slack thread, every ML team standup, and every "which model should we standardize on?" conversation I've been part of this month.
+  </p>
+  <p>
+    So let's do this properly. Not as a benchmark beauty pageant — those are everywhere. But as a practitioner's comparison: what each model is actually built for, where the numbers hold up, and the one question that should drive your choice: <strong>what does your deployment look like?</strong>
+  </p>
+
+  <!-- VS BANNER -->
+  <div class="vs-banner">
+    <div class="vs-side">
+      <div class="vs-label">Google DeepMind · Apr 2</div>
+      <div class="vs-model google">Gemma 4</div>
+      <div class="vs-sub">Open weights · Apache 2.0<br/>E2B / E4B / 26B MoE / 31B Dense</div>
+    </div>
+    <div class="vs-divider">vs</div>
+    <div class="vs-side">
+      <div class="vs-label">OpenAI · Apr 23</div>
+      <div class="vs-model openai">GPT-5.5</div>
+      <div class="vs-sub">Proprietary · ChatGPT / Codex / API<br/>Standard / Thinking / Pro</div>
+    </div>
+  </div>
+
+  <!-- CONTEXT -->
+  <div class="section-accent"><div class="accent-line"></div><span>Context</span></div>
+  <h2>Why This Comparison Is Genuinely Interesting</h2>
+
+  <p>
+    For most of 2024 and 2025, "open model vs. frontier proprietary" comparisons were a bit hollow. Open models were good but obviously trailing. The gap in reasoning, tool use, and long-context coherence was large enough that enterprise teams defaulted to GPT or Claude without much hand-wringing.
+  </p>
+  <p>
+    That calculus is changing. Gemma 4's 31B Dense is sitting at <strong>#3 on the Arena AI open model leaderboard</strong>, beating models 20× its size. And GPT-5.5 — which just dropped two days ago — is being called OpenAI's first fully retrained base model since GPT-4.5, with ground-up architecture changes, not just post-training iterations.
+  </p>
+  <p>
+    These are not incremental releases. They represent two meaningfully different bets on what "best AI" looks like in 2026. Let's break it down.
+  </p>
+
+  <div class="highlight-box">
+    <div class="stats-row">
+      <div class="stat-item">
+        <div class="big-stat">#1</div>
+        <div class="stat-label">GPT-5.5 on Artificial Analysis<br/>Intelligence Index (score: 60)</div>
+      </div>
+      <div class="stat-item">
+        <div class="big-stat">#3</div>
+        <div class="stat-label">Gemma 4 31B on Arena AI<br/>Open Model Leaderboard</div>
+      </div>
+      <div class="stat-item">
+        <div class="big-stat">$0</div>
+        <div class="stat-label">API cost to run<br/>Gemma 4 locally</div>
+      </div>
+      <div class="stat-item">
+        <div class="big-stat purple">$30</div>
+        <div class="stat-label">Per 1M output tokens<br/>GPT-5.5 API</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARCHITECTURE -->
+  <div class="section-accent"><div class="accent-line"></div><span>Architecture</span></div>
+  <h2>What's Under the Hood</h2>
+
+  <h3>Gemma 4: Gemini 3 DNA, Open Weights</h3>
+  <p>
+    Google describes Gemma 4 as sharing architecture and training methodology with Gemini 3. This isn't a distilled or compressed version — it's trained on the same research pipeline as Google's best proprietary model, then released under Apache 2.0. The family spans four tiers: edge models (E2B, E4B) engineered with Qualcomm and MediaTek for on-device NPU inference, a 26B MoE that activates only <strong>3.8B parameters per token</strong>, and a 31B dense flagship.
+  </p>
+  <p>
+    The MoE design on the 26B is particularly interesting from a quantization standpoint. Active-parameter efficiency means the memory bandwidth cost per token is dramatically lower than the 26B total parameter count suggests. This also means per-layer activation statistics change dynamically with routing — which matters a lot if you're applying AWQ or GPTQ calibration on top.
+  </p>
+
+  <h3>GPT-5.5: First Full Retrain Since GPT-4.5</h3>
+  <p>
+    OpenAI has been explicit about this: every model from GPT-5.0 through GPT-5.4 was post-training iteration on the same base. GPT-5.5 is a <strong>ground-up retrain</strong>. Three things genuinely changed at the architectural level. First, natively omnimodal — text, images, audio, and video in a single unified model, not a pipeline of separate specialists stitched together. Second, co-designed with NVIDIA's GB200/GB300 NVL72 rack-scale systems, enabling inference optimization that prior models couldn't achieve. Third, a unified router that auto-switches between Instant and Thinking modes based on query complexity.
+  </p>
+
+  <div class="callout purple">
+    <strong>For quantization researchers:</strong> GPT-5.5 is API-only — you cannot inspect weights, apply post-training quantization, or run it locally. Gemma 4's open weights mean the entire PTQ toolchain (GPTQ, AWQ, SpinQuant) is available. For on-device deployment research, there is no comparison: Gemma 4 is the only option.
+  </div>
+
+  <!-- BENCHMARKS -->
+  <div class="section-accent"><div class="accent-line"></div><span>Benchmarks</span></div>
+  <h2>Where the Numbers Actually Land</h2>
+
+  <p>
+    GPT-5.5 just hit the Artificial Analysis Intelligence Index at a score of 60 — breaking a three-way tie at 57 that had persisted for weeks between Claude Opus 4.7, Gemini 3.1 Pro, and GPT-5.4. Gemma 4 31B isn't in the same tier on these proprietary-model benchmarks. But the picture is more nuanced when you break it out by task category.
+  </p>
+
+  <div class="bench-grid">
+    <div class="bench-card">
+      <div class="bench-name">Terminal-Bench 2.0 (Agentic Coding)</div>
+      <div class="bench-row">
+        <span class="bench-model o">GPT-5.5</span>
+        <div class="bench-bar-wrap"><div class="bench-bar o" style="width:82.7%"></div></div>
+        <span class="bench-score">82.7%</span>
+      </div>
+      <div class="bench-row">
+        <span class="bench-model g">Gemma 4 31B</span>
+        <div class="bench-bar-wrap"><div class="bench-bar g" style="width:55%"></div></div>
+        <span class="bench-score">~55%*</span>
+      </div>
+    </div>
+
+    <div class="bench-card">
+      <div class="bench-name">GDPval (Knowledge Work, 44 Occupations)</div>
+      <div class="bench-row">
+        <span class="bench-model o">GPT-5.5</span>
+        <div class="bench-bar-wrap"><div class="bench-bar o" style="width:84.9%"></div></div>
+        <span class="bench-score">84.9%</span>
+      </div>
+      <div class="bench-row">
+        <span class="bench-model g">Gemma 4 31B</span>
+        <div class="bench-bar-wrap"><div class="bench-bar g" style="width:64%"></div></div>
+        <span class="bench-score">~64%*</span>
+      </div>
+    </div>
+
+    <div class="bench-card">
+      <div class="bench-name">OSWorld-Verified (Computer Use)</div>
+      <div class="bench-row">
+        <span class="bench-model o">GPT-5.5</span>
+        <div class="bench-bar-wrap"><div class="bench-bar o" style="width:78.7%"></div></div>
+        <span class="bench-score">78.7%</span>
+      </div>
+      <div class="bench-row">
+        <span class="bench-model g">Gemma 4 31B</span>
+        <div class="bench-bar-wrap"><div class="bench-bar g" style="width:42%"></div></div>
+        <span class="bench-score">N/A*</span>
+      </div>
+    </div>
+
+    <div class="bench-card">
+      <div class="bench-name">MMLU (Knowledge Breadth)</div>
+      <div class="bench-row">
+        <span class="bench-model o">GPT-5.5</span>
+        <div class="bench-bar-wrap"><div class="bench-bar o" style="width:91%"></div></div>
+        <span class="bench-score">&gt;90%</span>
+      </div>
+      <div class="bench-row">
+        <span class="bench-model g">Gemma 4 31B</span>
+        <div class="bench-bar-wrap"><div class="bench-bar g" style="width:87.1%"></div></div>
+        <span class="bench-score">87.1%</span>
+      </div>
+    </div>
+
+    <div class="bench-card">
+      <div class="bench-name">Arena AI Intelligence Index</div>
+      <div class="bench-row">
+        <span class="bench-model o">GPT-5.5</span>
+        <div class="bench-bar-wrap"><div class="bench-bar o" style="width:100%"></div></div>
+        <span class="bench-score">60 / 60</span>
+      </div>
+      <div class="bench-row">
+        <span class="bench-model g">Gemma 4 31B</span>
+        <div class="bench-bar-wrap"><div class="bench-bar g" style="width:67%"></div></div>
+        <span class="bench-score">~40*</span>
+      </div>
+    </div>
+
+    <div class="bench-card">
+      <div class="bench-name">Hallucination Rate (AA-Omniscience)</div>
+      <div class="bench-row">
+        <span class="bench-model o">GPT-5.5</span>
+        <div class="bench-bar-wrap"><div class="bench-bar o" style="width:86%"></div></div>
+        <span class="bench-score">86% ⚠</span>
+      </div>
+      <div class="bench-row">
+        <span class="bench-model g">Gemma 4 31B</span>
+        <div class="bench-bar-wrap"><div class="bench-bar g" style="width:40%"></div></div>
+        <span class="bench-score">~40%*</span>
+      </div>
+    </div>
+  </div>
+
+  <p style="font-size:0.82rem; color: var(--muted); margin-top: -0.5rem;">* Gemma 4 31B scores on agentic benchmarks are estimated/extrapolated from available data. GPT-5.5 scores are from OpenAI's official system card (April 23, 2026). The hallucination rate is a significant caveat for GPT-5.5 — see below.</p>
+
+  <div class="callout orange">
+    <strong>The hallucination problem:</strong> GPT-5.5's 86% hallucination rate on Artificial Analysis's independent AA-Omniscience eval is the number that should give every production team pause. Opus 4.7 runs at 36%. Gemini 3.1 Pro at 50%. GPT-5.5 knows more than anything ever tested — and will confidently answer questions it doesn't know the answer to at more than twice the rate of its closest competitor. For high-stakes knowledge work, this is not a minor footnote.
+  </div>
+
+  <!-- CAPABILITIES DEEP DIVE -->
+  <div class="section-accent"><div class="accent-line"></div><span>Capabilities</span></div>
+  <h2>Where Each Model Actually Wins</h2>
+
+  <h3>Agentic Coding: GPT-5.5, and It's Not Close</h3>
+  <p>
+    GPT-5.5 was specifically designed around Codex's agentic coding workloads. The 82.7% Terminal-Bench 2.0 score, the internal Expert-SWE at 73.1% (tasks with a 20-hour median human completion time), the 40% token efficiency improvement over GPT-5.4 — these are not benchmark numbers OpenAI optimized for. Teams at OpenAI are using it internally at 85%+ weekly penetration across software engineering, finance, and comms. Early CodeRabbit testing shows GPT-5.5 improving expected issue find rate from 55% to 65% in real code review. This is the model's genuine strong suit.
+  </p>
+
+  <h3>On-Device and Edge Deployment: Gemma 4, No Contest</h3>
+  <p>
+    GPT-5.5 doesn't run locally. Full stop. Gemma 4 E2B and E4B were co-engineered with Qualcomm and MediaTek for NPU-accelerated inference on Snapdragon and MediaTek chipsets — which means better hardware acceleration out-of-the-box than any previous open model at these sizes. For Android on-device AI pipelines, edge inference, air-gapped deployments, or any scenario where you can't send data to OpenAI's API, Gemma 4 is your only serious option.
+  </p>
+
+  <h3>Multimodality: Genuinely Different Approaches</h3>
+  <p>
+    GPT-5.5 is natively omnimodal — text, images, audio, and video in a single end-to-end model. Gemma 4 covers text, images, and video across all four sizes, plus native audio input on the E2B and E4B edge models (which is a significant deal for on-device speech pipelines). The key difference: GPT-5.5's unified architecture processes all modalities jointly. Gemma 4's multimodality is strong but the architecture details are less clear without a full technical report.
+  </p>
+
+  <h3>Context Window: GPT-5.5 Wins at Scale</h3>
+  <p>
+    GPT-5.5 ships with a <strong>1M token context window</strong> in the API. Gemma 4's server models (26B MoE, 31B Dense) have 256K; the edge models get 128K. For loading entire codebases, long research corpora, or large document workflows — GPT-5.5 has a meaningful advantage. Gemma 4's 256K is still excellent for most real-world use cases, but the ceiling difference matters for certain long-context agentic pipelines.
+  </p>
+
+  <!-- FULL COMPARISON TABLE -->
+  <div class="section-accent"><div class="accent-line"></div><span>Full Comparison</span></div>
+  <h2>Spec-by-Spec</h2>
+
+  <table class="feat-table">
+    <thead>
+      <tr>
+        <th>Dimension</th>
+        <th class="google-col">Gemma 4 (Best Variant)</th>
+        <th class="openai-col">GPT-5.5</th>
+        <th>Edge</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Release Date</td>
+        <td>April 2, 2026</td>
+        <td>April 23, 2026</td>
+        <td class="winner tie">Tie</td>
+      </tr>
+      <tr>
+        <td>Access Model</td>
+        <td>Open weights, Apache 2.0</td>
+        <td>API / ChatGPT only</td>
+        <td class="winner g">Gemma 4</td>
+      </tr>
+      <tr>
+        <td>Cost (API)</td>
+        <td>Free (self-hosted) / ~$0.03/1M via providers</td>
+        <td>$5 input / $30 output per 1M tokens</td>
+        <td class="winner g">Gemma 4</td>
+      </tr>
+      <tr>
+        <td>Context Window (Max)</td>
+        <td>256K (server models)</td>
+        <td>1M (API)</td>
+        <td class="winner o">GPT-5.5</td>
+      </tr>
+      <tr>
+        <td>On-Device / Local</td>
+        <td><span class="dot dot-teal"></span> Yes (all variants)</td>
+        <td><span class="dot dot-muted"></span> No</td>
+        <td class="winner g">Gemma 4</td>
+      </tr>
+      <tr>
+        <td>Edge Inference (NPU)</td>
+        <td><span class="dot dot-teal"></span> Yes (E2B/E4B, Qualcomm/MediaTek)</td>
+        <td><span class="dot dot-muted"></span> No</td>
+        <td class="winner g">Gemma 4</td>
+      </tr>
+      <tr>
+        <td>Native Audio Input</td>
+        <td><span class="dot dot-teal"></span> Yes (E2B/E4B)</td>
+        <td><span class="dot dot-teal"></span> Yes (unified)</td>
+        <td class="winner tie">Tie</td>
+      </tr>
+      <tr>
+        <td>Video Understanding</td>
+        <td><span class="dot dot-teal"></span> Yes (server models)</td>
+        <td><span class="dot dot-teal"></span> Yes</td>
+        <td class="winner tie">Tie</td>
+      </tr>
+      <tr>
+        <td>Agentic Coding</td>
+        <td>Capable (native function calling)</td>
+        <td>State-of-the-art (82.7% Terminal-Bench)</td>
+        <td class="winner o">GPT-5.5</td>
+      </tr>
+      <tr>
+        <td>Computer Use</td>
+        <td><span class="dot dot-muted"></span> Limited</td>
+        <td><span class="dot dot-teal"></span> Native (78.7% OSWorld)</td>
+        <td class="winner o">GPT-5.5</td>
+      </tr>
+      <tr>
+        <td>Hallucination Rate</td>
+        <td>Competitive (~40%)</td>
+        <td>High (86% on AA-Omniscience)</td>
+        <td class="winner g">Gemma 4</td>
+      </tr>
+      <tr>
+        <td>Fine-tuning / PTQ</td>
+        <td><span class="dot dot-teal"></span> Full access (GPTQ, AWQ, SpinQuant)</td>
+        <td><span class="dot dot-muted"></span> Not available</td>
+        <td class="winner g">Gemma 4</td>
+      </tr>
+      <tr>
+        <td>Multilingual</td>
+        <td>140+ languages</td>
+        <td>Broad multilingual</td>
+        <td class="winner tie">Tie</td>
+      </tr>
+      <tr>
+        <td>Native Function Calling</td>
+        <td><span class="dot dot-teal"></span> Yes</td>
+        <td><span class="dot dot-teal"></span> Yes</td>
+        <td class="winner tie">Tie</td>
+      </tr>
+      <tr>
+        <td>License</td>
+        <td>Apache 2.0 (fully permissive)</td>
+        <td>OpenAI Terms of Service</td>
+        <td class="winner g">Gemma 4</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- THE REAL QUESTION -->
+  <div class="section-accent"><div class="accent-line"></div><span>The Real Question</span></div>
+  <h2>This Isn't a Race — It's Two Different Products</h2>
+
+  <p>
+    Most "model comparison" posts treat this as a horse race where only one model can win. That framing is wrong for Gemma 4 vs GPT-5.5, because these models are optimized for fundamentally different deployment scenarios.
+  </p>
+  <p>
+    GPT-5.5 is built to be the best possible model you can call via API — period. It's the engine for OpenAI's super-app ambition. The agentic coding, knowledge work, and computer use capabilities are real and well ahead of anything else if your deployment is a cloud API call.
+  </p>
+  <p>
+    Gemma 4 is built to be the best possible model you can <em>own</em>. Run it on your hardware. Quantize it. Fine-tune it. Deploy it offline. Ship it to a phone. The Apache 2.0 license removes the last friction for enterprise and sovereign deployments. No usage ceiling, no data sent to external APIs, no vendor lock-in.
+  </p>
+
+  <div class="callout">
+    <strong>The one question that settles it:</strong> Does your deployment require the weights to live on your infrastructure? If yes — Gemma 4, not even close. If no — what's your hallucination tolerance, and what's your token budget? Those two variables should drive the rest of the analysis.
+  </div>
+
+  <!-- WHO SHOULD USE WHAT -->
+  <div class="section-accent"><div class="accent-line"></div><span>Decision Guide</span></div>
+  <h2>Who Should Use Which</h2>
+
+  <div class="verdict-grid">
+    <div class="verdict-card google">
+      <div class="verdict-heading g">Choose Gemma 4 if you are…</div>
+      <ul>
+        <li>Building on-device Android / iOS apps</li>
+        <li>Deploying in air-gapped or sovereign environments</li>
+        <li>Running quantization experiments (W3/W4 PTQ)</li>
+        <li>Working on research that needs fine-tuning access</li>
+        <li>Building for markets with 140+ language coverage</li>
+        <li>Cost-sensitive at high token volumes</li>
+        <li>Building on Qualcomm / MediaTek NPU stacks</li>
+        <li>Needing commercial deployment without usage caps</li>
+      </ul>
+    </div>
+    <div class="verdict-card openai">
+      <div class="verdict-heading o">Choose GPT-5.5 if you are…</div>
+      <ul>
+        <li>Building agentic coding or developer tooling</li>
+        <li>Running multi-step computer-use workflows</li>
+        <li>Needing 1M+ token long-context pipelines</li>
+        <li>Doing knowledge work at frontier capability levels</li>
+        <li>Already integrated in the ChatGPT / Codex ecosystem</li>
+        <li>Running financial modeling or investment banking workflows</li>
+        <li>Prioritizing raw benchmark performance over cost</li>
+        <li>Can tolerate a higher hallucination rate with verification steps</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- QUANTIZATION NOTE -->
+  <div class="section-accent"><div class="accent-line"></div><span>Quantization Note</span></div>
+  <h2>For Those of Us Running PTQ Experiments</h2>
+
+  <p>
+    I've been running W4 experiments on the Gemma 4 26B MoE this week, so a few quick observations relevant to the quantization community that you won't find in the standard model comparisons:
+  </p>
+
+  <div class="chip-list">
+    <span class="chip">W4A16 INT4 weights</span>
+    <span class="chip">26B MoE — 3.8B active params</span>
+    <span class="chip">Dynamic routing per token</span>
+    <span class="chip">256K context</span>
+    <span class="chip">Fits dual consumer GPU at INT4</span>
+  </div>
+
+  <p>
+    The MoE routing creates dynamic activation statistics that complicate calibration-based methods. AWQ's scale-search and GPTQ's Hessian estimation both assume relatively stable activation distributions across calibration samples — the expert routing variability breaks this assumption more than in dense models. SpinQuant's learned rotation is showing more promise here than fixed Hadamard, which makes sense given the geometry is input-dependent.
+  </p>
+  <p>
+    GPT-5.5 is entirely irrelevant to this discussion. Black-box API. No weight access. If you're doing PTQ research, Gemma 4 is your only playground in the frontier tier.
+  </p>
+
+  <div class="callout pink">
+    <strong>Quantization researchers specifically:</strong> The Gemma 4 31B Dense in bfloat16 fits on a single 80 GB H100. At W4, comfortably fits on a single consumer GPU with 24 GB VRAM. The 26B MoE at INT4 fits dual consumer GPU setups. Both are immediately runnable. The full PTQ toolchain — AWQ, GPTQ, SpinQuant, QuaRot — is available day one. That's not a marginal advantage over a closed API; it's the difference between doing research and not doing research.
+  </div>
+
+  <!-- CLOSING -->
+  <div class="section-accent"><div class="accent-line"></div><span>Verdict</span></div>
+  <h2>Final Thoughts</h2>
+
+  <p>
+    If I had to summarize this in two sentences: GPT-5.5 is the best thing you can call via API for complex, agentic, long-horizon work. Gemma 4 is the best thing you can own — and the gap between "owning" a frontier-class model and "renting" one is larger than most organizations have fully internalized.
+  </p>
+  <p>
+    The hallucination number on GPT-5.5 (86% vs. Opus 4.7's 36% on independent evals) is the one result I'd push back hardest on in OpenAI's framing. A model that scores highest on the intelligence index but hallucinates at more than twice the competitor rate is not straightforwardly the best choice for production knowledge work. Dial in verification steps and it may well be — but that's additional engineering overhead that the benchmark card doesn't account for.
+  </p>
+  <p>
+    Gemma 4 winning Apache 2.0 licensing, edge NPU support, quantization access, and cost — that's a real moat for a specific and large class of real-world deployments. The open model story has never been this compelling at the frontier tier.
+  </p>
+  <p>
+    Follow-up post coming once I have cleaner W4 numbers on the 26B MoE. I'll also be comparing against Llama baselines and running the RDQ / CEC pipeline to see if distributional drift corrections are as useful on MoE architectures as they are on dense ones — my hypothesis is they're less critical early but compound differently through the routing layers.
+  </p>
+
+  <div class="callout">
+    <strong>Quick links:</strong><br/>
+    Gemma 4 — Hugging Face: <a href="https://huggingface.co/collections/google/gemma-4" target="_blank">google/gemma-4</a> ·
+    Gemma 4 — AI Studio: <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a> ·
+    GPT-5.5 — System card: <a href="https://openai.com/index/introducing-gpt-5-5/" target="_blank">openai.com</a> ·
+    GPT-5.5 — API pricing: <a href="https://platform.openai.com/docs/models" target="_blank">platform.openai.com</a> ·
+    Artificial Analysis Intelligence Index: <a href="https://artificialanalysis.ai" target="_blank">artificialanalysis.ai</a>
+  </div>
+
+</article>
+
+<!-- ── FOOTER ── -->
+<footer class="site-footer">
+  <p>Written by <strong>Prateek Singh</strong> · Senior Manager, GenAI &amp; Digital Health AI · Samsung Research Institute India</p>
+  <p style="margin-top:0.5rem;"><a href="https://prateeksinghphd.in">prateeksinghphd.in
+  </a></p>
+</footer>
+
+</body>
+</html>
