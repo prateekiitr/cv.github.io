@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>CPU vs GPU vs NPU — Who Really Runs Your LLM on Mobile? | Prateek Singh</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg:       #0d0d12;
+      --bg-card:  #13131a;
+      --bg-card2: #1a1a24;
+      --teal:     #00d9b4;
+      --purple:   #7c6bff;
+      --pink:     #ff6b9d;
+      --orange:   #ffb347;
+      --text:     #e2e2ef;
+      --muted:    #8888aa;
+      --border:   rgba(255,255,255,0.07);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg) !important;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 17px;
+      line-height: 1.75;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    .site-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.4rem 2.5rem;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0;
+      background: rgba(13,13,18,0.92) !important;
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+    .site-logo {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900; font-size: 1.15rem;
+      color: var(--teal); text-decoration: none;
+      letter-spacing: 0.02em;
+    }
+    .site-nav a {
+      color: var(--muted); text-decoration: none;
+      font-size: 0.875rem; font-weight: 500;
+      margin-left: 1.8rem; transition: color 0.2s;
+    }
+    .site-nav a:hover { color: var(--teal); }
+
+    /* ── HERO ── */
+    .hero {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 5rem 2rem 3.5rem;
+      animation: fadeUp 0.6s ease both;
+    }
+    .hero-meta {
+      display: flex; align-items: center;
+      gap: 1rem; margin-bottom: 1.6rem; flex-wrap: wrap;
+    }
+    .tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.3em 0.85em; border-radius: 20px;
+      background: rgba(0,217,180,0.12); color: var(--teal);
+      border: 1px solid rgba(0,217,180,0.25);
+    }
+    .tag.purple { background: rgba(124,107,255,0.12); color: var(--purple); border-color: rgba(124,107,255,0.25); }
+    .tag.orange { background: rgba(255,179,71,0.12);  color: var(--orange); border-color: rgba(255,179,71,0.25); }
+    .tag.pink   { background: rgba(255,107,157,0.12); color: var(--pink);   border-color: rgba(255,107,157,0.25); }
+    .hero-date { font-size: 0.8rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      line-height: 1.15; color: #fff;
+      margin-bottom: 1.2rem; letter-spacing: -0.01em;
+    }
+    .hero h1 em { font-style: italic; color: var(--teal); }
+    .hero-subtitle {
+      font-size: 1.15rem; color: var(--muted);
+      font-weight: 300; max-width: 640px; line-height: 1.7;
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      max-width: 820px; margin: 0 auto 2.5rem;
+      padding: 0 2rem; height: 1px; background: var(--border);
+    }
+
+    /* ── ARTICLE ── */
+    .article {
+      max-width: 820px; margin: 0 auto;
+      padding: 0 2rem 6rem;
+      animation: fadeUp 0.7s ease 0.1s both;
+    }
+    .article h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.75rem; font-weight: 700; color: #fff;
+      margin: 3.2rem 0 1rem;
+      padding-bottom: 0.6rem; border-bottom: 1px solid var(--border);
+    }
+    .article h3 {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1.1rem; font-weight: 600; color: var(--teal);
+      margin: 2rem 0 0.7rem; letter-spacing: 0.01em;
+    }
+    .article p { margin-bottom: 1.3rem; color: #c8c8e0; }
+    .article strong { color: var(--text); font-weight: 600; }
+    .article a { color: var(--teal); text-decoration: none; }
+    .article a:hover { text-decoration: underline; }
+
+    /* ── SECTION ACCENT ── */
+    .section-accent {
+      display: flex; align-items: center;
+      gap: 0.75rem; margin-bottom: 0.5rem;
+    }
+    .section-accent .accent-line {
+      width: 28px; height: 2px;
+      background: var(--teal); border-radius: 2px;
+    }
+    .section-accent span {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem; color: var(--teal);
+      text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600;
+    }
+
+    /* ── CALLOUT ── */
+    .callout {
+      background: var(--bg-card);
+      border-left: 3px solid var(--teal);
+      border-radius: 0 12px 12px 0;
+      padding: 1.2rem 1.5rem; margin: 2rem 0;
+      font-size: 0.95rem; color: #b0b0cc; line-height: 1.7;
+    }
+    .callout.purple { border-color: var(--purple); }
+    .callout.orange { border-color: var(--orange); }
+    .callout.pink   { border-color: var(--pink); }
+
+    /* ── PIPELINE ── */
+    .pipeline { display: flex; flex-direction: column; gap: 0; margin: 2.5rem 0; }
+    .pipeline-step {
+      display: flex; align-items: flex-start; gap: 1.2rem;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 0; padding: 1.4rem 1.5rem;
+      position: relative; transition: border-color 0.2s;
+    }
+    .pipeline-step:first-child { border-radius: 14px 14px 0 0; }
+    .pipeline-step:last-child  { border-radius: 0 0 14px 14px; }
+    .pipeline-step:not(:last-child) { border-bottom: none; }
+    .pipeline-step:hover { border-color: rgba(0,217,180,0.25); z-index: 1; }
+    .step-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem; font-weight: 600;
+      min-width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 8px; margin-top: 0.15rem; flex-shrink: 0;
+    }
+    .step-num.teal   { background: rgba(0,217,180,0.15);  color: var(--teal); }
+    .step-num.purple { background: rgba(124,107,255,0.15); color: var(--purple); }
+    .step-num.orange { background: rgba(255,179,71,0.15);  color: var(--orange); }
+    .step-num.pink   { background: rgba(255,107,157,0.15); color: var(--pink); }
+    .step-body { flex: 1; }
+    .step-title { font-weight: 600; font-size: 1rem; color: var(--text); margin-bottom: 0.3rem; }
+    .step-desc  { font-size: 0.88rem; color: var(--muted); line-height: 1.6; }
+
+    /* ── CONCEPT CARDS ── */
+    .concept-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem; margin: 2.5rem 0;
+    }
+    .concept-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1.5rem 1.3rem;
+      position: relative; overflow: hidden;
+      transition: transform 0.2s, border-color 0.25s;
+    }
+    .concept-card:hover { transform: translateY(-2px); border-color: rgba(0,217,180,0.25); }
+    .concept-card::before {
+      content: ''; position: absolute;
+      top: 0; left: 0; right: 0; height: 3px; border-radius: 14px 14px 0 0;
+    }
+    .concept-card.c1::before { background: var(--orange); }
+    .concept-card.c2::before { background: var(--purple); }
+    .concept-card.c3::before { background: var(--teal); }
+    .concept-icon { font-size: 1.5rem; margin-bottom: 0.75rem; }
+    .concept-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem; text-transform: uppercase;
+      letter-spacing: 0.07em; color: var(--muted); margin-bottom: 0.4rem;
+    }
+    .concept-title {
+      font-family: 'Playfair Display', serif;
+      font-weight: 700; font-size: 1.1rem; color: #fff; margin-bottom: 0.5rem;
+    }
+    .concept-desc { font-size: 0.83rem; color: var(--muted); line-height: 1.55; }
+
+    /* ── HIGHLIGHT BOX ── */
+    .highlight-box {
+      background: linear-gradient(135deg, rgba(0,217,180,0.08), rgba(124,107,255,0.08));
+      border: 1px solid rgba(0,217,180,0.2);
+      border-radius: 16px; padding: 2rem; margin: 2.5rem 0;
+    }
+    .highlight-box p { margin-bottom: 0; }
+
+    /* ── ANALOGY BOX ── */
+    .analogy {
+      background: var(--bg-card2);
+      border: 1px dashed rgba(124,107,255,0.3);
+      border-radius: 12px; padding: 1.4rem 1.5rem; margin: 1.5rem 0;
+    }
+    .analogy-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--purple);
+      margin-bottom: 0.5rem; font-weight: 600;
+    }
+    .analogy p { color: #b0b0cc; margin: 0; font-size: 0.93rem; }
+
+    /* ── CODE ── */
+    code {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.82em;
+      background: rgba(0,217,180,0.1); color: var(--teal);
+      border-radius: 5px; padding: 0.15em 0.5em;
+    }
+    pre {
+      background: var(--bg-card2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.5rem;
+      overflow-x: auto; margin: 1.5rem 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem; line-height: 1.7; color: #c8c8e0;
+    }
+    pre .kw  { color: var(--purple); }
+    pre .fn  { color: var(--teal); }
+    pre .str { color: var(--orange); }
+    pre .cmt { color: var(--muted); font-style: italic; }
+
+    /* ── CHIP LIST ── */
+    .chip-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0; }
+    .chip {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
+      padding: 0.3em 0.75em; background: var(--bg-card2);
+      border: 1px solid var(--border); border-radius: 6px; color: var(--muted);
+    }
+
+    /* ── TABLE ── */
+    .table-wrap { overflow-x: auto; margin: 2rem 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    thead th {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--muted); border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1rem; text-align: left; font-weight: 600;
+    }
+    tbody td {
+      padding: 0.85rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.04);
+      color: #c8c8e0; vertical-align: top;
+    }
+    tbody tr:hover td { background: rgba(255,255,255,0.02); }
+    .td-win { color: var(--teal); font-weight: 600; }
+
+    /* ── BADGE ── */
+    .badge {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; font-weight: 600;
+      padding: 0.2em 0.55em; border-radius: 5px; display: inline-block; margin-right: 0.2em;
+    }
+    .badge.cpu { background: rgba(255,179,71,0.12);  color: var(--orange); border: 1px solid rgba(255,179,71,0.25); }
+    .badge.gpu { background: rgba(124,107,255,0.12); color: var(--purple); border: 1px solid rgba(124,107,255,0.25); }
+    .badge.npu { background: rgba(0,217,180,0.12);   color: var(--teal);   border: 1px solid rgba(0,217,180,0.25); }
+
+    /* ── STAT ROW ── */
+    .stat-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; margin: 2rem 0; }
+    .stat-box {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1.4rem 1.2rem; text-align: center;
+    }
+    .stat-val {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.1rem; font-weight: 900; line-height: 1; margin-bottom: 0.35rem;
+    }
+    .stat-unit { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: var(--muted); letter-spacing: 0.08em; }
+
+    /* ── FIGURE ── */
+    .figure { margin: 2.8rem 0; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); background: var(--bg-card); }
+    .figure img {
+      width: 100%; display: block; max-height: 360px;
+      object-fit: cover; object-position: center top;
+      filter: brightness(0.88) saturate(0.85); transition: filter 0.3s;
+    }
+    .figure:hover img { filter: brightness(1) saturate(1); }
+    .figure-caption {
+      padding: 0.75rem 1.2rem; border-top: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace; font-size: 0.67rem; color: var(--muted); letter-spacing: 0.04em;
+    }
+
+    /* ── FOOTER ── */
+    .site-footer {
+      border-top: 1px solid var(--border); padding: 2.5rem;
+      text-align: center; font-size: 0.82rem; color: var(--muted);
+    }
+    .site-footer a { color: var(--teal); text-decoration: none; }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      .site-header { padding: 1rem 1.25rem; }
+      .site-nav { display: none; }
+      .hero, .article { padding-left: 1.25rem; padding-right: 1.25rem; }
+      .divider { padding: 0 1.25rem; }
+      .hero h1 { font-size: 2rem; }
+      .concept-grid { grid-template-columns: 1fr; }
+      .stat-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="/" class="site-logo">Prateek Singh, PhD</a>
+  <nav class="site-nav">
+    <a href="/">Home</a>
+    <a href="/blog">Blog</a>
+    <a href="/research">Research</a>
+    <a href="/contact">Contact</a>
+  </nav>
+</header>
+
+<div style="max-width:820px;margin:0 auto;padding:1.8rem 2rem 0;">
+  <a href="/blog" style="display:inline-flex;align-items:center;gap:0.5rem;font-family:'JetBrains Mono',monospace;font-size:0.72rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='var(--teal)'" onmouseout="this.style.color='var(--muted)'">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to Blog
+  </a>
+</div>
+
+<section class="hero">
+  <div class="hero-meta">
+    <span class="tag">On-Device AI</span>
+    <span class="tag purple">Qualcomm</span>
+    <span class="tag orange">LLM Inference</span>
+    <span class="tag pink">Mobile AI</span>
+    <span class="hero-date">May 8, 2026</span>
+  </div>
+  <h1>CPU vs GPU vs NPU —<br/><em>Who Really Runs</em><br/>Your LLM on Mobile?</h1>
+  <p class="hero-subtitle">
+    Ask most engineers "which processor runs the AI?" and you'll get a confident but incomplete answer. LLM inference on Snapdragon isn't owned by one processor — it's a carefully orchestrated relay race. Here's how it actually works.
+  </p>
+</section>
+
+<div class="divider"></div>
+
+<article class="article">
+
+  <p>
+    If you've ever profiled an LLM running on a Snapdragon device, you know the truth is far messier — and far more interesting — than "it runs on the NPU." Token generation on modern mobile chips is a tightly choreographed handoff between the CPU, the Adreno GPU, and the Hexagon NPU, each taking the baton at different moments in the generation pipeline.
+  </p>
+  <p>
+    Understanding this choreography is what separates teams that get 15 tokens/sec from those who ship 45. This post walks through each processor's role, how runtimes make dispatch decisions, and practical guidance for on-device LLM products that hold up in production.
+  </p>
+
+  <div class="concept-grid">
+    <div class="concept-card c1">
+      <div class="concept-icon">🧠</div>
+      <div class="concept-name">Processor 1</div>
+      <div class="concept-title">Oryon CPU</div>
+      <div class="concept-desc">Orchestrator. Runs the runtime, tokenizes input, schedules dispatches, handles all control flow.</div>
+    </div>
+    <div class="concept-card c2">
+      <div class="concept-icon">⚡</div>
+      <div class="concept-name">Processor 2</div>
+      <div class="concept-title">Adreno GPU</div>
+      <div class="concept-desc">Parallel engine. Prefill matmuls, attention kernels, and activations via Vulkan compute shaders.</div>
+    </div>
+    <div class="concept-card c3">
+      <div class="concept-icon">🔷</div>
+      <div class="concept-name">Processor 3</div>
+      <div class="concept-title">Hexagon NPU</div>
+      <div class="concept-desc">Efficiency champion. INT4/INT8 quantized ops at 45 TOPS with best-in-class performance-per-watt.</div>
+    </div>
+  </div>
+
+  <!-- S1 -->
+  <div class="section-accent"><div class="accent-line"></div><span>Section 01</span></div>
+  <h2>The Three Processors — A Mental Model</h2>
+
+  <p>
+    Modern Snapdragon SoCs are not single chips — they are complete computing platforms on one die. On the Snapdragon 8 Elite, you get the Qualcomm Oryon CPU, the Adreno GPU with its new sliced architecture, and the Hexagon NPU — all sharing a unified memory subsystem and communicating over high-bandwidth interconnects.
+  </p>
+
+  <div class="figure">
+    <img src="https://s7d1.scene7.com/is/image/dmqualcommprod/8-elite-social-chip" alt="Qualcomm Snapdragon 8 Elite SoC" loading="lazy" />
+    <div class="figure-caption">Qualcomm Snapdragon 8 Elite — Oryon CPU + Adreno GPU + Hexagon NPU on a single die. Source: Qualcomm</div>
+  </div>
+
+  <div class="figure">
+    <img src="https://i0.wp.com/innogyan.in/wp-content/uploads/2024/10/wp-17300893394638701936101277257054.jpg" alt="Snapdragon 8 Elite SM8750 die shot with component layout — Oryon CPU cores, Adreno GPU, Hexagon NPU, modem" loading="lazy" />
+    <div class="figure-caption">Snapdragon 8 Elite (SM8750) die shot — component space allocation: Oryon CPU cluster (top-left), Adreno GPU (centre), Hexagon NPU (right), X80 modem (bottom). Source: innoGyan / Kurnal</div>
+  </div>
+
+  <p>
+    Each processor has a fundamentally different design philosophy. The <strong>CPU</strong> optimizes for latency on a single thread. The <strong>GPU</strong> optimizes for throughput across thousands of parallel threads. The <strong>NPU</strong> optimizes for efficiency — maximum integer tensor operations per milliwatt. LLM inference needs all three.
+  </p>
+
+  <div class="analogy">
+    <div class="analogy-label">Intuition</div>
+    <p>Think of it like a film crew. The CPU is the director — decides what happens and when. The GPU is the cinematography team — does the heavy parallel work at scale. The NPU is the specialized VFX studio — executes a narrow class of tasks (quantized inference) with unmatched efficiency. Great films need all three.</p>
+  </div>
+
+  <div class="callout">
+    <strong>Key spec:</strong> The Snapdragon 8 Elite's Hexagon NPU delivers <strong>45 TOPS</strong> — 45% faster and 45% better performance-per-watt than Snapdragon 8 Gen 3. But raw TOPS don't win LLM inference. Memory bandwidth is equally decisive.
+  </div>
+
+  <!-- S2 -->
+  <div class="section-accent"><div class="accent-line"></div><span>Section 02</span></div>
+  <h2>Prefill vs Decode — Two Radically Different Workloads</h2>
+
+  <p>
+    Before mapping operators to processors, you need to understand that LLM inference has two distinct phases — and they stress your hardware in completely opposite ways.
+  </p>
+
+  <div class="pipeline">
+    <div class="pipeline-step">
+      <div class="step-num teal">P</div>
+      <div class="step-body">
+        <div class="step-title">Prefill — Compute-Bound</div>
+        <div class="step-desc">All input tokens are processed simultaneously. Massive matrix multiplications, full-context attention, high parallelism. GPU utilization spikes. The Adreno Vulkan compute pipeline dominates here. Bottleneck: FLOPS.</div>
+      </div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num orange">D</div>
+      <div class="step-body">
+        <div class="step-title">Decode — Memory-Bandwidth-Bound</div>
+        <div class="step-desc">One token generated at a time, autoregressively. Each step loads the full KV cache from memory. Compute intensity drops dramatically. Even with 45 TOPS available, the system is waiting on memory reads — not compute cycles. Bottleneck: bandwidth.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout orange">
+    <strong>Most common optimization mistake:</strong> Over-investing in compute TOPS and ignoring memory bandwidth. Decode speed is almost entirely determined by how fast you read the KV cache — not how fast you multiply matrices.
+  </div>
+
+  <pre><span class="cmt">// Prefill vs Decode — characteristic workload profile</span>
+
+<span class="kw">Prefill</span>  → batch_size : <span class="str">N tokens (full prompt)</span>
+          → operation  : large matmuls, full attention
+          → bottleneck : FLOPS  → <span class="fn">GPU preferred</span>
+          → utilization: HIGH
+
+<span class="kw">Decode</span>   → batch_size : <span class="str">1 token per step</span>
+          → operation  : thin matmuls + KV cache reads
+          → bottleneck : bandwidth → <span class="fn">NPU preferred (W4)</span>
+          → utilization: appears LOW, but latency is HIGH</pre>
+
+  <!-- S3 -->
+  <div class="section-accent"><div class="accent-line"></div><span>Section 03</span></div>
+  <h2>Who Does What — The Operator-Level Picture</h2>
+
+  <h3>CPU — The Orchestrator</h3>
+  <p>
+    The Oryon CPU runs the runtime (QNN, llama.cpp, MLC-LLM), tokenizes input, schedules kernel dispatches, manages memory allocation, and handles all irregular control flow that GPUs and NPUs cannot express. On Snapdragon 8 Elite, Oryon cores run at up to 4.47 GHz, providing the single-thread responsiveness critical for fast scheduling.
+  </p>
+
+  <h3>GPU — The Parallel Engine</h3>
+  <p>
+    The Adreno GPU, running <strong>Vulkan compute shaders</strong>, is where the heavy transformer arithmetic lives. Large weight matrix multiplications, multi-head attention (<code>softmax(QKᵀ/√d)·V</code>), RMSNorm, SwiGLU activations, and KV cache projections are all natural GPU workloads. Vulkan's low driver overhead and fine-grained synchronization make it particularly effective for the rapid kernel-launch cadence of transformer layers.
+  </p>
+
+  <div class="figure">
+    <img src="https://s7d1.scene7.com/is/image/dmqualcommprod/engineering-human-progress" alt="Qualcomm AI Engine heterogeneous computing" loading="lazy" />
+    <div class="figure-caption">Qualcomm AI Engine — heterogeneous computing across Oryon CPU, Adreno GPU, and Hexagon NPU. Source: Qualcomm</div>
+  </div>
+
+  <h3>NPU — The Efficiency Champion</h3>
+  <p>
+    The Hexagon NPU is purpose-built for quantized integer inference. Its Tensor Accelerator handles INT4 and INT8 operations — the core compute primitive of modern quantized LLMs. The Hexagon's <strong>micro-tile inferencing</strong> breaks networks into small tiles, eliminating memory traffic across 10+ layers and maximizing scalar/vector/tensor accelerator utilization simultaneously. At W4, the NPU delivers dramatically better performance-per-watt than the GPU.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Operation</th><th>Preferred Processor</th><th>Reason</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Tokenization</td><td><span class="badge cpu">CPU</span></td><td>String ops, irregular control flow</td></tr>
+        <tr><td>Prefill matmuls (FP16)</td><td><span class="badge gpu">GPU</span></td><td>Large batch parallelism, FLOP throughput</td></tr>
+        <tr><td>Multi-head attention</td><td><span class="badge gpu">GPU</span></td><td>Softmax, irregular memory access patterns</td></tr>
+        <tr><td>W4 decode matmuls</td><td class="td-win"><span class="badge npu">NPU</span> ← winner</td><td>INT4 hardware, micro-tile, power efficiency</td></tr>
+        <tr><td>RMSNorm / SwiGLU</td><td><span class="badge gpu">GPU</span></td><td>Fused Vulkan kernels reduce sync overhead</td></tr>
+        <tr><td>KV cache management</td><td><span class="badge cpu">CPU</span> + <span class="badge gpu">GPU</span></td><td>Allocation on CPU, reads on GPU</td></tr>
+        <tr><td>Logit sampling (top-k/p)</td><td><span class="badge cpu">CPU</span></td><td>Sequential, branch-heavy logic</td></tr>
+        <tr><td>Sustained low-power decode</td><td class="td-win"><span class="badge npu">NPU</span> ← winner</td><td>Performance-per-watt dominance under thermal load</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- S4 -->
+  <div class="section-accent"><div class="accent-line"></div><span>Section 04</span></div>
+  <h2>The Hybrid Reality — It's a Relay Race</h2>
+
+  <p>
+    No single processor dominates production mobile LLM inference. Modern runtimes — QNN, llama.cpp (Vulkan backend), MLC-LLM — implement dynamic operator dispatch, routing each layer to whichever backend is optimal for that operation at that moment.
+  </p>
+
+  <div class="pipeline">
+    <div class="pipeline-step">
+      <div class="step-num teal">1</div>
+      <div class="step-body">
+        <div class="step-title"><span class="badge cpu">CPU</span> Tokenize &amp; Schedule</div>
+        <div class="step-desc">Tokenize input, prepare buffers, compile and schedule the kernel dispatch graph.</div>
+      </div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num purple">2</div>
+      <div class="step-body">
+        <div class="step-title"><span class="badge gpu">GPU</span> Prefill Pass</div>
+        <div class="step-desc">Embed tokens, run full-context multi-head attention via Vulkan compute shaders. GPU utilization spikes here.</div>
+      </div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num teal">3</div>
+      <div class="step-body">
+        <div class="step-title"><span class="badge npu">NPU</span> W4 Projection Matmuls</div>
+        <div class="step-desc">Weight projection layers (Q, K, V, O, FFN) dispatched to Hexagon INT4 Tensor Accelerator.</div>
+      </div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num orange">4</div>
+      <div class="step-body">
+        <div class="step-title"><span class="badge gpu">GPU</span> Normalization + Activation</div>
+        <div class="step-desc">RMSNorm and SwiGLU fused into a single Vulkan kernel to minimize synchronization barriers.</div>
+      </div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num teal">5</div>
+      <div class="step-body">
+        <div class="step-title"><span class="badge npu">NPU</span> Sustained Decode</div>
+        <div class="step-desc">Each decode step's weight ops run on Hexagon. Micro-tile inferencing keeps power stable through long generations.</div>
+      </div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num pink">6</div>
+      <div class="step-body">
+        <div class="step-title"><span class="badge cpu">CPU</span> Sample + Detokenize</div>
+        <div class="step-desc">Top-k/top-p sampling on the logit distribution, then detokenize and return the output string.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout purple">
+    <strong>QNN backend strategy:</strong> QNN exposes three backends — <code>HTP</code> (Hexagon NPU), <code>GPU</code> (Adreno Vulkan), and <code>CPU</code> (Oryon). For a typical W4-quantized 7B model, HTP handles projections, GPU handles attention, and CPU handles sampling. The runtime selects backends per-subgraph based on profiled latency.
+  </div>
+
+  <!-- S5 -->
+  <div class="section-accent"><div class="accent-line"></div><span>Section 05</span></div>
+  <h2>Quantization Changes the Entire Equation</h2>
+
+  <p>
+    Running a 7B model in FP16 requires ~14 GB of weight storage. That's not feasible on any current smartphone. Quantization is what makes on-device LLMs real — and it completely reshapes which processor wins.
+  </p>
+
+  <div class="stat-row">
+    <div class="stat-box">
+      <div class="stat-val" style="color: var(--orange);">14 GB</div>
+      <div class="stat-unit">7B model · FP16</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-val" style="color: var(--purple);">3.5 GB</div>
+      <div class="stat-unit">7B model · W4 INT4</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-val" style="color: var(--teal);">4×</div>
+      <div class="stat-unit">memory reduction</div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Precision</th><th>Optimal Processor</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>FP16 / BF16</td><td><span class="badge gpu">GPU</span></td><td>GPU has native FP16 tensor units. NPU less efficient here.</td></tr>
+        <tr><td>W8 (INT8)</td><td><span class="badge npu">NPU</span> / <span class="badge gpu">GPU</span></td><td>Both competitive. NPU starts winning on power budget.</td></tr>
+        <tr><td>W4 (INT4)</td><td class="td-win"><span class="badge npu">NPU</span> ← clear winner</td><td>Dedicated INT4 hardware. 2× throughput vs INT8 on HTP.</td></tr>
+        <tr><td>W3 / W2</td><td><span class="badge gpu">GPU</span></td><td>Below W4, GPU with SpinQuant / QuaRot rotation often wins.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="analogy">
+    <div class="analogy-label">Research Note</div>
+    <p>At W3 and below, rotation-based quantization methods (SpinQuant, QuaRot) that apply orthogonal transforms before quantization currently outperform pure INT approaches — because they preserve activation distributions that both the NPU and GPU can process more efficiently, at the cost of a small dequantization step.</p>
+  </div>
+
+  <!-- S6 -->
+  <div class="section-accent"><div class="accent-line"></div><span>Section 06</span></div>
+  <h2>Latency, Throughput, and the Thermal Wall</h2>
+
+  <div class="pipeline">
+    <div class="pipeline-step">
+      <div class="step-num teal">T</div>
+      <div class="step-body">
+        <div class="step-title">Time to First Token (TTFT)</div>
+        <div class="step-desc">Dominated by prefill speed. Long prompts = longer prefill. GPU-accelerated prefill with fused Vulkan kernels is the primary lever. Users feel TTFT as responsiveness — it's your first impression metric.</div>
+      </div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num purple">S</div>
+      <div class="step-body">
+        <div class="step-title">Tokens per Second (Decode Speed)</div>
+        <div class="step-desc">Dominated by memory bandwidth. NPU with W4 reduces the working set, cutting bandwidth pressure. But thermal throttling can drop this 30–50% after sustained generation — a factor that benchmarks almost never capture.</div>
+      </div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num orange">W</div>
+      <div class="step-body">
+        <div class="step-title">Power &amp; Thermals</div>
+        <div class="step-desc">NPU is non-negotiable for production. Hexagon's dedicated power rail and micro-tile inferencing sustain inference at dramatically lower wattage. For an always-on agent or background assistant, GPU-only inference is simply not shippable.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout orange">
+    <strong>The thermal trap:</strong> In a 60-second benchmark, GPU delivers the highest peak tokens/sec. In a 5-minute user session, NPU wins — because the GPU's thermal envelope triggers SoC throttling, while the NPU holds steady. Always build a sustained-load test harness before publishing performance targets.
+  </div>
+
+  <!-- S7 -->
+  <div class="section-accent"><div class="accent-line"></div><span>Section 07</span></div>
+  <h2>Real Numbers — Snapdragon 8 Gen 3 Inference</h2>
+
+  <div class="stat-row">
+    <div class="stat-box">
+      <div class="stat-val" style="color: var(--teal);">20–30</div>
+      <div class="stat-unit">tok/sec · NPU W4</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-val" style="color: var(--purple);">30–50</div>
+      <div class="stat-unit">tok/sec · GPU FP16</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-val" style="color: var(--orange);">3–8</div>
+      <div class="stat-unit">tok/sec · CPU only</div>
+    </div>
+  </div>
+
+  <pre><span class="cmt">// Snapdragon Profiler — 8 Gen 3 · 7B W4 model</span>
+
+<span class="kw">[Prefill — 512 tokens]</span>
+  GPU utilization : <span class="fn">78%</span>
+  NPU utilization : <span class="fn">65%</span>
+  TTFT            : <span class="str">~1.2 seconds</span>
+
+<span class="kw">[Decode — sustained 200 tokens]</span>
+  GPU utilization : <span class="fn">22%</span>  <span class="cmt">← appears low, but memory-bound</span>
+  NPU utilization : <span class="fn">80%</span>
+  tokens/sec      : <span class="str">22–26</span>
+  SoC temperature : <span class="str">38°C</span>  <span class="cmt">← stable, no throttle on NPU path</span></pre>
+
+  <div class="callout">
+    <strong>Snapdragon 8 Elite update:</strong> The Hexagon NPU on the 8 Elite is 45% faster and 45% better per-watt vs Gen 3. For a W4-quantized Llama 3.1 8B with hybrid NPU+GPU routing, sustained decode can approach <strong>40+ tokens/sec</strong> at stable thermals.
+  </div>
+
+  <!-- S8 -->
+  <div class="section-accent"><div class="accent-line"></div><span>Section 08</span></div>
+  <h2>What This Means for Developers</h2>
+
+  <h3>1. Use W4 quantization as your baseline</h3>
+  <p>W4 is the sweet spot for the Hexagon NPU's INT4 hardware. GPTQ, AWQ, and rotation-aware approaches like QuaRot deliver good quality at W4 on 7B-scale models. Start here, then evaluate whether W3 or W8 is a better fit for your quality/speed tradeoff.</p>
+
+  <h3>2. Use QNN HTP for decode, Adreno GPU for prefill</h3>
+  <p>Configure subgraph-level backend assignment: HTP for weight matrix ops during decode, Adreno GPU for attention during prefill. Let the runtime profile which mapping wins for your specific model architecture, then lock it in for production.</p>
+
+  <h3>3. Never benchmark with burst load</h3>
+  <p>Build a sustained-load test harness and measure under realistic session durations — not 60-second sprints. Thermal throttling at the 2-minute mark is one of the most common sources of production surprise in mobile LLM deployments.</p>
+
+  <h3>4. Watch your KV cache footprint</h3>
+  <p>In decode, KV cache reads dominate bandwidth. GQA (Grouped Query Attention) and sliding window attention are your primary levers for controlling this bandwidth footprint without sacrificing quality.</p>
+
+  <h3>5. The future: compiler-level NPU + GPU co-optimization</h3>
+  <p>Qualcomm's Hexagon MLIR stack is moving toward tighter NPU–GPU cooperation — shared memory pools, fused operator graphs spanning both backends, and compiler-driven co-optimization. The era of manually routing operators to backends is ending. Understanding the principles here is what lets you guide it when it doesn't.</p>
+
+  <div class="highlight-box">
+    <p>
+      <strong>The bottom line:</strong> The CPU vs GPU vs NPU question doesn't have a single right answer — it has a right answer for each operator, each phase, and each thermal state. The engineers who ship great on-device AI are those who stop asking "which processor runs my model" and start asking: which processor runs <em>this operator</em>, at <em>this moment</em>, at <em>this power budget</em>?
+    </p>
+  </div>
+
+  <div class="chip-list" style="margin-top: 3rem;">
+    <span class="chip">Qualcomm Snapdragon</span>
+    <span class="chip">On-Device LLM</span>
+    <span class="chip">Hexagon NPU</span>
+    <span class="chip">Adreno GPU</span>
+    <span class="chip">Vulkan Compute</span>
+    <span class="chip">LLM Quantization</span>
+    <span class="chip">INT4 Inference</span>
+    <span class="chip">Mobile AI</span>
+    <span class="chip">QNN</span>
+    <span class="chip">llama.cpp</span>
+  </div>
+
+</article>
+
+<footer class="site-footer">
+  <p>Written by <a href="/">Prateek Singh, PhD</a> · Senior Manager, GenAI · Samsung Research Institute, Noida · <a href="/research">IIT Roorkee Affiliate</a></p>
+  <p style="margin-top: 0.6rem; font-size: 0.78rem;">© 2026 · <a href="/blog">Back to Blog</a> · <a href="/newsletter">Subscribe to Newsletter</a></p>
+</footer>
+
+</body>
+</html>

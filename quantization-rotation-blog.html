@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>The Rotation Trick in LLM Quantization | Prateek Singh</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0d0d12;
+      --bg-card: #13131a;
+      --bg-card2: #1a1a24;
+      --teal: #00d9b4;
+      --purple: #7c6bff;
+      --pink: #ff6b9d;
+      --orange: #ffb347;
+      --text: #e2e2ef;
+      --muted: #8888aa;
+      --border: rgba(255,255,255,0.07);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 17px;
+      line-height: 1.75;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    .site-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.4rem 2.5rem;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(13,13,18,0.92);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+    .site-logo {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: 1.15rem;
+      color: var(--teal);
+      text-decoration: none;
+      letter-spacing: 0.02em;
+    }
+    .site-nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-left: 1.8rem;
+      transition: color 0.2s;
+    }
+    .site-nav a:hover { color: var(--teal); }
+
+    /* ── HERO ── */
+    .hero {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 5rem 2rem 3.5rem;
+      animation: fadeUp 0.6s ease both;
+    }
+    .hero-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.6rem;
+      flex-wrap: wrap;
+    }
+    .tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.3em 0.85em;
+      border-radius: 20px;
+      background: rgba(0,217,180,0.12);
+      color: var(--teal);
+      border: 1px solid rgba(0,217,180,0.25);
+    }
+    .tag.purple { background: rgba(124,107,255,0.12); color: var(--purple); border-color: rgba(124,107,255,0.25); }
+    .tag.orange { background: rgba(255,179,71,0.12); color: var(--orange); border-color: rgba(255,179,71,0.25); }
+    .hero-date {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      line-height: 1.15;
+      color: #fff;
+      margin-bottom: 1.2rem;
+      letter-spacing: -0.01em;
+    }
+    .hero h1 em {
+      font-style: italic;
+      color: var(--teal);
+    }
+    .hero-subtitle {
+      font-size: 1.15rem;
+      color: var(--muted);
+      font-weight: 300;
+      max-width: 640px;
+      line-height: 1.7;
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      max-width: 820px;
+      margin: 0 auto 2.5rem;
+      padding: 0 2rem;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── ARTICLE ── */
+    .article {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 0 2rem 6rem;
+      animation: fadeUp 0.7s ease 0.1s both;
+    }
+    .article h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #fff;
+      margin: 3.2rem 0 1rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .article h3 {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--teal);
+      margin: 2rem 0 0.7rem;
+      letter-spacing: 0.01em;
+    }
+    .article p { margin-bottom: 1.3rem; color: #c8c8e0; }
+    .article strong { color: var(--text); font-weight: 600; }
+    .article a { color: var(--teal); text-decoration: none; }
+    .article a:hover { text-decoration: underline; }
+    .article em { color: var(--pink); font-style: italic; }
+
+    /* ── CALLOUT ── */
+    .callout {
+      background: var(--bg-card);
+      border-left: 3px solid var(--teal);
+      border-radius: 0 12px 12px 0;
+      padding: 1.2rem 1.5rem;
+      margin: 2rem 0;
+      font-size: 0.95rem;
+      color: #b0b0cc;
+      line-height: 1.7;
+    }
+    .callout.purple { border-color: var(--purple); }
+    .callout.orange { border-color: var(--orange); }
+    .callout.pink   { border-color: var(--pink); }
+
+    /* ── SECTION ACCENT ── */
+    .section-accent {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+    .section-accent .accent-line {
+      width: 28px; height: 2px;
+      background: var(--teal);
+      border-radius: 2px;
+    }
+    .section-accent span {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--teal);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 600;
+    }
+
+    /* ── HIGHLIGHT BOX ── */
+    .highlight-box {
+      background: linear-gradient(135deg, rgba(0,217,180,0.08), rgba(124,107,255,0.08));
+      border: 1px solid rgba(0,217,180,0.2);
+      border-radius: 16px;
+      padding: 2rem;
+      margin: 2.5rem 0;
+      text-align: center;
+    }
+    .highlight-box .big-stat {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.6rem;
+      font-weight: 900;
+      color: var(--teal);
+      line-height: 1;
+      margin-bottom: 0.4rem;
+    }
+    .highlight-box .stat-label {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .stats-row {
+      display: flex;
+      gap: 1.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .stat-item { text-align: center; }
+
+    /* ── METHOD CARDS ── */
+    .method-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin: 2.5rem 0;
+    }
+    .method-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.4rem 1.2rem;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.25s, transform 0.2s;
+    }
+    .method-card:hover {
+      border-color: rgba(0,217,180,0.3);
+      transform: translateY(-2px);
+    }
+    .method-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: 14px 14px 0 0;
+    }
+    .method-card.gptq::before  { background: var(--purple); }
+    .method-card.awq::before   { background: var(--orange); }
+    .method-card.quarot::before { background: var(--teal); }
+    .method-card.spinquant::before { background: var(--pink); }
+    .method-card.rdq::before   { background: linear-gradient(90deg, var(--teal), var(--purple)); }
+    .method-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.35rem;
+    }
+    .method-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.35rem;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1;
+      margin-bottom: 0.6rem;
+    }
+    .method-badge {
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+    .method-badge strong { color: var(--text); font-weight: 600; }
+
+    /* ── COMPARISON TABLE ── */
+    .feat-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 2rem 0;
+      font-size: 0.9rem;
+    }
+    .feat-table th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      background: var(--bg-card2);
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      border-bottom: 1px solid var(--border);
+    }
+    .feat-table td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: #c4c4dc;
+    }
+    .feat-table tr:hover td { background: rgba(255,255,255,0.025); }
+    .feat-table td:first-child { color: var(--text); font-weight: 500; }
+    .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+    .dot-teal   { background: var(--teal); }
+    .dot-orange { background: var(--orange); }
+    .dot-muted  { background: var(--muted); }
+
+    /* ── INLINE CODE ── */
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82em;
+      background: rgba(0,217,180,0.1);
+      color: var(--teal);
+      border-radius: 5px;
+      padding: 0.15em 0.5em;
+    }
+
+    /* ── MATH BLOCK ── */
+    .math-block {
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.2rem 1.5rem;
+      margin: 1.5rem 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88rem;
+      color: var(--orange);
+      line-height: 2;
+      overflow-x: auto;
+    }
+    .math-block .comment {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* ── DECISION FLOW ── */
+    .flow-list {
+      list-style: none;
+      padding: 0;
+      margin: 1.5rem 0;
+    }
+    .flow-list li {
+      display: flex;
+      gap: 1rem;
+      padding: 1rem 1.2rem;
+      margin-bottom: 0.6rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.93rem;
+      color: #b8b8d4;
+      line-height: 1.6;
+      align-items: flex-start;
+      transition: border-color 0.2s;
+    }
+    .flow-list li:hover { border-color: rgba(0,217,180,0.25); }
+    .flow-icon {
+      font-size: 1.1rem;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+
+    /* ── CHIP LIST ── */
+    .chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .chip {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      padding: 0.3em 0.75em;
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+    }
+
+    /* ── FOOTER ── */
+    .site-footer {
+      border-top: 1px solid var(--border);
+      padding: 2.5rem;
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+    .site-footer a { color: var(--teal); text-decoration: none; }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      .site-header { padding: 1rem 1.25rem; }
+      .site-nav { display: none; }
+      .hero, .article { padding-left: 1.25rem; padding-right: 1.25rem; }
+      .divider { padding: 0 1.25rem; }
+      .hero h1 { font-size: 2rem; }
+      .method-grid { grid-template-columns: 1fr 1fr; }
+      .stats-row { gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <a href="/" class="site-logo">Prateek Singh, PhD</a>
+  <nav class="site-nav">
+    <a href="/">Home</a>
+    <a href="/blog">Blog</a>
+    <a href="/research">Research</a>
+    <a href="/contact">Contact</a>
+  </nav>
+</header>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-meta">
+    <span class="tag">Quantization</span>
+    <span class="tag purple">LLM Research</span>
+    <span class="tag orange">Deep Dive</span>
+    <span class="hero-date">April 22, 2026</span>
+  </div>
+  <h1>The <em>Rotation Trick</em> That Separates Good Quantization from Great</h1>
+  <p class="hero-subtitle">
+    AWQ, GPTQ, QuaRot, SpinQuant — and why one geometric insight explains which methods hold up at 4-bit and which ones quietly fall apart.
+  </p>
+</section>
+
+<div class="divider"></div>
+
+<!-- ── ARTICLE ── -->
+<article class="article">
+
+  <p>
+    I've been stress-testing quantization methods against the Gemma 4 MoE this week, and it's been a useful reminder that not all quantization failures are equal. Some methods hit a wall at 4-bit because of outliers. Others degrade gracefully until they don't. Understanding <em>why</em> — at the math level, not the benchmark level — is the only way to diagnose what's actually going wrong and fix it.
+  </p>
+  <p>
+    This post is my attempt to lay out the core ideas cleanly. No prerequisites beyond knowing that weight matrices multiply activations. Let's go.
+  </p>
+
+  <!-- THE ROOT PROBLEM -->
+  <div class="section-accent"><div class="accent-line"></div><span>The Problem</span></div>
+  <h2>Why Quantization Breaks: The Bully in the Distribution</h2>
+
+  <p>
+    Quantization is fundamentally a range problem. When you store a floating-point weight in 4 bits, you get 16 possible values. The quantizer maps every weight to the nearest of those 16 slots. Simple enough.
+  </p>
+  <p>
+    The problem is <strong>outliers</strong> — a handful of activation channels that carry values 100× or 1000× larger than everything else. To fit that outlier in range, you have to scale everything down. Your 16 buckets now span an enormous range, and all the small-but-important weights collapse into the same bucket. Information destroyed.
+  </p>
+
+  <div class="math-block">
+    input:  [ 1.2,  0.8,  1.4, <span style="color:var(--pink)">987.3</span>,  1.1 ]<br/>
+    scale:  max / 15 = 65.8 per step<br/>
+    <span class="comment">→ quantized: [ 0, 0, 0, 15, 0 ]   ← four channels destroyed</span>
+  </div>
+
+  <p>
+    This isn't a contrived example. The LLaMA and Gemma families have specific attention projection layers where outlier channels are a well-documented structural feature, not noise.
+  </p>
+
+  <div class="callout">
+    <strong>Key intuition:</strong> It's not that quantization is inaccurate everywhere — it's inaccurate <em>selectively</em>, in the channels that share a range with an outlier. One bully ruins the precision for every well-behaved value nearby.
+  </div>
+
+  <!-- THE METHODS -->
+  <div class="section-accent"><div class="accent-line"></div><span>Method Survey</span></div>
+  <h2>The Field, Mapped Honestly</h2>
+
+  <div class="method-grid">
+    <div class="method-card gptq">
+      <div class="method-label">Layer-wise Optimizer</div>
+      <div class="method-name">GPTQ</div>
+      <div class="method-badge">
+        <strong>Second-order error correction</strong><br/>
+        Uses Hessian sensitivity<br/>
+        Sequential weight update<br/>
+        No outlier handling
+      </div>
+    </div>
+    <div class="method-card awq">
+      <div class="method-label">Activation-Aware</div>
+      <div class="method-name">AWQ</div>
+      <div class="method-badge">
+        <strong>Per-channel scaling</strong><br/>
+        Protects salient channels<br/>
+        Hardware-friendly<br/>
+        Doesn't fix root cause
+      </div>
+    </div>
+    <div class="method-card quarot">
+      <div class="method-label">Geometric Rotation</div>
+      <div class="method-name">QuaRot</div>
+      <div class="method-badge">
+        <strong>Hadamard transform</strong><br/>
+        Smooths outliers structurally<br/>
+        Fixed rotation matrix<br/>
+        Fast to apply
+      </div>
+    </div>
+    <div class="method-card spinquant">
+      <div class="method-label">Learned Rotation</div>
+      <div class="method-name">SpinQuant</div>
+      <div class="method-badge">
+        <strong>Optimized via Cayley SGD</strong><br/>
+        Learns best rotation per model<br/>
+        Better than fixed transforms<br/>
+        Higher calibration cost
+      </div>
+    </div>
+    <div class="method-card rdq">
+      <div class="method-label">Sequential Corrector</div>
+      <div class="method-name">RDQ</div>
+      <div class="method-badge">
+        <strong>Cascaded Error Compensation</strong><br/>
+        Corrects distributional drift<br/>
+        Layer-aware codebook<br/>
+        Works best mid/late layers
+      </div>
+    </div>
+  </div>
+
+  <h3>GPTQ: Fixing the Error After the Fact</h3>
+  <p>
+    GPTQ's insight is that not all weight errors matter equally. A rounding error on a weight connected to a large activation is far more damaging than the same error on a weight connected to a small one. GPTQ uses the <strong>Hessian matrix</strong> to score this sensitivity for every weight.
+  </p>
+  <p>
+    Its algorithm quantizes weights in order of sensitivity — most sensitive first — and after each quantization step, it <strong>redistributes the resulting error</strong> onto the remaining unquantized weights to compensate. Think of it as constantly rebalancing: "I just introduced error X here, so I'll adjust everything downstream to absorb it."
+  </p>
+  <p>
+    This is elegant and it works well. The catch: if you have outliers in the input activations, you're mopping the floor while the tap is still running. The per-layer optimization is fighting against a structural distributional problem it wasn't designed to handle.
+  </p>
+
+  <h3>AWQ: Protect the 1%, Ignore the Root Cause</h3>
+  <p>
+    AWQ starts from an observation that's easy to miss: the most important channels aren't the ones with the <em>largest weights</em> — they're the ones connected to the <em>largest activations</em>. Those channels are the ones where rounding errors hurt the most.
+  </p>
+  <p>
+    The fix is clever. AWQ exploits a mathematical identity: for any scalar <code>s</code>, you can write <code>WX = (W·s)(X/s)</code>. The output is identical, but if you choose <code>s &gt; 1</code> for the sensitive channels, those weights grow larger before quantization, so they get more of the 4-bit precision budget. The activations are divided by <code>s</code> upstream to cancel it out.
+  </p>
+
+  <div class="math-block">
+    W · X  =  (W · s) · (X / s)<br/>
+    <span class="comment">→ scale up sensitive weights → more bits per step → less rounding error</span><br/>
+    <span class="comment">→ divide activations by s before multiply → output unchanged</span>
+  </div>
+
+  <p>
+    AWQ is pragmatic and hardware-friendly — everything stays in low precision, the scaling is absorbed offline. But it doesn't eliminate outliers; it just gives sensitive channels a bigger share of the quantization range. The bully is still there, it's just wearing a slightly bigger coat.
+  </p>
+
+  <!-- THE ROTATION INSIGHT -->
+  <div class="section-accent"><div class="accent-line"></div><span>The Key Insight</span></div>
+  <h2>Rotation: The Geometric Fix</h2>
+
+  <p>
+    QuaRot and SpinQuant attack a different problem. Instead of correcting error after quantization or protecting important channels from the outlier, they ask: <strong>what if we just got rid of the outlier?</strong>
+  </p>
+  <p>
+    The core observation is that orthogonal (rotation) matrices have a special property: they preserve all information while reshaping the distribution. If <code>Q</code> is orthogonal, then <code>Q⁻¹ = Qᵀ</code>, and crucially:
+  </p>
+
+  <div class="math-block">
+    W · X  =  (W · Qᵀ) · (Q · X)<br/>
+    <span class="comment">→ rotate weights right → rotate activations left → output identical</span><br/>
+    <span class="comment">→ energy is conserved, but spread across all dimensions</span>
+  </div>
+
+  <p>
+    Here's what this buys you. A rotation matrix mixes all channels together. That outlier value of 987 gets spread across every dimension — instead of one channel holding 987, you now have 512 channels each holding roughly 1.9. <strong>No single channel dominates the range anymore.</strong> The quantizer now has 16 buckets covering a small, uniform range, and every channel gets meaningful precision.
+  </p>
+
+  <div class="callout purple">
+    <strong>The analogy:</strong> Imagine a classroom where one student is shouting and everyone else is whispering. The teacher can't hear the quiet students. Rotation is like asking everyone to talk in turn and averaging their voices — the shouter's energy is still there, but no single voice dominates.
+  </div>
+
+  <h3>QuaRot: The Hadamard Fast Lane</h3>
+  <p>
+    QuaRot applies the <strong>Hadamard transform</strong> as its rotation matrix. The Hadamard is elegant: every entry is +1 or −1, it's its own inverse (up to scaling), and it can be applied in <code>O(n log n)</code> rather than <code>O(n²)</code>. Practically, this means you can rotate a 4096-dim activation vector cheaply at inference time.
+  </p>
+  <p>
+    Results are strong. The Hadamard is a well-conditioned rotation that distributes energy evenly — empirically, it kills most of the outlier mass in transformer attention layers. The limitation is that it's a <em>fixed</em> rotation: it doesn't know anything about your specific model's weight distribution. It just rotates and hopes for the best.
+  </p>
+
+  <h3>SpinQuant: Learning the Best Rotation</h3>
+  <p>
+    SpinQuant asks: what if instead of using a generic rotation, we <em>learn</em> the rotation that minimizes quantization error for this specific model? That's a constrained optimization problem — the rotation matrix must stay orthogonal throughout training — and SpinQuant solves it using <strong>Cayley SGD</strong>, a gradient descent variant that stays on the manifold of orthogonal matrices.
+  </p>
+  <p>
+    The result is a rotation tailored to your model's activation geometry. In practice, SpinQuant consistently outperforms fixed-transform methods, especially at aggressive quantization targets (W3 and below). The cost is a calibration run to learn the rotation — worth it for production deployments, potentially overkill for quick experiments.
+  </p>
+
+  <!-- COMPARISON -->
+  <div class="section-accent"><div class="accent-line"></div><span>Comparison</span></div>
+  <h2>How They Stack Up</h2>
+
+  <table class="feat-table">
+    <thead>
+      <tr>
+        <th>Method</th>
+        <th>Outlier Handling</th>
+        <th>Error Compensation</th>
+        <th>Inference Overhead</th>
+        <th>Best For</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>GPTQ</td>
+        <td><span class="dot dot-muted"></span> None</td>
+        <td><span class="dot dot-teal"></span> Strong (Hessian)</td>
+        <td>None</td>
+        <td>Clean distributions</td>
+      </tr>
+      <tr>
+        <td>AWQ</td>
+        <td><span class="dot dot-orange"></span> Partial (scaling)</td>
+        <td><span class="dot dot-muted"></span> Minimal</td>
+        <td>None</td>
+        <td>Hardware-constrained deploy</td>
+      </tr>
+      <tr>
+        <td>QuaRot</td>
+        <td><span class="dot dot-teal"></span> Strong (fixed)</td>
+        <td><span class="dot dot-muted"></span> Minimal</td>
+        <td>Low (Hadamard)</td>
+        <td>Fast outlier suppression</td>
+      </tr>
+      <tr>
+        <td>SpinQuant</td>
+        <td><span class="dot dot-teal"></span> Strongest (learned)</td>
+        <td><span class="dot dot-muted"></span> Minimal</td>
+        <td>Low (learned matrix)</td>
+        <td>Production W3/W4</td>
+      </tr>
+      <tr>
+        <td>RDQ (CEC)</td>
+        <td><span class="dot dot-muted"></span> None</td>
+        <td><span class="dot dot-teal"></span> Strong (cascaded)</td>
+        <td>None (offline)</td>
+        <td>Deep layer drift correction</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- RDQ -->
+  <div class="section-accent"><div class="accent-line"></div><span>RDQ</span></div>
+  <h2>Where RDQ Fits — and Where It Doesn't</h2>
+
+  <p>
+    Residual Distribution Quantization (RDQ) is solving a different problem from the rotation methods. It's not trying to smooth activation geometry; it's trying to prevent <strong>distributional drift</strong> as errors accumulate across the 32+ layers of a transformer.
+  </p>
+  <p>
+    In a floating-point model, layer N produces a clean distribution of hidden states as input for layer N+1. In a quantized model, layer N produces a slightly wrong distribution. Layer N+1 was calibrated assuming clean inputs — so it introduces its own error on top of the upstream error. By layer 32, you're operating in a distribution that has drifted significantly from anything the codebooks were designed for.
+  </p>
+
+  <div class="callout orange">
+    <strong>The CEC intuition:</strong> Standard quantization minimizes local error — it asks "how wrong is this layer's output?" CEC minimizes cumulative error — it asks "given the drifted inputs this layer will <em>actually receive</em> at inference time, what codebook produces the best output?" That's a harder problem, but it's the right problem for deep networks.
+  </div>
+
+  <p>
+    The failure mode is instructive. If RDQ's CEC isn't helping in the layers you expect, there are two likely causes. First, <strong>early layers with heavy outliers</strong>: if the first few layers are operating on wildly non-uniform activations, the error going into layer 2 is large enough that CEC can't fully compensate — you're correcting for drift but the initial error was already catastrophic. Second, <strong>codebook optimization scope</strong>: CEC works best when the per-layer optimization has enough calibration data to accurately model the real drifted distribution. Too few calibration samples and you're optimizing against a poor proxy.
+  </p>
+
+  <!-- DIAGNOSIS -->
+  <div class="section-accent"><div class="accent-line"></div><span>Diagnosis</span></div>
+  <h2>Debugging Quantization Failures: A Decision Map</h2>
+
+  <ul class="flow-list">
+    <li>
+      <span class="flow-icon">🔴</span>
+      <div><strong>Error concentrated in early layers (1–8)?</strong> Outliers are the likely culprit. Profile the activation distributions: if you see channels with values &gt;10× the median, rotation pre-processing is your first move. QuaRot is fast to try; SpinQuant is better if you have calibration budget.</div>
+    </li>
+    <li>
+      <span class="flow-icon">🟡</span>
+      <div><strong>Error grows progressively through mid-layers (8–24)?</strong> Classic distributional drift. This is where CEC should shine. If it isn't helping, check the diversity and size of your calibration set — CEC is calibration-hungry. Also verify the per-layer optimization is seeing the actual drifted inputs, not clean FP16 activations.</div>
+    </li>
+    <li>
+      <span class="flow-icon">🟠</span>
+      <div><strong>Error large everywhere, no clear pattern?</strong> Both problems are severe. The combination approach — rotate first to suppress outliers, then apply CEC to correct residual drift — is the principled path. The rotation fixes the geometry; CEC handles what the rotation can't.</div>
+    </li>
+    <li>
+      <span class="flow-icon">🟣</span>
+      <div><strong>MoE architecture (e.g. Gemma 4 26B)?</strong> Expect unusual activation statistics. With only 3.8B params active per forward pass, the routing decisions create dynamic outlier patterns that change with input. Fixed calibration-based methods may underfit. SpinQuant's learned rotation is more robust here than Hadamard.</div>
+    </li>
+  </ul>
+
+  <div class="callout pink">
+    <strong>The RotRDQ hypothesis:</strong> If outliers are severe enough to corrupt the starting point for CEC, pre-rotating to eliminate outliers and then applying CEC to the cleaner distribution may be strictly better than either alone. The rotation improves the conditioning of the optimization; CEC handles the remaining drift. Worth testing before giving up on either method.
+  </div>
+
+  <!-- GEMMA 4 NOTE -->
+  <div class="section-accent"><div class="accent-line"></div><span>Current Work</span></div>
+  <h2>Gemma 4 MoE: Early Observations</h2>
+
+  <p>
+    I'm mid-experiment on the 26B MoE at W4A16. A few things stand out that are relevant to the above framework:
+  </p>
+
+  <div class="chip-list">
+    <span class="chip">W4A16 INT4 weights</span>
+    <span class="chip">Activation outliers: significant in attn proj</span>
+    <span class="chip">3.8B active params per token</span>
+    <span class="chip">256K context window</span>
+    <span class="chip">Dynamic expert routing</span>
+  </div>
+
+  <p>
+    The sparse activation pattern from MoE routing means that calibration statistics collected on one batch may not generalize well — the active experts vary with the input. This makes both AWQ's scale-search and CEC's distribution estimation harder than in a dense model. More to follow once I have cleaner numbers.
+  </p>
+
+  <p>
+    For anyone running similar experiments: the INT4 26B MoE comfortably fits on dual consumer GPUs at full precision, with headroom. The active-parameter efficiency means per-token memory bandwidth is well below what the parameter count suggests.
+  </p>
+
+  <!-- CLOSING -->
+  <div class="section-accent"><div class="accent-line"></div><span>Takeaway</span></div>
+  <h2>The One-Paragraph Summary</h2>
+
+  <p>
+    GPTQ corrects quantization error locally using second-order sensitivity. AWQ protects the most vulnerable channels by giving them more range. QuaRot and SpinQuant take a different approach entirely: they rotate the data so that no channel is vulnerable in the first place, by spreading outlier energy across all dimensions. RDQ / CEC addresses something none of the others do — error accumulation across the depth of the network. In practice, the best-performing pipelines at aggressive bit-widths combine rotation (for geometry) with layer-aware compensation (for drift).
+  </p>
+
+  <div class="highlight-box">
+    <div class="stats-row">
+      <div class="stat-item">
+        <div class="big-stat">AWQ</div>
+        <div class="stat-label">Scale the sensitive<br/>channels up</div>
+      </div>
+      <div class="stat-item">
+        <div class="big-stat">GPTQ</div>
+        <div class="stat-label">Redistribute error<br/>sequentially</div>
+      </div>
+      <div class="stat-item">
+        <div class="big-stat">Rotation</div>
+        <div class="stat-label">Eliminate outliers<br/>geometrically</div>
+      </div>
+      <div class="stat-item">
+        <div class="big-stat">CEC</div>
+        <div class="stat-label">Correct drift<br/>across layers</div>
+      </div>
+    </div>
+  </div>
+
+  <p>
+    The quantization literature can feel like an alphabet soup of acronyms and ablations. But the underlying ideas are few and clean — and knowing which problem each method actually solves makes it much easier to figure out why your specific model is failing and what to try next.
+  </p>
+  <p>
+    Will post follow-up numbers from the Gemma 4 MoE experiments once they're complete. If you're running similar work, would be interested in comparing calibration set sizes and routing statistics.
+  </p>
+
+  <div class="callout">
+    <strong>Related reading:</strong><br/>
+    GPTQ paper: <a href="https://arxiv.org/abs/2210.17323" target="_blank">arxiv.org/abs/2210.17323</a> ·
+    AWQ paper: <a href="https://arxiv.org/abs/2306.00978" target="_blank">arxiv.org/abs/2306.00978</a> ·
+    QuaRot: <a href="https://arxiv.org/abs/2404.00456" target="_blank">arxiv.org/abs/2404.00456</a> ·
+    SpinQuant: <a href="https://arxiv.org/abs/2405.16406" target="_blank">arxiv.org/abs/2405.16406</a>
+  </div>
+
+</article>
+
+<!-- ── FOOTER ── -->
+<footer class="site-footer">
+  <p>Written by <strong>Prateek Singh</strong> · Senior Manager, GenAI &amp; Digital Health AI · Samsung Research Institute India</p>
+  <p style="margin-top:0.5rem;"><a href="https://prateeksinghphd.com">prateeksinghphd.com</a></p>
+</footer>
+
+</body>
+</html>
