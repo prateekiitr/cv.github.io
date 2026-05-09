@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>Inside QNN's Execution Engine — Threads, Tiles & Tensor Ops | Prateek Singh</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg:       #0d0d12;
+      --bg-card:  #13131a;
+      --bg-card2: #1a1a24;
+      --teal:     #00d9b4;
+      --purple:   #7c6bff;
+      --pink:     #ff6b9d;
+      --orange:   #ffb347;
+      --blue:     #50a0ff;
+      --text:     #e2e2ef;
+      --muted:    #8888aa;
+      --border:   rgba(255,255,255,0.07);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg) !important;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 17px;
+      line-height: 1.75;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    .site-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.4rem 2.5rem; border-bottom: 1px solid var(--border);
+      position: sticky; top: 0;
+      background: rgba(13,13,18,0.92) !important;
+      backdrop-filter: blur(12px); z-index: 100;
+    }
+    .site-logo { font-family: 'Playfair Display', serif; font-weight: 900; font-size: 1.15rem; color: var(--teal); text-decoration: none; }
+    .site-nav a { color: var(--muted); text-decoration: none; font-size: 0.875rem; font-weight: 500; margin-left: 1.8rem; transition: color 0.2s; }
+    .site-nav a:hover { color: var(--teal); }
+
+    /* ── BREADCRUMB ── */
+    .breadcrumb { max-width: 820px; margin: 0 auto; padding: 1.8rem 2rem 0; }
+    .breadcrumb a {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); text-decoration: none; transition: color 0.2s;
+    }
+    .breadcrumb a:hover { color: var(--teal); }
+
+    /* ── HERO ── */
+    .hero { max-width: 820px; margin: 0 auto; padding: 4rem 2rem 3.5rem; animation: fadeUp 0.6s ease both; }
+    .hero-meta { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.6rem; flex-wrap: wrap; }
+    .tag {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase; padding: 0.3em 0.85em; border-radius: 20px;
+      background: rgba(0,217,180,0.12); color: var(--teal); border: 1px solid rgba(0,217,180,0.25);
+    }
+    .tag.purple { background: rgba(124,107,255,0.12); color: var(--purple); border-color: rgba(124,107,255,0.25); }
+    .tag.orange { background: rgba(255,179,71,0.12); color: var(--orange); border-color: rgba(255,179,71,0.25); }
+    .tag.pink   { background: rgba(255,107,157,0.12); color: var(--pink);   border-color: rgba(255,107,157,0.25); }
+    .hero-date { font-size: 0.8rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+    .hero h1 { font-family: 'Playfair Display', serif; font-weight: 900; font-size: clamp(2.2rem, 5vw, 3.4rem); line-height: 1.15; color: #fff; margin-bottom: 1.2rem; letter-spacing: -0.01em; }
+    .hero h1 em { font-style: italic; color: var(--teal); }
+    .hero-subtitle { font-size: 1.15rem; color: var(--muted); font-weight: 300; max-width: 640px; line-height: 1.7; }
+
+    .divider { max-width: 820px; margin: 0 auto 2.5rem; padding: 0 2rem; height: 1px; background: var(--border); }
+
+    /* ── ARTICLE ── */
+    .article { max-width: 820px; margin: 0 auto; padding: 0 2rem 6rem; animation: fadeUp 0.7s ease 0.1s both; }
+    .article h2 { font-family: 'Playfair Display', serif; font-size: 1.75rem; font-weight: 700; color: #fff; margin: 3.2rem 0 1rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--border); }
+    .article h3 { font-family: 'DM Sans', sans-serif; font-size: 1.1rem; font-weight: 600; color: var(--teal); margin: 2rem 0 0.7rem; }
+    .article p { margin-bottom: 1.3rem; color: #c8c8e0; }
+    .article strong { color: var(--text); font-weight: 600; }
+
+    .section-accent { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; }
+    .section-accent .accent-line { width: 28px; height: 2px; background: var(--teal); border-radius: 2px; }
+    .section-accent span { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--teal); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; }
+
+    .callout { background: var(--bg-card); border-left: 3px solid var(--teal); border-radius: 0 12px 12px 0; padding: 1.2rem 1.5rem; margin: 2rem 0; font-size: 0.95rem; color: #b0b0cc; line-height: 1.7; }
+    .callout.purple { border-color: var(--purple); }
+    .callout.orange { border-color: var(--orange); }
+    .callout.pink   { border-color: var(--pink); }
+
+    .analogy { background: var(--bg-card2); border: 1px dashed rgba(124,107,255,0.3); border-radius: 12px; padding: 1.4rem 1.5rem; margin: 1.5rem 0; }
+    .analogy-label { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--purple); margin-bottom: 0.5rem; font-weight: 600; }
+    .analogy p { color: #b0b0cc; margin: 0; font-size: 0.93rem; }
+
+    code { font-family: 'JetBrains Mono', monospace; font-size: 0.82em; background: rgba(0,217,180,0.1); color: var(--teal); border-radius: 5px; padding: 0.15em 0.5em; }
+    pre { background: var(--bg-card2); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; overflow-x: auto; margin: 1.5rem 0; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.7; color: #c8c8e0; }
+    pre .kw { color: var(--purple); }
+    pre .fn { color: var(--teal); }
+    pre .str { color: var(--orange); }
+    pre .cmt { color: var(--muted); font-style: italic; }
+
+    .chip-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0; }
+    .chip { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; padding: 0.3em 0.75em; background: var(--bg-card2); border: 1px solid var(--border); border-radius: 6px; color: var(--muted); }
+
+    .highlight-box { background: linear-gradient(135deg, rgba(0,217,180,0.08), rgba(124,107,255,0.08)); border: 1px solid rgba(0,217,180,0.2); border-radius: 16px; padding: 2rem; margin: 2.5rem 0; }
+    .highlight-box p { margin-bottom: 0; }
+
+    /* ── PIPELINE ── */
+    .pipeline { display: flex; flex-direction: column; gap: 0; margin: 2.5rem 0; }
+    .pipeline-step { display: flex; align-items: flex-start; gap: 1.2rem; background: var(--bg-card); border: 1px solid var(--border); padding: 1.4rem 1.5rem; position: relative; transition: border-color 0.2s; }
+    .pipeline-step:first-child { border-radius: 14px 14px 0 0; }
+    .pipeline-step:last-child  { border-radius: 0 0 14px 14px; }
+    .pipeline-step:not(:last-child) { border-bottom: none; }
+    .pipeline-step:hover { border-color: rgba(0,217,180,0.25); z-index: 1; }
+    .step-num { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; font-weight: 600; min-width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 8px; margin-top: 0.15rem; flex-shrink: 0; }
+    .step-num.teal   { background: rgba(0,217,180,0.15);  color: var(--teal); }
+    .step-num.purple { background: rgba(124,107,255,0.15); color: var(--purple); }
+    .step-num.orange { background: rgba(255,179,71,0.15);  color: var(--orange); }
+    .step-num.pink   { background: rgba(255,107,157,0.15); color: var(--pink); }
+    .step-num.blue   { background: rgba(80,160,255,0.15);  color: var(--blue); }
+    .step-body { flex: 1; }
+    .step-title { font-weight: 600; font-size: 1rem; color: var(--text); margin-bottom: 0.3rem; }
+    .step-desc  { font-size: 0.88rem; color: var(--muted); line-height: 1.6; }
+
+    /* ── TABLE ── */
+    .table-wrap { overflow-x: auto; margin: 2rem 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    thead th { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); padding: 0.75rem 1rem; text-align: left; font-weight: 600; }
+    tbody td { padding: 0.85rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.04); color: #c8c8e0; }
+    tbody tr:hover td { background: rgba(255,255,255,0.02); }
+    .td-good { color: var(--teal); font-weight: 600; }
+    .td-bad  { color: var(--pink); font-weight: 600; }
+
+    /* ── FOOTER ── */
+    .site-footer { border-top: 1px solid var(--border); padding: 2.5rem; text-align: center; font-size: 0.82rem; color: var(--muted); }
+    .site-footer a { color: var(--teal); text-decoration: none; }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ════════════════════════════════════════
+       ANIMATED DIAGRAM STYLES
+    ════════════════════════════════════════ */
+    .anim-wrap {
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .anim-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem; color: var(--teal); letter-spacing: 0.12em;
+      text-transform: uppercase; margin-bottom: 1rem; font-weight: 600;
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .anim-title::before { content: '▶'; font-size: 0.55rem; opacity: 0.7; animation: blinkPlay 1.5s ease-in-out infinite; }
+    @keyframes blinkPlay { 0%,100%{opacity:0.4} 50%{opacity:1} }
+
+    .anim-canvas {
+      width: 100%; min-height: 200px;
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+    }
+
+    /* ── ANIMATION 1: Matrix Tiling ── */
+    .matrix-grid {
+      display: grid;
+      gap: 2px;
+    }
+    .matrix-cell {
+      width: 22px; height: 22px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 2px;
+      transition: background 0.15s, border-color 0.15s, transform 0.15s;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.42rem;
+      display: flex; align-items: center; justify-content: center;
+      color: transparent;
+    }
+    .matrix-cell.tile-active  { background: rgba(0,217,180,0.25); border-color: var(--teal); color: var(--teal); transform: scale(1.05); }
+    .matrix-cell.tile-done    { background: rgba(0,217,180,0.08); border-color: rgba(0,217,180,0.2); }
+    .matrix-cell.tile-current { background: rgba(255,179,71,0.35); border-color: var(--orange); color: var(--orange); transform: scale(1.1); box-shadow: 0 0 8px rgba(255,179,71,0.4); }
+
+    /* ── ANIMATION 2: Thread Wavefront ── */
+    .thread-row {
+      display: flex; gap: 4px; margin-bottom: 6px; align-items: center;
+    }
+    .thread-box {
+      width: 36px; height: 36px; border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.04);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.45rem; color: var(--muted);
+      transition: all 0.2s; gap: 2px;
+    }
+    .thread-box .tid { font-size: 0.52rem; font-weight: 600; }
+    .thread-box.executing { background: rgba(124,107,255,0.3); border-color: var(--purple); color: var(--purple); box-shadow: 0 0 10px rgba(124,107,255,0.3); }
+    .thread-box.done      { background: rgba(0,217,180,0.12); border-color: rgba(0,217,180,0.3); color: var(--teal); }
+    .thread-box.idle      { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.06); color: rgba(255,255,255,0.2); }
+
+    /* ── ANIMATION 3: Shared Memory ── */
+    .mem-scenario {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px;
+      padding: 1rem; border-radius: 10px; border: 1px solid var(--border);
+    }
+    .mem-label { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+    .mem-block {
+      width: 100%; padding: 0.5rem; text-align: center; border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; font-weight: 600;
+    }
+    .mem-dram  { background: rgba(255,107,157,0.12); color: var(--pink); border: 1px solid rgba(255,107,157,0.25); }
+    .mem-sram  { background: rgba(0,217,180,0.12); color: var(--teal); border: 1px solid rgba(0,217,180,0.25); }
+    .mem-threads { display: flex; gap: 4px; justify-content: center; }
+    .mem-thread { width: 28px; height: 28px; border-radius: 4px; background: rgba(124,107,255,0.15); border: 1px solid rgba(124,107,255,0.3); display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 0.5rem; color: var(--purple); font-weight: 600; }
+    .mem-arrow { font-size: 0.8rem; transition: color 0.3s, transform 0.3s; }
+    .mem-arrow.fast { color: var(--teal); }
+    .mem-arrow.slow { color: var(--pink); }
+    .mem-cost { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; font-weight: 700; padding: 0.25rem 0.75rem; border-radius: 20px; }
+    .cost-bad  { background: rgba(255,107,157,0.15); color: var(--pink); border: 1px solid rgba(255,107,157,0.3); }
+    .cost-good { background: rgba(0,217,180,0.15); color: var(--teal); border: 1px solid rgba(0,217,180,0.3); }
+
+    /* ── ANIMATION 4: Memory Coalescing ── */
+    .mem-bus {
+      display: flex; gap: 3px; justify-content: center; flex-wrap: nowrap;
+    }
+    .addr-cell {
+      width: 32px; height: 32px; border-radius: 4px;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.5rem; color: var(--muted);
+      transition: all 0.3s;
+    }
+    .addr-cell.hit-good { background: rgba(0,217,180,0.3); border-color: var(--teal); color: var(--teal); box-shadow: 0 0 8px rgba(0,217,180,0.3); }
+    .addr-cell.hit-bad  { background: rgba(255,107,157,0.3); border-color: var(--pink); color: var(--pink); box-shadow: 0 0 8px rgba(255,107,157,0.3); }
+
+    /* ── ANIMATION 5: Double Buffering ── */
+    .dbuf-row { display: flex; gap: 12px; align-items: center; justify-content: center; }
+    .dbuf-box {
+      flex: 1; max-width: 200px; padding: 1rem; border-radius: 10px; text-align: center;
+      border: 2px solid; transition: all 0.4s;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 600;
+    }
+    .dbuf-box .dbuf-name { font-size: 0.85rem; font-weight: 700; margin-bottom: 0.3rem; }
+    .dbuf-box .dbuf-status { font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.5rem; }
+    .dbuf-box .dbuf-bar { height: 4px; border-radius: 2px; margin-top: 0.5rem; transition: width 0.4s; }
+    .dbuf-compute { border-color: var(--teal); background: rgba(0,217,180,0.08); color: var(--teal); }
+    .dbuf-compute .dbuf-bar { background: var(--teal); }
+    .dbuf-load    { border-color: var(--orange); background: rgba(255,179,71,0.08); color: var(--orange); }
+    .dbuf-load .dbuf-bar { background: var(--orange); }
+    .dbuf-idle    { border-color: rgba(255,255,255,0.1); background: transparent; color: var(--muted); }
+    .dbuf-idle .dbuf-bar { background: rgba(255,255,255,0.1); }
+
+    /* ── ANIMATION 6: Operator Fusion ── */
+    .fusion-row { display: flex; align-items: center; justify-content: center; gap: 4px; flex-wrap: wrap; }
+    .kernel-box {
+      padding: 0.5rem 0.9rem; border-radius: 8px; border: 1px solid;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 600;
+      text-align: center; transition: all 0.4s; white-space: nowrap;
+    }
+    .kernel-sync {
+      width: 2px; height: 30px; border-radius: 1px; transition: all 0.4s;
+      background: rgba(255,107,157,0.5); flex-shrink: 0;
+    }
+    .kernel-arrow { color: var(--muted); font-size: 0.8rem; }
+
+    /* ── ANIMATION 7: Roofline ── */
+    .roofline-svg { width: 100%; max-width: 500px; display: block; margin: 0 auto; }
+
+    /* ── ANIM CONTROLS ── */
+    .anim-controls { display: flex; gap: 0.5rem; margin-top: 1rem; align-items: center; }
+    .anim-btn {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; font-weight: 600;
+      padding: 0.3em 0.9em; border-radius: 6px; border: 1px solid rgba(0,217,180,0.3);
+      background: rgba(0,217,180,0.08); color: var(--teal); cursor: pointer; transition: all 0.2s;
+      letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .anim-btn:hover { background: rgba(0,217,180,0.18); border-color: var(--teal); }
+    .anim-step-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--muted); margin-left: 0.5rem; }
+
+    @media (max-width: 600px) {
+      .site-nav { display: none; }
+      .hero, .article, .breadcrumb { padding-left: 1.25rem; padding-right: 1.25rem; }
+      .dbuf-row { flex-direction: column; }
+      .thread-row { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="/" class="site-logo">Prateek Singh, PhD</a>
+  <nav class="site-nav">
+    <a href="/">Home</a><a href="/blog">Blog</a><a href="/research">Research</a><a href="/contact">Contact</a>
+  </nav>
+</header>
+
+<div class="breadcrumb">
+  <a href="/blog">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to Blog
+  </a>
+</div>
+
+<section class="hero">
+  <div class="hero-meta">
+    <span class="tag">On-Device AI</span>
+    <span class="tag purple">QNN Internals</span>
+    <span class="tag orange">GPU / HTP</span>
+    <span class="tag pink">Deep Dive</span>
+    <span class="hero-date">May 2026</span>
+  </div>
+  <h1>Inside QNN's Execution Engine —<br/><em>Threads, Tiles & Tensor Ops</em></h1>
+  <p class="hero-subtitle">
+    Most engineers call <code>qnn-net-run</code> and move on. But what actually happens between "dispatch" and "output tensor"? This is the layer where real mobile AI performance is won or lost.
+  </p>
+</section>
+
+<div class="divider"></div>
+
+<article class="article">
+
+  <p>
+    The previous post explained <em>who</em> runs your LLM on Snapdragon — CPU for orchestration, GPU for prefill, NPU for decode. This post goes one level deeper: <em>how</em> each processor actually executes a tensor operation. We're talking threads, tiles, wavefronts, shared memory, DMA pipelines — the engineering that makes the difference between 20 tokens/sec and 45.
+  </p>
+  <p>
+    Everything here is illustrated with animated diagrams. Each one shows a concept playing out step by step — not as an abstract description, but as an actual execution trace.
+  </p>
+
+  <!-- ════ S1 ════ -->
+  <div class="section-accent"><div class="accent-line"></div><span>Section 01</span></div>
+  <h2>The Problem: A Matrix Multiply Is Deceptively Expensive</h2>
+
+  <p>
+    Every transformer layer in an LLM is dominated by one operation: matrix multiplication. In a 7B model running on Snapdragon, a single attention projection looks like this:
+  </p>
+
+  <pre><span class="cmt">// One linear projection in Llama 3.1 7B</span>
+<span class="kw">input</span>   : [1 × 4096]        <span class="cmt">← one token, 4096-dim embedding</span>
+<span class="kw">weights</span> : [4096 × 4096]     <span class="cmt">← Q, K, V, or O projection matrix</span>
+<span class="kw">output</span>  : [1 × 4096]
+
+<span class="cmt">// That's 4096 × 4096 = 16.7 million multiply-accumulate ops</span>
+<span class="cmt">// For ONE projection. There are ~224 such ops per decode step.</span></pre>
+
+  <p>
+    Done naively — one thread computing one output element — this would take millions of sequential steps. Instead, QNN maps this onto thousands of parallel threads using a technique called <strong>tiling</strong>. The animation below shows exactly how.
+  </p>
+
+  <!-- ANIM 1: Matrix Tiling -->
+  <div class="anim-wrap">
+    <div class="anim-title">Animation 1 — Matrix Tiling: How QNN Splits One Matmul Into Parallel Tiles</div>
+    <div class="anim-canvas" style="flex-direction: column; gap: 1.2rem;">
+      <div style="display: flex; gap: 2rem; align-items: flex-start; flex-wrap: wrap; justify-content: center;">
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--muted);margin-bottom:6px;text-align:center;">Output Matrix C (simplified 8×8)</div>
+          <div class="matrix-grid" id="matrixGrid" style="grid-template-columns: repeat(8, 22px);"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.6rem;min-width:180px;">
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:0.8rem;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--muted);margin-bottom:0.4rem;">CURRENT TILE</div>
+            <div id="tileInfo" style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--teal);font-weight:600;">Tile 0 → Workgroup 0</div>
+            <div id="threadInfo" style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--muted);margin-top:0.3rem;">16×16 = 256 threads</div>
+          </div>
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:0.8rem;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--muted);margin-bottom:0.4rem;">PROGRESS</div>
+            <div style="background:rgba(255,255,255,0.05);border-radius:4px;height:6px;overflow:hidden;">
+              <div id="tileProgress" style="height:100%;background:linear-gradient(90deg,var(--teal),var(--purple));border-radius:4px;transition:width 0.3s;width:0%;"></div>
+            </div>
+            <div id="tileCount" style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--muted);margin-top:0.3rem;">0 / 16 tiles</div>
+          </div>
+          <div id="tileKey" style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:0.8rem;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--muted);margin-bottom:0.5rem;">KEY</div>
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.3rem;"><div style="width:14px;height:14px;background:rgba(255,179,71,0.35);border:1px solid var(--orange);border-radius:2px;"></div><span style="font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:var(--muted);">Active tile</span></div>
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.3rem;"><div style="width:14px;height:14px;background:rgba(0,217,180,0.25);border:1px solid var(--teal);border-radius:2px;"></div><span style="font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:var(--muted);">Computing</span></div>
+            <div style="display:flex;align-items:center;gap:0.5rem;"><div style="width:14px;height:14px;background:rgba(0,217,180,0.08);border:1px solid rgba(0,217,180,0.2);border-radius:2px;"></div><span style="font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:var(--muted);">Done</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="anim-controls">
+      <button class="anim-btn" onclick="startMatrixAnim()">▶ Play</button>
+      <button class="anim-btn" onclick="resetMatrixAnim()">↺ Reset</button>
+      <span class="anim-step-label" id="matrixStepLabel">Each tile = one workgroup of threads executing in parallel</span>
+    </div>
+  </div>
+
+  <p>
+    Each <strong>tile</strong> maps directly to one <strong>workgroup</strong> on the Adreno GPU. All workgroups run simultaneously — that's the parallelism. The key insight: instead of computing one output element at a time, QNN computes an entire 16×16 block at once using 256 threads working in lockstep.
+  </p>
+
+  <div class="callout">
+    <strong>Why tiles?</strong> A 4096×4096 matrix has 16.7M elements. With 256-thread workgroups, that's ~65,000 workgroups — all dispatched simultaneously. The Adreno GPU on Snapdragon 8 Elite can schedule thousands of these concurrently across its compute units.
+  </div>
+
+  <!-- ════ S2 ════ -->
+  <div class="section-accent"><div class="accent-line"></div><span>Section 02</span></div>
+  <h2>Wavefronts — When 64 Threads Run as One</h2>
+
+  <p>
+    Inside each workgroup, threads don't execute completely independently. Adreno groups them into <strong>wavefronts</strong> — sets of threads that execute the exact same instruction simultaneously, just on different data. This is SIMT: Single Instruction, Multiple Threads.
+  </p>
+
+  <div class="analogy">
+    <div class="analogy-label">Intuition</div>
+    <p>A wavefront is like a marching band row. Every musician plays a different note (different data), but they all play on the same beat (same instruction). If one musician needs to stop early, the whole row waits — that's called divergence, and it's expensive.</p>
+  </div>
+
+  <!-- ANIM 2: Wavefront Execution -->
+  <div class="anim-wrap">
+    <div class="anim-title">Animation 2 — Wavefront Execution: 32 Threads, One Instruction</div>
+    <div class="anim-canvas" style="flex-direction: column; gap: 1rem;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted);text-align:center;" id="waveInstruction">Instruction: <span style="color:var(--purple);">MAC(a[i], b[i], c[i])</span> — multiply-accumulate</div>
+      <div id="wavefrontGrid" style="display:flex;flex-direction:column;gap:6px;"></div>
+      <div id="waveStatus" style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted);text-align:center;"></div>
+    </div>
+    <div class="anim-controls">
+      <button class="anim-btn" onclick="startWaveAnim()">▶ Play</button>
+      <button class="anim-btn" onclick="resetWaveAnim()">↺ Reset</button>
+      <span class="anim-step-label" id="waveStepLabel">32 threads fire together — one dispatch, 32 results</span>
+    </div>
+  </div>
+
+  <!-- ════ S3 ════ -->
+  <div class="section-accent"><div class="accent-line"></div><span>Section 03</span></div>
+  <h2>The Shared Memory Trick — DDR Is the Enemy</h2>
+
+  <p>
+    Here's the bottleneck most engineers don't think about: if every thread independently reads its data from DRAM (main memory), the bandwidth cost is catastrophic. A single matmul tile would cause hundreds of DRAM round-trips — each one taking 50-100 nanoseconds.
+  </p>
+  <p>
+    QNN solves this with <strong>shared local memory</strong> (SRAM on the GPU, TCM on the HTP). The entire tile of data is loaded from DRAM <em>once</em>, placed into fast on-chip SRAM, and then all 256 threads in the workgroup reuse it many times.
+  </p>
+
+  <!-- ANIM 3: Shared Memory vs DRAM -->
+  <div class="anim-wrap">
+    <div class="anim-title">Animation 3 — Shared Memory vs Direct DRAM: The Bandwidth Difference</div>
+    <div class="anim-canvas" style="gap: 1.5rem; flex-wrap: wrap;">
+      <!-- BAD -->
+      <div class="mem-scenario" style="border-color: rgba(255,107,157,0.2); background: rgba(255,107,157,0.03);">
+        <div class="mem-label" style="color: var(--pink);">❌ Without Shared Memory</div>
+        <div class="mem-block mem-dram">DRAM (50–100ns latency)</div>
+        <div id="badArrows" style="display:flex;flex-direction:column;gap:3px;width:100%;align-items:center;">
+          <div class="mem-arrow slow" id="bArr0">↑ ↑ ↑ ↑</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:rgba(255,107,157,0.6);">4 separate round-trips</div>
+        </div>
+        <div class="mem-threads">
+          <div class="mem-thread" id="bt0">T0</div>
+          <div class="mem-thread" id="bt1">T1</div>
+          <div class="mem-thread" id="bt2">T2</div>
+          <div class="mem-thread" id="bt3">T3</div>
+        </div>
+        <div class="mem-cost cost-bad" id="badCost">~400ns total</div>
+      </div>
+      <!-- GOOD -->
+      <div class="mem-scenario" style="border-color: rgba(0,217,180,0.2); background: rgba(0,217,180,0.03);">
+        <div class="mem-label" style="color: var(--teal);">✓ With Shared Memory (SRAM)</div>
+        <div class="mem-block mem-dram">DRAM</div>
+        <div id="goodArrow1" class="mem-arrow fast" style="opacity:0.4;">↑ (once)</div>
+        <div class="mem-block mem-sram" id="sramBlock">SRAM — shared by all threads</div>
+        <div id="goodArrows" style="display:flex;gap:4px;">
+          <div class="mem-arrow fast" id="gArr0" style="opacity:0.3;">↑</div>
+          <div class="mem-arrow fast" id="gArr1" style="opacity:0.3;">↑</div>
+          <div class="mem-arrow fast" id="gArr2" style="opacity:0.3;">↑</div>
+          <div class="mem-arrow fast" id="gArr3" style="opacity:0.3;">↑</div>
+        </div>
+        <div class="mem-threads">
+          <div class="mem-thread" id="gt0">T0</div>
+          <div class="mem-thread" id="gt1">T1</div>
+          <div class="mem-thread" id="gt2">T2</div>
+          <div class="mem-thread" id="gt3">T3</div>
+        </div>
+        <div class="mem-cost cost-good" id="goodCost">~5ns reuse</div>
+      </div>
+    </div>
+    <div class="anim-controls">
+      <button class="anim-btn" onclick="startMemAnim()">▶ Play</button>
+      <button class="anim-btn" onclick="resetMemAnim()">↺ Reset</button>
+      <span class="anim-step-label">SRAM is ~10-20× faster than DRAM on mobile</span>
+    </div>
+  </div>
+
+  <!-- ════ S4 ════ -->
+  <div class="section-accent"><div class="accent-line"></div><span>Section 04</span></div>
+  <h2>Memory Coalescing — Access Patterns That Kill Performance</h2>
+
+  <p>
+    Even with shared memory, how threads access it matters enormously. Memory buses on mobile GPUs are designed to handle <strong>coalesced</strong> access — when adjacent threads read adjacent addresses, the hardware can serve them in a single wide transaction. Scatter them across memory and performance collapses.
+  </p>
+
+  <!-- ANIM 4: Memory Coalescing -->
+  <div class="anim-wrap">
+    <div class="anim-title">Animation 4 — Memory Coalescing: Sequential vs Scattered Access</div>
+    <div class="anim-canvas" style="flex-direction: column; gap: 1.5rem;">
+      <!-- Good coalescing -->
+      <div style="background: var(--bg-card); border-radius: 10px; padding: 1rem; border: 1px solid rgba(0,217,180,0.15);">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--teal);font-weight:600;margin-bottom:0.6rem;">✓ COALESCED — T0→addr0, T1→addr1, T2→addr2, T3→addr3</div>
+        <div class="mem-bus" id="goodBus"></div>
+        <div id="goodTxn" style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--muted);margin-top:0.5rem;text-align:center;">→ 1 memory transaction</div>
+      </div>
+      <!-- Bad coalescing -->
+      <div style="background: var(--bg-card); border-radius: 10px; padding: 1rem; border: 1px solid rgba(255,107,157,0.15);">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--pink);font-weight:600;margin-bottom:0.6rem;">❌ SCATTERED — T0→addr0, T1→addr7, T2→addr3, T3→addr12</div>
+        <div class="mem-bus" id="badBus"></div>
+        <div id="badTxn" style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--muted);margin-top:0.5rem;text-align:center;">→ 4 separate transactions (4× bandwidth waste)</div>
+      </div>
+    </div>
+    <div class="anim-controls">
+      <button class="anim-btn" onclick="startCoalesceAnim()">▶ Play</button>
+      <button class="anim-btn" onclick="resetCoalesceAnim()">↺ Reset</button>
+      <span class="anim-step-label">QNN rearranges tensor layouts (NHWC → blocked) to guarantee coalescing</span>
+    </div>
+  </div>
+
+  <div class="callout purple">
+    <strong>What QNN does about this:</strong> Before dispatching kernels, QNN may transform tensor memory layouts — converting from standard NHWC to blocked formats where channels are packed in groups of 32 or 64, aligned to cache line boundaries. This guarantees coalesced access even for tensors that weren't originally laid out that way.
+  </div>
+
+  <!-- ════ S5 ════ -->
+  <div class="section-accent"><div class="accent-line"></div><span>Section 05</span></div>
+  <h2>The Decode Problem — Why Arithmetic Intensity Collapses</h2>
+
+  <p>
+    Everything above applies beautifully to <strong>prefill</strong>: big matrices, lots of data reuse, high GPU utilization. But during <strong>decode</strong> — token generation — the workload changes completely. You're multiplying a tiny <code>[1 × 4096]</code> vector against a large weight matrix. The tile tricks still apply, but the ratio of compute to memory access (called <strong>arithmetic intensity</strong>) plummets.
+  </p>
+
+  <!-- ANIM 5: Roofline / Arithmetic Intensity -->
+  <div class="anim-wrap">
+    <div class="anim-title">Animation 5 — Arithmetic Intensity: Prefill vs Decode on the Roofline</div>
+    <div class="anim-canvas" style="flex-direction:column; gap:1rem;">
+      <svg class="roofline-svg" viewBox="0 0 480 260" id="rooflineSvg">
+        <!-- Axes -->
+        <line x1="50" y1="220" x2="450" y2="220" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+        <line x1="50" y1="220" x2="50" y2="20" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+        <!-- Axis labels -->
+        <text x="240" y="250" font-family="JetBrains Mono" font-size="10" fill="#8888aa" text-anchor="middle">Arithmetic Intensity (FLOPs/byte)</text>
+        <text x="15" y="120" font-family="JetBrains Mono" font-size="10" fill="#8888aa" text-anchor="middle" transform="rotate(-90,15,120)">Performance (TFLOPS)</text>
+        <!-- Roofline shape -->
+        <polyline id="roofLine" points="50,220 180,90 450,90" fill="none" stroke="rgba(0,217,180,0.5)" stroke-width="2" stroke-dasharray="4,3" opacity="0"/>
+        <!-- Memory bound label -->
+        <text id="memBoundLabel" x="80" y="175" font-family="JetBrains Mono" font-size="9" fill="rgba(255,107,157,0.7)" opacity="0">Memory</text>
+        <text id="memBoundLabel2" x="80" y="186" font-family="JetBrains Mono" font-size="9" fill="rgba(255,107,157,0.7)" opacity="0">Bound</text>
+        <!-- Compute bound label -->
+        <text id="compBoundLabel" x="310" y="80" font-family="JetBrains Mono" font-size="9" fill="rgba(0,217,180,0.7)" opacity="0">Compute Bound</text>
+        <!-- Decode dot -->
+        <circle id="decodeDot" cx="80" cy="200" r="7" fill="var(--pink)" opacity="0"/>
+        <text id="decodeLabel" x="90" y="196" font-family="JetBrains Mono" font-size="9" fill="var(--pink)" opacity="0">Decode (memory-bound)</text>
+        <!-- Prefill dot -->
+        <circle id="prefillDot" cx="320" cy="90" r="7" fill="var(--teal)" opacity="0"/>
+        <text id="prefillLabel" x="332" y="86" font-family="JetBrains Mono" font-size="9" fill="var(--teal)" opacity="0">Prefill (compute-bound)</text>
+        <!-- X axis ticks -->
+        <text x="80" y="232" font-family="JetBrains Mono" font-size="8" fill="#555" text-anchor="middle">0.1</text>
+        <text x="180" y="232" font-family="JetBrains Mono" font-size="8" fill="#555" text-anchor="middle">1</text>
+        <text x="320" y="232" font-family="JetBrains Mono" font-size="8" fill="#555" text-anchor="middle">10</text>
+        <text x="430" y="232" font-family="JetBrains Mono" font-size="8" fill="#555" text-anchor="middle">100</text>
+      </svg>
+      <div id="rooflineStatus" style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted);text-align:center;"></div>
+    </div>
+    <div class="anim-controls">
+      <button class="anim-btn" onclick="startRooflineAnim()">▶ Play</button>
+      <button class="anim-btn" onclick="resetRooflineAnim()">↺ Reset</button>
+      <span class="anim-step-label" id="rooflineLabel">The roofline model explains why GPU looks idle during decode</span>
+    </div>
+  </div>
+
+  <p>
+    During decode, arithmetic intensity drops below the ridge point — you're in the memory-bound region. The GPU's compute units are starved, waiting on KV cache reads from LPDDR5X. This is why <strong>low GPU utilization during decode is not a bug</strong> — it's physics. The fix is reducing memory traffic (quantized KV cache, GQA), not adding more compute.
+  </p>
+
+  <div class="callout orange">
+    <strong>The Snapdragon Profiler trap:</strong> If you see GPU utilization at 22% during decode and assume the GPU is idle — you're misreading the data. Fire up the memory bandwidth counter. You'll likely see it pegged at or near the LPDDR5X ceiling of ~77 GB/s.
+  </div>
+
+  <!-- ════ S6 ════ -->
+  <div class="section-accent"><div class="accent-line"></div><span>Section 06</span></div>
+  <h2>HTP Execution — A Totally Different Animal</h2>
+
+  <p>
+    The Hexagon Tensor Processor (HTP) is architecturally nothing like the Adreno GPU. Instead of thousands of lightweight threads, it runs a small number of deeply scheduled operations using a hierarchy of specialized compute units:
+  </p>
+
+  <div class="pipeline">
+    <div class="pipeline-step">
+      <div class="step-num teal">S</div>
+      <div class="step-body">
+        <div class="step-title">Scalar Core (VLIW)</div>
+        <div class="step-desc">6–8 hardware threads running control code. Handles branching, loop control, memory management. Like a very lean CPU inside the NPU. Runs compiled C code — not GPU shaders.</div>
+      </div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num purple">V</div>
+      <div class="step-body">
+        <div class="step-title">HVX — Hexagon Vector eXtensions</div>
+        <div class="step-desc">512-bit or 1024-bit wide SIMD vectors. Handles element-wise ops: activations (SiLU, GeLU), normalization, residual additions. Each HVX instruction processes 64–128 elements simultaneously.</div>
+      </div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num orange">T</div>
+      <div class="step-body">
+        <div class="step-title">HMX — Hexagon Matrix eXtensions (Tensor Accelerator)</div>
+        <div class="step-desc">The INT4/INT8/FP16 matrix multiply engine. Executes 16,000+ MAC ops per cycle. This is what handles W4 weight projections in decode. Instructions are not publicly documented — QNN generates them internally.</div>
+      </div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num pink">D</div>
+      <div class="step-body">
+        <div class="step-title">DMA Engine + TCM</div>
+        <div class="step-desc">8MB of Tightly Coupled Memory (TCM) — software-managed on-chip SRAM. The DMA engine loads tiles from DRAM into TCM asynchronously, overlapping with HMX computation. This overlap is the HTP's biggest performance lever.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANIM 6: DMA Double Buffering -->
+  <div class="anim-wrap">
+    <div class="anim-title">Animation 6 — DMA Double Buffering: Overlap Compute and Memory Load</div>
+    <div class="anim-canvas" style="flex-direction: column; gap: 1rem;">
+      <div id="dbufPhaseLabel" style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted);text-align:center;"></div>
+      <div class="dbuf-row">
+        <div class="dbuf-box dbuf-idle" id="bufA">
+          <div class="dbuf-name">Buffer A</div>
+          <div class="dbuf-status" id="bufAStatus">IDLE</div>
+          <div class="dbuf-bar" id="bufABar" style="width:0%;"></div>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:1.2rem;color:var(--muted);">⇄</div>
+        <div class="dbuf-box dbuf-idle" id="bufB">
+          <div class="dbuf-name">Buffer B</div>
+          <div class="dbuf-status" id="bufBStatus">IDLE</div>
+          <div class="dbuf-bar" id="bufBBar" style="width:0%;"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+        <div id="hmxStatus" style="padding:0.4rem 1rem;border-radius:20px;font-family:'JetBrains Mono',monospace;font-size:0.65rem;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--muted);">HMX: idle</div>
+        <div id="dmaStatus" style="padding:0.4rem 1rem;border-radius:20px;font-family:'JetBrains Mono',monospace;font-size:0.65rem;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--muted);">DMA: idle</div>
+      </div>
+      <div id="dbufTimelineWrap" style="width:100%;max-width:500px;margin:0 auto;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--muted);margin-bottom:4px;">Timeline</div>
+        <div style="display:flex;gap:3px;" id="dbufTimeline"></div>
+      </div>
+    </div>
+    <div class="anim-controls">
+      <button class="anim-btn" onclick="startDbufAnim()">▶ Play</button>
+      <button class="anim-btn" onclick="resetDbufAnim()">↺ Reset</button>
+      <span class="anim-step-label">Without double buffering: HMX idles 50% of the time waiting for DMA</span>
+    </div>
+  </div>
+
+  <p>
+    Without double buffering, HMX must wait for DMA to finish loading before it can compute — leaving it idle roughly half the time. With double buffering, while HMX computes tile A, the DMA engine loads tile B. Then they swap. Hardware is always busy.
+  </p>
+
+  <!-- ════ S7 ════ -->
+  <div class="section-accent"><div class="accent-line"></div><span>Section 07</span></div>
+  <h2>Operator Fusion — The Biggest Single Speedup</h2>
+
+  <p>
+    Every kernel launch has overhead: command submission, memory barriers, synchronization. In a transformer layer, a naive implementation would run MatMul → sync → RMSNorm → sync → SwiGLU → sync → next MatMul. Each sync is a barrier where all threads must stop and wait.
+  </p>
+  <p>
+    QNN's compiler fuses adjacent operators into single super-kernels where possible, eliminating intermediate memory writes and barrier costs entirely.
+  </p>
+
+  <!-- ANIM 7: Operator Fusion -->
+  <div class="anim-wrap">
+    <div class="anim-title">Animation 7 — Operator Fusion: 3 Kernels Collapsed Into 1</div>
+    <div class="anim-canvas" style="flex-direction: column; gap: 1.2rem;">
+      <!-- Unfused -->
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--pink);margin-bottom:0.5rem;font-weight:600;">❌ Unfused — 3 launches, 2 sync barriers, 2 DRAM writes</div>
+        <div class="fusion-row" id="unfusedRow">
+          <div class="kernel-box" style="border-color:rgba(255,179,71,0.4);background:rgba(255,179,71,0.08);color:var(--orange);">MatMul</div>
+          <div class="kernel-sync" id="sync1"></div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:var(--pink);white-space:nowrap;">✗ DRAM write<br/>✗ sync barrier</div>
+          <div class="kernel-sync" id="sync2"></div>
+          <div class="kernel-box" style="border-color:rgba(124,107,255,0.4);background:rgba(124,107,255,0.08);color:var(--purple);">RMSNorm</div>
+          <div class="kernel-sync" id="sync3"></div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:var(--pink);white-space:nowrap;">✗ DRAM write<br/>✗ sync barrier</div>
+          <div class="kernel-sync" id="sync4"></div>
+          <div class="kernel-box" style="border-color:rgba(0,217,180,0.4);background:rgba(0,217,180,0.08);color:var(--teal);">SwiGLU</div>
+        </div>
+      </div>
+      <!-- Fused -->
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--teal);margin-bottom:0.5rem;font-weight:600;">✓ Fused — 1 launch, 0 barriers, 0 intermediate DRAM writes</div>
+        <div class="fusion-row" id="fusedRow">
+          <div class="kernel-box" id="fusedKernel" style="border-color:rgba(0,217,180,0.4);background:rgba(0,217,180,0.08);color:var(--teal);padding:0.6rem 1.4rem;font-size:0.75rem;opacity:0;transition:all 0.5s;">MatMul + RMSNorm + SwiGLU</div>
+        </div>
+      </div>
+      <div id="fusionSaving" style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted);text-align:center;opacity:0;transition:opacity 0.5s;"></div>
+    </div>
+    <div class="anim-controls">
+      <button class="anim-btn" onclick="startFusionAnim()">▶ Play</button>
+      <button class="anim-btn" onclick="resetFusionAnim()">↺ Reset</button>
+      <span class="anim-step-label">QNN fuses MatMul+Activation+Norm in transformer FFN blocks</span>
+    </div>
+  </div>
+
+  <!-- ════ S8 ════ -->
+  <div class="section-accent"><div class="accent-line"></div><span>Section 08</span></div>
+  <h2>Why the Profiler Lies — Reading Utilization Correctly</h2>
+
+  <p>
+    Armed with the above, you can now correctly interpret Snapdragon Profiler output — instead of being misled by it.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>What Profiler Shows</th><th>What Engineers Think</th><th>What's Actually Happening</th><th>Fix</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>GPU util: 22% during decode</td><td class="td-bad">GPU is idle</td><td>Memory-bandwidth bottleneck. LPDDR5X saturated.</td><td>Quantize KV cache, use GQA</td></tr>
+        <tr><td>GPU util: 90% during prefill</td><td class="td-good">GPU is busy, good</td><td>Correct. Compute-bound. Expected behaviour.</td><td>No action needed</td></tr>
+        <tr><td>High util + slow tok/s</td><td class="td-bad">Compute limited</td><td>Kernel launch overhead, uncoalesced access, or sync barriers.</td><td>Fuse kernels, fix tensor layout</td></tr>
+        <tr><td>HTP util: 80%, GPU: 5%</td><td class="td-bad">GPU broken?</td><td>QNN correctly routed W4 matmuls to HTP for decode.</td><td>Expected. Check power draw.</td></tr>
+        <tr><td>Low util across all</td><td class="td-bad">Everything idle</td><td>Unsupported op fell back to CPU. CPU is blocking.</td><td>Check QNN backend log for fallback ops</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ════ S9 ════ -->
+  <div class="section-accent"><div class="accent-line"></div><span>Section 09</span></div>
+  <h2>The Hierarchy That Actually Matters</h2>
+
+  <div class="highlight-box">
+    <p>
+      <strong>For GPU (Adreno):</strong> Performance bottleneck order is usually: <em>memory bandwidth &gt; coalescing &gt; occupancy &gt; FLOPS</em>. Fix bandwidth before adding compute.<br/><br/>
+      <strong>For HTP (Hexagon):</strong> Performance bottleneck order is usually: <em>DMA throughput &gt; TCM capacity &gt; HMX utilization &gt; operator support</em>. If you're not overlapping DMA and compute, you're leaving 50% performance on the table.<br/><br/>
+      <strong>For both:</strong> Operator fusion is almost always the highest-ROI optimization. Two synced kernels with one DRAM write between them lose more time to the barrier than either kernel spends computing.
+    </p>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Phase</th><th>Processor</th><th>Primary Bottleneck</th><th>Key Optimization</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Prefill</td><td>GPU (Adreno)</td><td>FLOPS</td><td>Tiling, wavefront occupancy, fused attention</td></tr>
+        <tr><td>Decode — W4 matmuls</td><td>HTP (HMX)</td><td>DMA throughput</td><td>Double buffering, TCM prefetch</td></tr>
+        <tr><td>Decode — attention</td><td>GPU</td><td>Memory bandwidth (KV cache)</td><td>INT8 KV cache, GQA, sliding window</td></tr>
+        <tr><td>Decode — normalization</td><td>GPU</td><td>Kernel launch overhead</td><td>Fuse with adjacent ops</td></tr>
+        <tr><td>Sampling</td><td>CPU</td><td>Single-thread latency</td><td>Oryon clock frequency, fused top-k</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="chip-list" style="margin-top:3rem;">
+    <span class="chip">QNN Internals</span>
+    <span class="chip">Matrix Tiling</span>
+    <span class="chip">Wavefronts</span>
+    <span class="chip">Shared Memory</span>
+    <span class="chip">HVX / HMX</span>
+    <span class="chip">Double Buffering</span>
+    <span class="chip">Operator Fusion</span>
+    <span class="chip">Roofline Model</span>
+    <span class="chip">Memory Coalescing</span>
+    <span class="chip">Snapdragon Profiler</span>
+  </div>
+
+</article>
+
+<footer class="site-footer">
+  <p>Written by <a href="/">Prateek Singh, PhD</a> · Senior Manager, GenAI · Samsung Research Institute, Noida</p>
+  <p style="margin-top:0.6rem;font-size:0.78rem;">© 2026 · <a href="https://prateeksinghphd.in/blogs.html">Back to Blog</a> · <a href="https://prateeksinghphd.in/index.html#newsletter">Subscribe</a></p>
+</footer>
+
+<!-- ════════════════════════════════════════
+     ANIMATION JAVASCRIPT
+════════════════════════════════════════ -->
+<script>
+// ── ANIM 1: Matrix Tiling ──
+const COLS = 8, ROWS = 8;
+let matrixInterval = null, matrixRunning = false;
+const tileColors = [
+  [[0,0],[0,1],[1,0],[1,1]], [[0,2],[0,3],[1,2],[1,3]],
+  [[0,4],[0,5],[1,4],[1,5]], [[0,6],[0,7],[1,6],[1,7]],
+  [[2,0],[2,1],[3,0],[3,1]], [[2,2],[2,3],[3,2],[3,3]],
+  [[2,4],[2,5],[3,4],[3,5]], [[2,6],[2,7],[3,6],[3,7]],
+  [[4,0],[4,1],[5,0],[5,1]], [[4,2],[4,3],[5,2],[5,3]],
+  [[4,4],[4,5],[5,4],[5,5]], [[4,6],[4,7],[5,6],[5,7]],
+  [[6,0],[6,1],[7,0],[7,1]], [[6,2],[6,3],[7,2],[7,3]],
+  [[6,4],[6,5],[7,4],[7,5]], [[6,6],[6,7],[7,6],[7,7]],
+];
+let cells = [];
+
+function initMatrix() {
+  const grid = document.getElementById('matrixGrid');
+  grid.innerHTML = ''; cells = [];
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'matrix-cell';
+      grid.appendChild(cell);
+      cells.push(cell);
+    }
+  }
+}
+
+function getCell(r, c) { return cells[r * COLS + c]; }
+
+function startMatrixAnim() {
+  if (matrixRunning) return;
+  resetMatrixAnim();
+  matrixRunning = true;
+  let tileIdx = 0;
+  let prevTile = null;
+
+  function nextTile() {
+    if (tileIdx >= tileColors.length) {
+      matrixRunning = false;
+      document.getElementById('matrixStepLabel').textContent = '✓ All 16 tiles complete — full matrix computed in parallel';
+      return;
+    }
+    if (prevTile !== null) {
+      tileColors[prevTile].forEach(([r,c]) => getCell(r,c).className = 'matrix-cell tile-done');
+    }
+    const tile = tileColors[tileIdx];
+    tile.forEach(([r,c]) => getCell(r,c).className = 'matrix-cell tile-current');
+    document.getElementById('tileInfo').textContent = `Tile ${tileIdx} → Workgroup ${tileIdx}`;
+    document.getElementById('tileProgress').style.width = ((tileIdx+1)/16*100) + '%';
+    document.getElementById('tileCount').textContent = `${tileIdx+1} / 16 tiles`;
+    document.getElementById('matrixStepLabel').textContent = `Workgroup ${tileIdx}: 256 threads compute 2×2 output block simultaneously`;
+
+    // flash active
+    setTimeout(() => {
+      tile.forEach(([r,c]) => getCell(r,c).className = 'matrix-cell tile-active');
+    }, 150);
+
+    prevTile = tileIdx;
+    tileIdx++;
+    matrixInterval = setTimeout(nextTile, 480);
+  }
+  nextTile();
+}
+
+function resetMatrixAnim() {
+  if (matrixInterval) clearTimeout(matrixInterval);
+  matrixRunning = false;
+  initMatrix();
+  document.getElementById('tileInfo').textContent = 'Tile 0 → Workgroup 0';
+  document.getElementById('tileProgress').style.width = '0%';
+  document.getElementById('tileCount').textContent = '0 / 16 tiles';
+  document.getElementById('matrixStepLabel').textContent = 'Each tile = one workgroup of threads executing in parallel';
+}
+
+initMatrix();
+
+// ── ANIM 2: Wavefront ──
+let waveInterval = null, waveRunning = false;
+const N_THREADS = 32;
+
+function initWavefront() {
+  const grid = document.getElementById('wavefrontGrid');
+  grid.innerHTML = '';
+  const row = document.createElement('div');
+  row.className = 'thread-row';
+  row.style.flexWrap = 'wrap';
+  row.style.justifyContent = 'center';
+  for (let i = 0; i < N_THREADS; i++) {
+    const box = document.createElement('div');
+    box.className = 'thread-box idle';
+    box.id = `wt${i}`;
+    box.innerHTML = `<span class="tid">T${i}</span><span>a${i}·b${i}</span>`;
+    row.appendChild(box);
+  }
+  grid.appendChild(row);
+  document.getElementById('waveStatus').textContent = '';
+}
+
+function startWaveAnim() {
+  if (waveRunning) return;
+  resetWaveAnim();
+  waveRunning = true;
+
+  const steps = [
+    { label: 'Step 1: Dispatcher issues one MAC instruction to all 32 threads simultaneously', fn: () => {
+      for (let i = 0; i < N_THREADS; i++) document.getElementById(`wt${i}`).className = 'thread-box executing';
+      document.getElementById('waveStatus').textContent = '⚡ All 32 threads fire — same instruction, different data';
+    }},
+    { label: 'Step 2: Each thread computes its own multiply-accumulate in parallel', fn: () => {
+      for (let i = 0; i < 16; i++) document.getElementById(`wt${i}`).className = 'thread-box done';
+      document.getElementById('waveStatus').textContent = '✓ T0–T15 complete...';
+    }},
+    { label: 'Step 3: All results written back — one wavefront = 32 MACs in ~1 cycle', fn: () => {
+      for (let i = 0; i < N_THREADS; i++) document.getElementById(`wt${i}`).className = 'thread-box done';
+      document.getElementById('waveStatus').textContent = '✓ 32 multiply-accumulates done in one wavefront cycle';
+      waveRunning = false;
+    }},
+  ];
+
+  let s = 0;
+  function nextStep() {
+    if (s >= steps.length) return;
+    document.getElementById('waveStepLabel').textContent = steps[s].label;
+    steps[s].fn();
+    s++;
+    if (s < steps.length) waveInterval = setTimeout(nextStep, 1200);
+  }
+  nextStep();
+}
+
+function resetWaveAnim() {
+  if (waveInterval) clearTimeout(waveInterval);
+  waveRunning = false;
+  initWavefront();
+  document.getElementById('waveStepLabel').textContent = '32 threads fire together — one dispatch, 32 results';
+}
+
+initWavefront();
+
+// ── ANIM 3: Shared Memory ──
+let memInterval = null, memRunning = false;
+
+function resetMemAnim() {
+  if (memInterval) clearTimeout(memInterval);
+  memRunning = false;
+  ['bt0','bt1','bt2','bt3'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.background = 'rgba(124,107,255,0.15)'; el.style.borderColor = 'rgba(124,107,255,0.3)'; }
+  });
+  ['gt0','gt1','gt2','gt3'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.background = 'rgba(124,107,255,0.15)'; el.style.borderColor = 'rgba(124,107,255,0.3)'; }
+  });
+  const sram = document.getElementById('sramBlock');
+  if (sram) { sram.style.background = 'rgba(0,217,180,0.12)'; sram.style.boxShadow = 'none'; }
+  ['gArr0','gArr1','gArr2','gArr3'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.opacity = '0.3';
+  });
+  const ga1 = document.getElementById('goodArrow1');
+  if (ga1) ga1.style.opacity = '0.4';
+}
+
+function startMemAnim() {
+  if (memRunning) return;
+  resetMemAnim();
+  memRunning = true;
+
+  const badThreads = ['bt0','bt1','bt2','bt3'];
+  const goodThreads = ['gt0','gt1','gt2','gt3'];
+  const goodArrows = ['gArr0','gArr1','gArr2','gArr3'];
+
+  // Animate bad scenario: threads one by one going to DRAM
+  let step = 0;
+  function badStep() {
+    if (step < badThreads.length) {
+      const el = document.getElementById(badThreads[step]);
+      if (el) { el.style.background = 'rgba(255,107,157,0.3)'; el.style.borderColor = 'var(--pink)'; }
+      step++;
+      memInterval = setTimeout(badStep, 350);
+    } else {
+      // Now animate good scenario
+      const ga1 = document.getElementById('goodArrow1');
+      if (ga1) ga1.style.opacity = '1';
+      const sram = document.getElementById('sramBlock');
+      setTimeout(() => {
+        if (sram) sram.style.boxShadow = '0 0 12px rgba(0,217,180,0.4)';
+        goodArrows.forEach((id, i) => {
+          setTimeout(() => {
+            const el = document.getElementById(id);
+            if (el) el.style.opacity = '1';
+            const gt = document.getElementById(goodThreads[i]);
+            if (gt) { gt.style.background = 'rgba(0,217,180,0.25)'; gt.style.borderColor = 'var(--teal)'; }
+          }, i * 150);
+        });
+        memRunning = false;
+      }, 400);
+    }
+  }
+  badStep();
+}
+
+// ── ANIM 4: Memory Coalescing ──
+let coalesceInterval = null, coalesceRunning = false;
+const ADDR_COUNT = 16;
+
+function initCoalesce() {
+  ['goodBus','badBus'].forEach(id => {
+    const bus = document.getElementById(id);
+    if (!bus) return;
+    bus.innerHTML = '';
+    for (let i = 0; i < ADDR_COUNT; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'addr-cell';
+      cell.textContent = i;
+      cell.id = `${id}_${i}`;
+      bus.appendChild(cell);
+    }
+  });
+  const gt = document.getElementById('goodTxn');
+  const bt = document.getElementById('badTxn');
+  if (gt) gt.style.color = 'var(--muted)';
+  if (bt) bt.style.color = 'var(--muted)';
+}
+
+function startCoalesceAnim() {
+  if (coalesceRunning) return;
+  initCoalesce();
+  coalesceRunning = true;
+
+  // Good: highlight 0,1,2,3 all at once
+  setTimeout(() => {
+    [0,1,2,3].forEach(i => {
+      const el = document.getElementById(`goodBus_${i}`);
+      if (el) el.className = 'addr-cell hit-good';
+    });
+    const gt = document.getElementById('goodTxn');
+    if (gt) { gt.textContent = '→ 1 memory transaction ✓ (contiguous burst read)'; gt.style.color = 'var(--teal)'; }
+  }, 400);
+
+  // Bad: highlight 0, then 7, then 3, then 12 one by one
+  const badAddrs = [0, 7, 3, 12];
+  badAddrs.forEach((addr, i) => {
+    setTimeout(() => {
+      const el = document.getElementById(`badBus_${addr}`);
+      if (el) el.className = 'addr-cell hit-bad';
+      if (i === badAddrs.length - 1) {
+        const bt = document.getElementById('badTxn');
+        if (bt) { bt.textContent = '→ 4 separate transactions ✗ (4× bandwidth waste)'; bt.style.color = 'var(--pink)'; }
+        coalesceRunning = false;
+      }
+    }, 400 + i * 450);
+  });
+}
+
+function resetCoalesceAnim() {
+  if (coalesceInterval) clearTimeout(coalesceInterval);
+  coalesceRunning = false;
+  initCoalesce();
+}
+
+initCoalesce();
+
+// ── ANIM 5: Roofline ──
+let rooflineRunning = false, rooflineTimeout = null;
+
+function resetRooflineAnim() {
+  if (rooflineTimeout) clearTimeout(rooflineTimeout);
+  rooflineRunning = false;
+  ['roofLine','memBoundLabel','memBoundLabel2','compBoundLabel','decodeDot','decodeLabel','prefillDot','prefillLabel']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.setAttribute('opacity','0'); });
+  document.getElementById('rooflineStatus').textContent = '';
+  document.getElementById('rooflineLabel').textContent = 'The roofline model explains why GPU looks idle during decode';
+}
+
+function startRooflineAnim() {
+  if (rooflineRunning) return;
+  resetRooflineAnim();
+  rooflineRunning = true;
+
+  const steps = [
+    { delay: 300,  fn: () => { document.getElementById('roofLine').setAttribute('opacity','1'); document.getElementById('rooflineStatus').textContent = 'Roofline: peak performance bounded by either memory bandwidth or compute'; }},
+    { delay: 800,  fn: () => { document.getElementById('memBoundLabel').setAttribute('opacity','1'); document.getElementById('memBoundLabel2').setAttribute('opacity','1'); }},
+    { delay: 1100, fn: () => { document.getElementById('compBoundLabel').setAttribute('opacity','1'); }},
+    { delay: 1600, fn: () => { document.getElementById('decodeDot').setAttribute('opacity','1'); document.getElementById('decodeLabel').setAttribute('opacity','1'); document.getElementById('rooflineStatus').textContent = 'Decode: low arithmetic intensity → deep inside memory-bound region'; document.getElementById('rooflineLabel').textContent = 'Decode sits left of the ridge point — memory bandwidth is the wall'; }},
+    { delay: 2400, fn: () => { document.getElementById('prefillDot').setAttribute('opacity','1'); document.getElementById('prefillLabel').setAttribute('opacity','1'); document.getElementById('rooflineStatus').textContent = 'Prefill: high arithmetic intensity → hits compute ceiling. GPU is genuinely busy.'; document.getElementById('rooflineLabel').textContent = '✓ Decode = bandwidth-bound. Prefill = compute-bound. Completely different problems.'; rooflineRunning = false; }},
+  ];
+
+  let cumDelay = 0;
+  steps.forEach(s => {
+    cumDelay += s.delay;
+    rooflineTimeout = setTimeout(s.fn, cumDelay);
+  });
+}
+
+// ── ANIM 6: Double Buffering ──
+let dbufRunning = false, dbufTimeout = null;
+let timelineData = [];
+
+function initDbuf() {
+  ['bufA','bufB'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.className = 'dbuf-box dbuf-idle';
+  });
+  ['bufAStatus','bufBStatus'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = 'IDLE'; });
+  ['bufABar','bufBBar'].forEach(id => { const el = document.getElementById(id); if (el) el.style.width = '0%'; });
+  document.getElementById('hmxStatus').textContent = 'HMX: idle';
+  document.getElementById('hmxStatus').style.color = 'var(--muted)';
+  document.getElementById('dmaStatus').textContent = 'DMA: idle';
+  document.getElementById('dmaStatus').style.color = 'var(--muted)';
+  document.getElementById('dbufPhaseLabel').textContent = '';
+  document.getElementById('dbufTimeline').innerHTML = '';
+  timelineData = [];
+}
+
+function addTimelineTick(label, color) {
+  const tl = document.getElementById('dbufTimeline');
+  const tick = document.createElement('div');
+  tick.style.cssText = `flex:1;height:16px;border-radius:2px;background:${color};min-width:24px;max-width:60px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:0.45rem;color:#000;font-weight:700;`;
+  tick.textContent = label;
+  tl.appendChild(tick);
+}
+
+function startDbufAnim() {
+  if (dbufRunning) return;
+  initDbuf();
+  dbufRunning = true;
+
+  const phases = [
+    { delay: 300, label: 'Phase 1: DMA loads tile 0 into Buffer A', fn: () => {
+      document.getElementById('bufA').className = 'dbuf-box dbuf-load';
+      document.getElementById('bufAStatus').textContent = 'LOADING ←DMA';
+      document.getElementById('bufABar').style.width = '70%';
+      document.getElementById('dmaStatus').textContent = 'DMA: loading → Buf A';
+      document.getElementById('dmaStatus').style.color = 'var(--orange)';
+      addTimelineTick('DMA→A', 'rgba(255,179,71,0.7)');
+    }},
+    { delay: 800, label: 'Phase 2: HMX computes Buffer A. DMA simultaneously loads Buffer B', fn: () => {
+      document.getElementById('bufA').className = 'dbuf-box dbuf-compute';
+      document.getElementById('bufAStatus').textContent = 'COMPUTING ↔HMX';
+      document.getElementById('bufABar').style.width = '100%';
+      document.getElementById('bufB').className = 'dbuf-box dbuf-load';
+      document.getElementById('bufBStatus').textContent = 'LOADING ←DMA';
+      document.getElementById('bufBBar').style.width = '60%';
+      document.getElementById('hmxStatus').textContent = 'HMX: computing A';
+      document.getElementById('hmxStatus').style.color = 'var(--teal)';
+      document.getElementById('dmaStatus').textContent = 'DMA: loading → Buf B';
+      document.getElementById('dmaStatus').style.color = 'var(--orange)';
+      addTimelineTick('HMX:A', 'rgba(0,217,180,0.7)');
+      addTimelineTick('DMA→B', 'rgba(255,179,71,0.7)');
+    }},
+    { delay: 800, label: 'Phase 3: SWAP — HMX computes Buffer B. DMA loads Buffer A (tile 2)', fn: () => {
+      document.getElementById('bufA').className = 'dbuf-box dbuf-load';
+      document.getElementById('bufAStatus').textContent = 'LOADING ←DMA';
+      document.getElementById('bufABar').style.width = '50%';
+      document.getElementById('bufB').className = 'dbuf-box dbuf-compute';
+      document.getElementById('bufBStatus').textContent = 'COMPUTING ↔HMX';
+      document.getElementById('bufBBar').style.width = '100%';
+      document.getElementById('hmxStatus').textContent = 'HMX: computing B';
+      document.getElementById('hmxStatus').style.color = 'var(--teal)';
+      document.getElementById('dmaStatus').textContent = 'DMA: loading → Buf A';
+      document.getElementById('dmaStatus').style.color = 'var(--orange)';
+      addTimelineTick('HMX:B', 'rgba(0,217,180,0.7)');
+      addTimelineTick('DMA→A', 'rgba(255,179,71,0.7)');
+    }},
+    { delay: 800, label: '✓ Result: HMX is always computing. DMA is always loading. Zero idle time.', fn: () => {
+      document.getElementById('dbufPhaseLabel').textContent = '✓ Hardware utilization: ~100%. Without double buffering: ~50%.';
+      document.getElementById('dbufPhaseLabel').style.color = 'var(--teal)';
+      addTimelineTick('...', 'rgba(124,107,255,0.5)');
+      dbufRunning = false;
+    }},
+  ];
+
+  let cumDelay = 0;
+  phases.forEach(p => {
+    cumDelay += p.delay;
+    dbufTimeout = setTimeout(() => {
+      document.getElementById('dbufPhaseLabel').textContent = p.label;
+      p.fn();
+    }, cumDelay);
+  });
+}
+
+function resetDbufAnim() {
+  if (dbufTimeout) clearTimeout(dbufTimeout);
+  dbufRunning = false;
+  initDbuf();
+}
+
+initDbuf();
+
+// ── ANIM 7: Operator Fusion ──
+let fusionRunning = false, fusionTimeout = null;
+
+function resetFusionAnim() {
+  if (fusionTimeout) clearTimeout(fusionTimeout);
+  fusionRunning = false;
+  ['sync1','sync2','sync3','sync4'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.opacity = '1'; el.style.background = 'rgba(255,107,157,0.5)'; }
+  });
+  const fk = document.getElementById('fusedKernel');
+  if (fk) { fk.style.opacity = '0'; fk.style.transform = 'scale(0.8)'; }
+  const fs = document.getElementById('fusionSaving');
+  if (fs) fs.style.opacity = '0';
+}
+
+function startFusionAnim() {
+  if (fusionRunning) return;
+  resetFusionAnim();
+  fusionRunning = true;
+
+  // Step 1: flash syncs as bad
+  setTimeout(() => {
+    ['sync1','sync2','sync3','sync4'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.boxShadow = '0 0 8px rgba(255,107,157,0.6)';
+    });
+  }, 300);
+
+  // Step 2: fade out syncs
+  setTimeout(() => {
+    ['sync1','sync2','sync3','sync4'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.style.transition = 'all 0.5s'; el.style.opacity = '0'; el.style.transform = 'scaleY(0)'; }
+    });
+  }, 1000);
+
+  // Step 3: show fused kernel
+  setTimeout(() => {
+    const fk = document.getElementById('fusedKernel');
+    if (fk) { fk.style.opacity = '1'; fk.style.transform = 'scale(1)'; fk.style.boxShadow = '0 0 20px rgba(0,217,180,0.3)'; }
+    const fs = document.getElementById('fusionSaving');
+    if (fs) { fs.style.opacity = '1'; fs.textContent = '✓ Eliminated: 2 DRAM writes · 2 sync barriers · 2 kernel launches → ~30–40% latency reduction'; fs.style.color = 'var(--teal)'; }
+    fusionRunning = false;
+  }, 1800);
+}
+
+resetFusionAnim();
+resetRooflineAnim();
+</script>
+
+</body>
+</html>
