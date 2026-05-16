@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>Inside Hexagon — Qualcomm's NPU from Silicon to Inference | Prateek Singh</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg:       #0d0d12;
+      --bg-card:  #13131a;
+      --bg-card2: #1a1a24;
+      --teal:     #00d9b4;
+      --purple:   #7c6bff;
+      --pink:     #ff6b9d;
+      --orange:   #ffb347;
+      --blue:     #50a0ff;
+      --text:     #e2e2ef;
+      --muted:    #8888aa;
+      --border:   rgba(255,255,255,0.07);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg) !important; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 17px; line-height: 1.75; min-height: 100vh; }
+
+    .site-header { display: flex; align-items: center; justify-content: space-between; padding: 1.4rem 2.5rem; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: rgba(13,13,18,0.92) !important; backdrop-filter: blur(12px); z-index: 100; }
+    .site-logo { font-family: 'Playfair Display', serif; font-weight: 900; font-size: 1.15rem; color: var(--teal); text-decoration: none; }
+    .site-nav a { color: var(--muted); text-decoration: none; font-size: 0.875rem; font-weight: 500; margin-left: 1.8rem; transition: color 0.2s; }
+    .site-nav a:hover { color: var(--teal); }
+
+    .breadcrumb { max-width: 820px; margin: 0 auto; padding: 1.8rem 2rem 0; }
+    .breadcrumb a { display: inline-flex; align-items: center; gap: 0.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+    .breadcrumb a:hover { color: var(--teal); }
+
+    .hero { max-width: 820px; margin: 0 auto; padding: 4rem 2rem 3.5rem; animation: fadeUp 0.6s ease both; }
+    .hero-meta { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.6rem; flex-wrap: wrap; }
+    .tag { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.3em 0.85em; border-radius: 20px; background: rgba(0,217,180,0.12); color: var(--teal); border: 1px solid rgba(0,217,180,0.25); }
+    .tag.purple { background: rgba(124,107,255,0.12); color: var(--purple); border-color: rgba(124,107,255,0.25); }
+    .tag.orange { background: rgba(255,179,71,0.12); color: var(--orange); border-color: rgba(255,179,71,0.25); }
+    .tag.pink   { background: rgba(255,107,157,0.12); color: var(--pink); border-color: rgba(255,107,157,0.25); }
+    .hero-date { font-size: 0.8rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+    .hero h1 { font-family: 'Playfair Display', serif; font-weight: 900; font-size: clamp(2.2rem, 5vw, 3.4rem); line-height: 1.15; color: #fff; margin-bottom: 1.2rem; letter-spacing: -0.01em; }
+    .hero h1 em { font-style: italic; color: var(--teal); }
+    .hero-subtitle { font-size: 1.15rem; color: var(--muted); font-weight: 300; max-width: 640px; line-height: 1.7; }
+
+    .divider { max-width: 820px; margin: 0 auto 2.5rem; padding: 0 2rem; height: 1px; background: var(--border); }
+
+    .article { max-width: 820px; margin: 0 auto; padding: 0 2rem 6rem; animation: fadeUp 0.7s ease 0.1s both; }
+    .article h2 { font-family: 'Playfair Display', serif; font-size: 1.75rem; font-weight: 700; color: #fff; margin: 3.2rem 0 1rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--border); }
+    .article h3 { font-family: 'DM Sans', sans-serif; font-size: 1.1rem; font-weight: 600; color: var(--teal); margin: 2rem 0 0.7rem; }
+    .article p { margin-bottom: 1.3rem; color: #c8c8e0; }
+    .article strong { color: var(--text); font-weight: 600; }
+
+    .section-accent { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; }
+    .section-accent .accent-line { width: 28px; height: 2px; background: var(--teal); border-radius: 2px; }
+    .section-accent span { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--teal); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; }
+
+    .callout { background: var(--bg-card); border-left: 3px solid var(--teal); border-radius: 0 12px 12px 0; padding: 1.2rem 1.5rem; margin: 2rem 0; font-size: 0.95rem; color: #b0b0cc; line-height: 1.7; }
+    .callout.purple { border-color: var(--purple); }
+    .callout.orange { border-color: var(--orange); }
+    .callout.pink   { border-color: var(--pink); }
+
+    .analogy { background: var(--bg-card2); border: 1px dashed rgba(124,107,255,0.3); border-radius: 12px; padding: 1.4rem 1.5rem; margin: 1.5rem 0; }
+    .analogy-label { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--purple); margin-bottom: 0.5rem; font-weight: 600; }
+    .analogy p { color: #b0b0cc; margin: 0; font-size: 0.93rem; }
+
+    code { font-family: 'JetBrains Mono', monospace; font-size: 0.82em; background: rgba(0,217,180,0.1); color: var(--teal); border-radius: 5px; padding: 0.15em 0.5em; }
+    pre { background: var(--bg-card2); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; overflow-x: auto; margin: 1.5rem 0; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.7; color: #c8c8e0; }
+    pre .kw { color: var(--purple); }
+    pre .fn { color: var(--teal); }
+    pre .str { color: var(--orange); }
+    pre .cmt { color: var(--muted); font-style: italic; }
+
+    .pipeline { display: flex; flex-direction: column; gap: 0; margin: 2.5rem 0; }
+    .pipeline-step { display: flex; align-items: flex-start; gap: 1.2rem; background: var(--bg-card); border: 1px solid var(--border); padding: 1.4rem 1.5rem; position: relative; transition: border-color 0.2s; }
+    .pipeline-step:first-child { border-radius: 14px 14px 0 0; }
+    .pipeline-step:last-child  { border-radius: 0 0 14px 14px; }
+    .pipeline-step:not(:last-child) { border-bottom: none; }
+    .pipeline-step:hover { border-color: rgba(0,217,180,0.25); z-index: 1; }
+    .step-num { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; font-weight: 600; min-width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 8px; margin-top: 0.15rem; flex-shrink: 0; }
+    .step-num.teal   { background: rgba(0,217,180,0.15);  color: var(--teal); }
+    .step-num.purple { background: rgba(124,107,255,0.15); color: var(--purple); }
+    .step-num.orange { background: rgba(255,179,71,0.15);  color: var(--orange); }
+    .step-num.pink   { background: rgba(255,107,157,0.15); color: var(--pink); }
+    .step-num.blue   { background: rgba(80,160,255,0.15);  color: var(--blue); }
+    .step-body { flex: 1; }
+    .step-title { font-weight: 600; font-size: 1rem; color: var(--text); margin-bottom: 0.3rem; }
+    .step-desc  { font-size: 0.88rem; color: var(--muted); line-height: 1.6; }
+
+    .table-wrap { overflow-x: auto; margin: 2rem 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    thead th { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); padding: 0.75rem 1rem; text-align: left; font-weight: 600; }
+    tbody td { padding: 0.85rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.04); color: #c8c8e0; }
+    tbody tr:hover td { background: rgba(255,255,255,0.02); }
+    .td-good { color: var(--teal); font-weight: 600; }
+    .td-bad  { color: var(--pink); font-weight: 600; }
+
+    .highlight-box { background: linear-gradient(135deg, rgba(0,217,180,0.08), rgba(124,107,255,0.08)); border: 1px solid rgba(0,217,180,0.2); border-radius: 16px; padding: 2rem; margin: 2.5rem 0; }
+    .highlight-box p { margin-bottom: 0.8rem; }
+    .highlight-box p:last-child { margin-bottom: 0; }
+
+    .chip-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0; }
+    .chip { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; padding: 0.3em 0.75em; background: var(--bg-card2); border: 1px solid var(--border); border-radius: 6px; color: var(--muted); }
+
+    .site-footer { border-top: 1px solid var(--border); padding: 2.5rem; text-align: center; font-size: 0.82rem; color: var(--muted); }
+    .site-footer a { color: var(--teal); text-decoration: none; }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ══════════════════════════════════════
+       ANIMATION SHARED STYLES
+    ══════════════════════════════════════ */
+    .anim-wrap { background: var(--bg-card2); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; margin: 2rem 0; }
+    .anim-title { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: var(--teal); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.6rem; }
+    .anim-title::before { content: '▶'; font-size: 0.55rem; opacity: 0.7; animation: blinkPlay 1.5s ease-in-out infinite; }
+    @keyframes blinkPlay { 0%,100%{opacity:0.3} 50%{opacity:1} }
+    .anim-controls { display: flex; gap: 0.5rem; margin-top: 1rem; align-items: center; flex-wrap: wrap; }
+    .anim-btn { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; font-weight: 600; padding: 0.3em 0.9em; border-radius: 6px; border: 1px solid rgba(0,217,180,0.3); background: rgba(0,217,180,0.08); color: var(--teal); cursor: pointer; transition: all 0.2s; letter-spacing: 0.06em; text-transform: uppercase; }
+    .anim-btn:hover { background: rgba(0,217,180,0.18); border-color: var(--teal); }
+    .anim-step-label { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; color: var(--muted); flex: 1; }
+
+    /* ── ANIM 1: HVX Lanes ── */
+    .hvx-reg { display: flex; flex-wrap: wrap; gap: 2px; justify-content: center; margin: 0.5rem 0; }
+    .hvx-lane { width: 14px; height: 24px; border-radius: 2px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); transition: all 0.1s; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 0; }
+    .hvx-lane.active { background: rgba(0,217,180,0.4); border-color: var(--teal); box-shadow: 0 0 6px rgba(0,217,180,0.4); font-size: 0; }
+    .hvx-lane.done   { background: rgba(0,217,180,0.15); border-color: rgba(0,217,180,0.3); }
+
+    /* ── ANIM 2: HMX Systolic ── */
+    .systolic-grid { display: grid; gap: 4px; }
+    .mac-cell { width: 52px; height: 52px; border-radius: 6px; background: var(--bg-card); border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 0.52rem; color: var(--muted); transition: all 0.25s; gap: 2px; }
+    .mac-cell.computing { background: rgba(124,107,255,0.25); border-color: var(--purple); color: var(--purple); box-shadow: 0 0 10px rgba(124,107,255,0.3); }
+    .mac-cell.done      { background: rgba(0,217,180,0.15); border-color: rgba(0,217,180,0.35); color: var(--teal); }
+    .flow-token { width: 32px; height: 18px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 0.5rem; font-weight: 600; transition: all 0.3s; }
+    .wt-token  { background: rgba(255,179,71,0.25); border: 1px solid rgba(255,179,71,0.4); color: var(--orange); }
+    .act-token { background: rgba(124,107,255,0.25); border: 1px solid rgba(124,107,255,0.4); color: var(--purple); }
+
+    /* ── ANIM 3: TCM Tile ── */
+    .tcm-bar { height: 32px; border-radius: 6px; background: rgba(0,217,180,0.08); border: 1px solid rgba(0,217,180,0.2); position: relative; overflow: hidden; transition: all 0.4s; }
+    .tcm-fill { height: 100%; border-radius: 5px; transition: width 0.6s, background 0.4s; display: flex; align-items: center; padding-left: 0.6rem; font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; font-weight: 600; white-space: nowrap; overflow: hidden; }
+    .tile-btn { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; padding: 0.35em 0.9em; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-card); color: var(--muted); cursor: pointer; transition: all 0.2s; font-weight: 600; }
+    .tile-btn:hover { border-color: rgba(0,217,180,0.4); color: var(--teal); }
+    .tile-btn.selected { border-color: var(--teal); background: rgba(0,217,180,0.1); color: var(--teal); }
+
+    /* ── ANIM 4: Multi-DMA ── */
+    .dma-channel { background: var(--bg-card); border-radius: 8px; padding: 0.8rem; border: 1px solid var(--border); }
+    .dma-ch-label { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .dma-progress-bar { height: 8px; border-radius: 4px; background: rgba(255,255,255,0.05); overflow: hidden; }
+    .dma-progress-fill { height: 100%; border-radius: 4px; width: 0%; transition: width 0.4s; }
+
+    /* ── ANIM 5: INT4 Packing ── */
+    .bit-row { display: flex; gap: 3px; justify-content: center; }
+    .bit-cell { width: 28px; height: 28px; border-radius: 3px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; font-weight: 600; color: var(--muted); transition: all 0.3s; }
+    .bit-cell.w0 { background: rgba(255,179,71,0.2); border-color: rgba(255,179,71,0.4); color: var(--orange); }
+    .bit-cell.w1 { background: rgba(124,107,255,0.2); border-color: rgba(124,107,255,0.4); color: var(--purple); }
+    .bit-cell.active { transform: scale(1.1); box-shadow: 0 0 8px currentColor; }
+
+    @media (max-width: 600px) {
+      .site-nav { display: none; }
+      .hero, .article, .breadcrumb { padding-left: 1.25rem; padding-right: 1.25rem; }
+      .hvx-lane { width: 10px; height: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="/" class="site-logo">Prateek Singh, PhD</a>
+  <nav class="site-nav">
+    <a href="/">Home</a><a href="/blog">Blog</a><a href="/research">Research</a><a href="/contact">Contact</a>
+  </nav>
+</header>
+
+<div class="breadcrumb">
+  <a href="/blog">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to Blog
+  </a>
+</div>
+
+<section class="hero">
+  <div class="hero-meta">
+    <span class="tag">Hexagon NPU</span>
+    <span class="tag purple">HVX · HMX</span>
+    <span class="tag orange">Silicon Deep Dive</span>
+    <span class="tag pink">Qualcomm</span>
+    <span class="hero-date">May 2026</span>
+  </div>
+  <h1>Inside Hexagon —<br/><em>Qualcomm's NPU from<br/>Silicon to Inference</em></h1>
+  <p class="hero-subtitle">
+    The Hexagon NPU is not just an "AI accelerator." It's a DSP, a 1024-bit vector engine, a systolic tensor processor, and a DMA controller — all working in concert. This is how it actually works.
+  </p>
+</section>
+
+<div class="divider"></div>
+
+<article class="article">
+
+  <p>
+    The previous two posts explained who runs your LLM on Snapdragon, and how thread execution and operator fusion work. Now we go deeper still — into the Hexagon processor itself. This is the silicon that Qualcomm has been quietly refining since 2006, and in the Snapdragon 8 Elite's V75 generation, it is one of the most sophisticated NPU architectures shipping in any consumer device.
+  </p>
+  <p>
+    Understanding it at this level is what separates engineers who tune QNN configs from engineers who understand <em>why</em> certain tile sizes, quantization formats, and operator orderings produce dramatically different results.
+  </p>
+
+  <!-- ════ S1 ════ -->
+  <div class="section-accent"><div class="accent-line"></div><span>Section 01</span></div>
+  <h2>What Hexagon Actually Is</h2>
+
+  <p>
+    Most documentation describes Hexagon as Qualcomm's "AI processor." That description is technically accurate and practically useless. Here is what Hexagon V75 (Snapdragon 8 Elite) actually contains on-die:
+  </p>
+
+  <div class="pipeline">
+    <div class="pipeline-step">
+      <div class="step-num teal">1</div>
+      <div class="step-body">
+        <div class="step-title">Scalar Core — VLIW processor</div>
+        <div class="step-desc">A Very Long Instruction Word CPU with 6–8 hardware threads. Runs control flow, memory management, loop scheduling. Think of it as a lean embedded CPU inside the NPU — handles everything that isn't pure tensor math.</div>
+      </div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num purple">2</div>
+      <div class="step-body">
+        <div class="step-title">HVX — Hexagon Vector eXtensions</div>
+        <div class="step-desc">1024-bit SIMD vector units (two per V75 core). Processes 128 INT8 values — or 64 INT16 values — per instruction. Handles normalization, activations (SiLU, GeLU, RoPE), residual additions, and anything element-wise.</div>
+      </div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num orange">3</div>
+      <div class="step-body">
+        <div class="step-title">HMX — Hexagon Matrix eXtensions</div>
+        <div class="step-desc">The dedicated tensor accelerator. Executes INT4, INT8, and FP16 matrix multiplications at peak TOPS. This is the unit that handles every weight projection in a transformer during decode. Its microarchitecture is not publicly documented — QNN generates its instructions internally.</div>
+      </div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num pink">4</div>
+      <div class="step-body">
+        <div class="step-title">DMA Engine + 8MB TCM</div>
+        <div class="step-desc">A multi-channel DMA engine connected to 8MB of Tightly Coupled Memory — software-managed on-chip SRAM. The DMA engine loads weight and activation tiles from LPDDR5X directly into TCM, overlapping with HMX computation. This overlap is Hexagon's biggest performance multiplier.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>History note:</strong> Hexagon V1 shipped in 2006 as a pure audio DSP. V65 (2018) added HVX. V68 (2020) added the first HMX prototype. V73 (Snapdragon 8 Gen 2) brought native INT4. V75 (8 Elite) doubles HMX throughput and introduces micro-tile inferencing. The architecture you see today is 18 years of mobile-specific iteration.
+  </div>
+
+  <!-- ════ S2 ════ -->
+  <div class="section-accent"><div class="accent-line"></div><span>Section 02</span></div>
+  <h2>VLIW — The Scalar Core That Schedules Everything</h2>
+
+  <p>
+    The scalar core runs VLIW — Very Long Instruction Word architecture. Unlike a modern CPU that uses out-of-order execution hardware to find parallelism at runtime, VLIW puts that burden entirely on the compiler. Every instruction packet can contain up to 4 operations scheduled in parallel by the compiler at compile time.
+  </p>
+
+  <div class="analogy">
+    <div class="analogy-label">Intuition</div>
+    <p>A standard CPU is like a chef who improvises during service — reads the situation, reorders tasks on the fly. A VLIW processor is like a chef following a microsecond-perfect prep schedule written the day before. Less flexible, but dramatically simpler silicon — no reorder buffer, no branch predictor, no out-of-order logic. That silicon area gets reallocated to HVX and HMX instead.</p>
+  </div>
+
+  <pre><span class="cmt">// VLIW packet: 4 operations execute simultaneously</span>
+<span class="kw">{ </span>
+  <span class="fn">r0 = memw(r4)</span>        <span class="cmt">// load from memory</span>
+  <span class="fn">r1 = add(r2, r3)</span>      <span class="cmt">// integer add</span>
+  <span class="fn">p0 = cmp.gt(r5, #0)</span>  <span class="cmt">// compare</span>
+  <span class="fn">r6 = r7</span>               <span class="cmt">// register move</span>
+<span class="kw">}</span>
+<span class="cmt">// All four execute in one clock cycle</span>
+<span class="cmt">// Compiler verified no data hazards exist</span></pre>
+
+  <p>
+    The Hexagon compiler (part of QNN's toolchain) statically schedules HVX and HMX instructions across VLIW slots. This means the compiler, not hardware, decides when to issue vector loads, when to fire HMX operations, and when to stall. Getting this scheduling right is a major part of what QNN's kernel library does.
+  </p>
+
+  <!-- ════ S3 ════ -->
+  <div class="section-accent"><div class="accent-line"></div><span>Section 03</span></div>
+  <h2>HVX — 1024-Bit Vector Engine</h2>
+
+  <p>
+    HVX is Hexagon's SIMD engine. Each HVX unit operates on 1024-bit registers — which means in a single <code>vmpy</code> (vector multiply) instruction, it processes <strong>128 pairs of INT8 values simultaneously</strong>. V75 has two HVX units per core, doubling that throughput.
+  </p>
+
+  <p>
+    HVX handles the operations that HMX can't: element-wise functions (SiLU, GeLU, ReLU), RoPE rotary embeddings, RMSNorm reduction, softmax, residual additions. These aren't matrix multiplies — they're per-element transformations on activation vectors. HVX processes them 128 elements at a time.
+  </p>
+
+  <!-- ANIM 1: HVX 1024-bit lane animation -->
+  <div class="anim-wrap">
+    <div class="anim-title">Animation 1 — HVX 1024-bit Register: 128 INT8 Lanes Fire Simultaneously</div>
+    <div id="hvxCanvas" style="display:flex;flex-direction:column;gap:0.8rem;">
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--muted);margin-bottom:4px;">Input A — 128 × INT8 activations (1024 bits total)</div>
+        <div class="hvx-reg" id="hvxA"></div>
+      </div>
+      <div style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--purple);letter-spacing:0.1em;" id="hvxOp">vmpy — waiting...</div>
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--muted);margin-bottom:4px;">Input B — 128 × INT8 weights (1024 bits total)</div>
+        <div class="hvx-reg" id="hvxB"></div>
+      </div>
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--muted);margin-bottom:4px;">Output — 128 × INT16 products (accumulated)</div>
+        <div class="hvx-reg" id="hvxOut"></div>
+      </div>
+      <div id="hvxStatus" style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted);text-align:center;"></div>
+    </div>
+    <div class="anim-controls">
+      <button class="anim-btn" onclick="startHvxAnim()">▶ Play</button>
+      <button class="anim-btn" onclick="resetHvxAnim()">↺ Reset</button>
+      <span class="anim-step-label" id="hvxLabel">One vmpy instruction — 128 multiplies, one clock cycle</span>
+    </div>
+  </div>
+
+  <div class="callout purple">
+    <strong>Key HVX instructions for LLMs:</strong> <code>vmpy</code> (vector multiply), <code>vadd</code> / <code>vsub</code> (residual add), <code>vmem</code> (vector load/store), <code>vdeal</code> / <code>vshuff</code> (data rearrangement for layout transforms), <code>vmax</code> / <code>vmin</code> (activation clamping). RoPE embedding rotations map directly to HVX complex multiply sequences.
+  </div>
+
+  <!-- ════ S4 ════ -->
+  <div class="section-accent"><div class="accent-line"></div><span>Section 04</span></div>
+  <h2>HMX — The Tensor Accelerator</h2>
+
+  <p>
+    HMX is where the bulk of LLM compute lives. It is a dedicated matrix multiply engine — closer in spirit to a systolic array than a GPU's SIMD cores. Instead of dispatching thousands of independent threads, HMX moves data through a structured array of multiply-accumulate units in a coordinated wave. Weights flow in one direction, activations in another, and partial sums accumulate as they travel.
+  </p>
+
+  <!-- ANIM 2: HMX Systolic Flow -->
+  <div class="anim-wrap">
+    <div class="anim-title">Animation 2 — HMX Systolic Flow: Weights × Activations Through the MAC Array</div>
+    <div id="hmxCanvas" style="display:flex;flex-direction:column;gap:1rem;align-items:center;">
+      <div style="display:flex;gap:4px;" id="actTokenRow"></div>
+      <div style="display:flex;gap:1rem;align-items:center;">
+        <div style="display:flex;flex-direction:column;gap:4px;" id="wtTokenCol"></div>
+        <div class="systolic-grid" id="systolicGrid" style="grid-template-columns: repeat(4, 52px);"></div>
+      </div>
+      <div id="hmxAccum" style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted);text-align:center;"></div>
+    </div>
+    <div class="anim-controls">
+      <button class="anim-btn" onclick="startHmxAnim()">▶ Play</button>
+      <button class="anim-btn" onclick="resetHmxAnim()">↺ Reset</button>
+      <span class="anim-step-label" id="hmxLabel">Weights flow ↓, activations flow →, MACs accumulate at each cell</span>
+    </div>
+  </div>
+
+  <h3>INT4 Mode — Why It Matters</h3>
+  <p>
+    In INT4 mode, HMX processes 4-bit weights against 8-bit activations (W4A8 — the dominant quantization format for on-device LLMs). The hardware unpacks two INT4 weights from each byte, scales them, and feeds them into INT32 accumulators. This doubles effective throughput compared to INT8: same silicon area, twice the operations per cycle.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Mode</th><th>Weight bits</th><th>Activation bits</th><th>Accumulator</th><th>Relative Throughput</th></tr></thead>
+      <tbody>
+        <tr><td>FP16</td><td>16</td><td>16</td><td>FP32</td><td>1×</td></tr>
+        <tr><td>INT8 (W8A8)</td><td>8</td><td>8</td><td>INT32</td><td>2×</td></tr>
+        <tr><td class="td-good">INT4 (W4A8)</td><td class="td-good">4</td><td>8</td><td>INT32</td><td class="td-good">4× (peak)</td></tr>
+        <tr><td>INT4 (W4A4)</td><td>4</td><td>4</td><td>INT32</td><td>~3× (accuracy cost)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ════ S5 ════ -->
+  <div class="section-accent"><div class="accent-line"></div><span>Section 05</span></div>
+  <h2>INT4 Packing — How Two Weights Share One Byte</h2>
+
+  <p>
+    W4 quantization stores two weight values per byte — the upper nibble (bits 7–4) and lower nibble (bits 3–0). Before HMX can use them, they must be unpacked, de-quantized using per-channel scale factors and zero points, and fed into the accumulator pipeline. The animation below shows this exactly.
+  </p>
+
+  <!-- ANIM 5: INT4 Packing (placed here for flow) -->
+  <div class="anim-wrap">
+    <div class="anim-title">Animation 3 — INT4 Packing: Two Weights Per Byte, Unpacked for HMX</div>
+    <div id="int4Canvas" style="display:flex;flex-direction:column;gap:1.2rem;align-items:center;">
+      <!-- The byte -->
+      <div style="text-align:center;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--muted);margin-bottom:6px;">One byte in weight memory</div>
+        <div class="bit-row" id="byteBits"></div>
+      </div>
+      <!-- Split -->
+      <div style="display:flex;gap:2rem;justify-content:center;flex-wrap:wrap;">
+        <div style="text-align:center;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:var(--orange);margin-bottom:4px;">Upper nibble → W0</div>
+          <div class="bit-row" id="nibble0"></div>
+          <div id="w0val" style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--orange);margin-top:4px;opacity:0;transition:opacity 0.4s;"></div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:var(--purple);margin-bottom:4px;">Lower nibble → W1</div>
+          <div class="bit-row" id="nibble1"></div>
+          <div id="w1val" style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--purple);margin-top:4px;opacity:0;transition:opacity 0.4s;"></div>
+        </div>
+      </div>
+      <!-- Dequant -->
+      <div id="dequantRow" style="opacity:0;transition:opacity 0.5s;text-align:center;background:var(--bg-card);border-radius:10px;padding:0.8rem 1.4rem;border:1px solid var(--border);">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--muted);margin-bottom:0.4rem;">Dequantization</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--teal);">W_float = (W_int4 − zero_point) × scale</div>
+        <div id="dequantValues" style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted);margin-top:0.4rem;"></div>
+      </div>
+      <div id="int4Status" style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted);text-align:center;"></div>
+    </div>
+    <div class="anim-controls">
+      <button class="anim-btn" onclick="startInt4Anim()">▶ Play</button>
+      <button class="anim-btn" onclick="resetInt4Anim()">↺ Reset</button>
+      <span class="anim-step-label" id="int4Label">8 bits → 2 × INT4 weights → 2 FP32 values after dequant</span>
+    </div>
+  </div>
+
+  <div class="callout orange">
+    <strong>W4A8 is the hardware sweet spot:</strong> Weights are INT4 (4× memory savings vs FP16), activations stay INT8 (preserving dynamic range that INT4 activations would lose). The HMX INT32 accumulator is wide enough to prevent overflow from accumulated INT4×INT8 products. This is exactly what GPTQ, AWQ, and QuaRot all target.
+  </div>
+
+  <!-- ════ S6 ════ -->
+  <div class="section-accent"><div class="accent-line"></div><span>Section 06</span></div>
+  <h2>TCM — 8MB of Software-Managed SRAM</h2>
+
+  <p>
+    Unlike a GPU's L1/L2 caches — which are hardware-managed and transparent to the programmer — Hexagon's TCM (Tightly Coupled Memory) is <strong>software-managed</strong>. QNN's compiler explicitly decides what goes in TCM, in what order, and when. There is no hardware eviction policy. If QNN puts something in TCM, it stays there until QNN removes it.
+  </p>
+  <p>
+    This is a significant advantage for LLM workloads: hardware caches don't know which data will be reused; the compiler does. For a specific tile size and sequence of operations, QNN can guarantee zero cache misses on the weight tiles that matter most.
+  </p>
+
+  <!-- ANIM 3: TCM Tile Fitting -->
+  <div class="anim-wrap">
+    <div class="anim-title">Animation 4 — TCM Tile Fitting: Does Your Tile Fit? The Performance Cliff</div>
+    <div id="tcmCanvas" style="display:flex;flex-direction:column;gap:1rem;">
+      <div style="display:flex;gap:0.6rem;flex-wrap:wrap;" id="tileBtnRow">
+        <button class="tile-btn" onclick="selectTile(0)">Tiny tile — 256×256 (0.5MB)</button>
+        <button class="tile-btn" onclick="selectTile(1)">Medium tile — 512×512 (2MB)</button>
+        <button class="tile-btn" onclick="selectTile(2)">Large tile — 1024×1024 (8MB)</button>
+        <button class="tile-btn" onclick="selectTile(3)">XL tile — 2048×2048 (32MB)</button>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--muted);margin-bottom:4px;">
+          <span>TCM (8MB)</span>
+          <span id="tcmPct">0%</span>
+        </div>
+        <div class="tcm-bar">
+          <div class="tcm-fill" id="tcmFill" style="width:0%;"></div>
+        </div>
+      </div>
+      <div id="tcmResult" style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--muted);padding:0.8rem;background:var(--bg-card);border-radius:8px;border:1px solid var(--border);min-height:48px;transition:all 0.3s;"></div>
+    </div>
+    <div class="anim-controls">
+      <span class="anim-step-label">Select a tile size to see how it maps onto TCM — and the performance consequence</span>
+    </div>
+  </div>
+
+  <div class="callout purple">
+    <strong>TCM banking:</strong> The 8MB TCM is divided into banks. QNN must schedule tensor loads to avoid bank conflicts — two simultaneous accesses to the same bank cause a stall. For weight matrices laid out in row-major order, QNN may apply a banking-aware transpose during model compilation to guarantee conflict-free access patterns at runtime.
+  </div>
+
+  <!-- ════ S7 ════ -->
+  <div class="section-accent"><div class="accent-line"></div><span>Section 07</span></div>
+  <h2>The DMA Engine — Qualcomm's Secret Weapon</h2>
+
+  <p>
+    The DMA engine in Hexagon is not a simple memcpy accelerator. It is a multi-channel, scatter-gather capable data mover that can simultaneously transfer weight tiles from different memory regions while the HMX is computing. This overlap — DMA loading the next tile while HMX computes the current one — is where Hexagon earns its performance-per-watt advantage.
+  </p>
+
+  <!-- ANIM 4: Multi-channel DMA -->
+  <div class="anim-wrap">
+    <div class="anim-title">Animation 5 — Multi-Channel DMA: Two Channels Load Simultaneously While HMX Computes</div>
+    <div id="dmaCanvas" style="display:flex;flex-direction:column;gap:1rem;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div class="dma-channel">
+          <div class="dma-ch-label" style="color:var(--orange);">DMA Channel 0 — Weight tile</div>
+          <div class="dma-progress-bar"><div class="dma-progress-fill" id="dma0fill" style="background:var(--orange);"></div></div>
+          <div id="dma0label" style="font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:var(--muted);margin-top:4px;">idle</div>
+        </div>
+        <div class="dma-channel">
+          <div class="dma-ch-label" style="color:var(--blue);">DMA Channel 1 — Activation tile</div>
+          <div class="dma-progress-bar"><div class="dma-progress-fill" id="dma1fill" style="background:var(--blue);"></div></div>
+          <div id="dma1label" style="font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:var(--muted);margin-top:4px;">idle</div>
+        </div>
+      </div>
+      <div style="background:var(--bg-card);border-radius:8px;padding:0.9rem;border:1px solid rgba(0,217,180,0.15);">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--teal);font-weight:600;margin-bottom:0.4rem;">HMX Tensor Accelerator</div>
+        <div class="dma-progress-bar" style="background:rgba(0,217,180,0.06);"><div class="dma-progress-fill" id="hmxfill" style="background:var(--teal);"></div></div>
+        <div id="hmxlabel" style="font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:var(--muted);margin-top:4px;">idle — waiting for first tile</div>
+      </div>
+      <div id="dmaTimeline" style="display:flex;gap:3px;align-items:center;flex-wrap:wrap;"></div>
+      <div id="dmaStatus" style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted);text-align:center;"></div>
+    </div>
+    <div class="anim-controls">
+      <button class="anim-btn" onclick="startDmaAnim()">▶ Play</button>
+      <button class="anim-btn" onclick="resetDmaAnim()">↺ Reset</button>
+      <span class="anim-step-label" id="dmaLabel">Two DMA channels + HMX = fully pipelined, zero stall steady state</span>
+    </div>
+  </div>
+
+  <p>
+    Scatter-gather DMA means the engine can load non-contiguous tensor regions — for example, every 4th row of a weight matrix for a strided operation — without CPU involvement. This matters for attention mechanisms where the KV cache layout can be non-contiguous after paged allocation.
+  </p>
+
+  <!-- ════ S8 ════ -->
+  <div class="section-accent"><div class="accent-line"></div><span>Section 08</span></div>
+  <h2>How QNN Compiles a Transformer Layer to Hexagon</h2>
+
+  <p>
+    When you run a W4A8 quantized Llama 3.1 7B through QNN targeting the HTP backend, here is the compilation path for a single FFN (feed-forward network) block:
+  </p>
+
+  <div class="pipeline">
+    <div class="pipeline-step">
+      <div class="step-num teal">1</div>
+      <div class="step-body">
+        <div class="step-title">Graph → Subgraph Partitioning</div>
+        <div class="step-desc">QNN splits the ONNX/QDQ graph into HTP-compatible subgraphs. Operations with unsupported data types or shapes are marked for GPU or CPU fallback. The partitioner estimates per-subgraph latency to find the optimal split boundary.</div>
+      </div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num purple">2</div>
+      <div class="step-body">
+        <div class="step-title">Tiling Decision</div>
+        <div class="step-desc">For each matmul, QNN's compiler selects a tile size that fits within the 8MB TCM — while maximizing HMX utilization. For a [1×4096]×[4096×4096] decode matmul, this typically means tiling along the output dimension to keep weight tiles resident in TCM across multiple activation vectors.</div>
+      </div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num orange">3</div>
+      <div class="step-body">
+        <div class="step-title">Operator Fusion at HMX Level</div>
+        <div class="step-desc">Adjacent operators are fused into single HMX passes where possible: MatMul + dequant + bias add can execute as one HMX operation. RMSNorm immediately following a projection is fused with HVX instructions scheduled between HMX outputs — no intermediate DRAM write.</div>
+      </div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num pink">4</div>
+      <div class="step-body">
+        <div class="step-title">DMA Scheduling + Double Buffering</div>
+        <div class="step-desc">The compiler generates a DMA schedule that prefetches the next weight tile into TCM buffer B while HMX computes the current tile from buffer A. The swap is statically scheduled — no runtime decision required.</div>
+      </div>
+    </div>
+    <div class="pipeline-step">
+      <div class="step-num blue">5</div>
+      <div class="step-body">
+        <div class="step-title">VLIW Instruction Packing</div>
+        <div class="step-desc">The final scalar control code is packed into VLIW packets. DMA initiation, HMX launch, HVX element-wise ops, and scalar loop counters are scheduled into parallel slots. The compiler verifies no data hazards exist across all slots before emitting the binary.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ S9 ════ -->
+  <div class="section-accent"><div class="accent-line"></div><span>Section 09</span></div>
+  <h2>Power Architecture — Why Hexagon Wins at Battery Life</h2>
+
+  <p>
+    Hexagon runs on a <strong>dedicated power island</strong> — it can be powered up independently of the CPU and GPU. This means for a sustained background AI task (wakeword detection, continuous health monitoring, on-device agent), the SoC can keep Hexagon active while the Oryon CPU is in deep sleep and the Adreno GPU is completely off.
+  </p>
+
+  <p>
+    V75's <strong>micro-tile inferencing</strong> takes this further: instead of loading the full model and running it continuously, Hexagon breaks inference into small bursts — loading a tile, computing it, writing the result, and entering a low-power state between bursts. This dramatically reduces average power while maintaining acceptable latency for non-real-time tasks.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Processor</th><th>Peak Power (LLM decode)</th><th>Sustained Power</th><th>Always-On Feasibility</th></tr></thead>
+      <tbody>
+        <tr><td>Oryon CPU (all cores)</td><td>~4–6W</td><td>~2–3W</td><td class="td-bad">No</td></tr>
+        <tr><td>Adreno GPU (full load)</td><td>~3–5W</td><td>~2–4W (throttled)</td><td class="td-bad">No</td></tr>
+        <tr><td class="td-good">Hexagon HTP (W4 decode)</td><td class="td-good">~0.8–1.5W</td><td class="td-good">~0.5–1W</td><td class="td-good">Yes (micro-tile)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ════ S10 ════ -->
+  <div class="section-accent"><div class="accent-line"></div><span>Section 10</span></div>
+  <h2>Reading Hexagon Profiler Counters Correctly</h2>
+
+  <pre><span class="cmt"># Run with detailed HTP profiling</span>
+<span class="fn">qnn-net-run</span> \
+  --backend libQnnHtp.so \
+  --model your_model.serialized.bin \
+  --profiling_level <span class="str">detailed</span> \
+  --log_level <span class="str">verbose</span>
+
+<span class="cmt"># Key counters to watch:</span>
+<span class="kw">HMX_ACTIVE_CYCLES</span>     <span class="cmt">← HMX busy. Want this &gt;80% of total</span>
+<span class="kw">HVX_ACTIVE_CYCLES</span>     <span class="cmt">← HVX busy. High = lots of activation ops</span>
+<span class="kw">DMA_WAIT_CYCLES</span>       <span class="cmt">← HMX stalled waiting for DMA. Should be &lt;10%</span>
+<span class="kw">TCM_SPILL_EVENTS</span>      <span class="cmt">← Tile didn't fit TCM → DRAM eviction → danger</span>
+<span class="kw">SCALAR_STALL_CYCLES</span>   <span class="cmt">← VLIW hazard or fallback op. Should be near 0</span></pre>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Counter Pattern</th><th>Diagnosis</th><th>Fix</th></tr></thead>
+      <tbody>
+        <tr><td>Low HMX_ACTIVE, high SCALAR_STALL</td><td class="td-bad">Op fell back to scalar/CPU</td><td>Check QNN backend log — unsupported op</td></tr>
+        <tr><td>High DMA_WAIT_CYCLES</td><td class="td-bad">DMA can't keep up with HMX</td><td>Reduce tile size, check memory bandwidth ceiling</td></tr>
+        <tr><td>TCM_SPILL_EVENTS &gt; 0</td><td class="td-bad">Tile too large for TCM</td><td>Reduce tile dimensions in QNN config</td></tr>
+        <tr><td>High HVX, low HMX</td><td>Model is activation-heavy</td><td>Expected for large norm/activation layers</td></tr>
+        <tr><td class="td-good">HMX_ACTIVE &gt; 80%, DMA_WAIT &lt; 10%</td><td class="td-good">Optimal execution</td><td>Nothing — this is the target state</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ════ S11 ════ -->
+  <div class="section-accent"><div class="accent-line"></div><span>Section 11</span></div>
+  <h2>The Full Picture — From Token to Silicon</h2>
+
+  <div class="highlight-box">
+    <p><strong>A single decode step on Hexagon:</strong></p>
+    <p>1. CPU hands QNN a <code>[1×4096]</code> activation vector for the current token.</p>
+    <p>2. QNN's runtime triggers the pre-compiled HTP dispatch graph. No recompilation.</p>
+    <p>3. DMA Channel 0 loads the Q-projection weight tile (INT4, packed 2-per-byte) from LPDDR5X into TCM buffer A.</p>
+    <p>4. HMX fires: W4A8 matmul of the activation vector against the weight tile. INT32 accumulators collect partial sums.</p>
+    <p>5. Simultaneously, DMA Channel 1 prefetches the K-projection weight tile into TCM buffer B.</p>
+    <p>6. HMX dequantizes outputs via per-channel scale factors. HVX applies RoPE rotation to Q and K vectors (complex multiply, 1024-bit lanes).</p>
+    <p>7. Buffers swap. HMX processes K-projection while DMA loads V-projection. Zero stall.</p>
+    <p>8. HVX computes attention scores, applies causal mask, runs softmax. HMX computes V-projection simultaneously.</p>
+    <p>9. Output vector returned to CPU for sampling. Total time: ~3–5ms at 30 tok/sec.</p>
+  </div>
+
+  <div class="chip-list" style="margin-top:3rem;">
+    <span class="chip">Hexagon V75</span>
+    <span class="chip">HVX 1024-bit SIMD</span>
+    <span class="chip">HMX Tensor Accelerator</span>
+    <span class="chip">VLIW Scalar Core</span>
+    <span class="chip">TCM — Software SRAM</span>
+    <span class="chip">Multi-channel DMA</span>
+    <span class="chip">INT4 / W4A8</span>
+    <span class="chip">Micro-tile Inferencing</span>
+    <span class="chip">Operator Fusion</span>
+    <span class="chip">QNN HTP Backend</span>
+  </div>
+
+</article>
+
+<footer class="site-footer">
+  <p>Written by <a href="/">Prateek Singh, PhD</a> · Senior Manager, GenAI · Samsung Research Institute, Noida</p>
+  <p style="margin-top:0.6rem;font-size:0.78rem;">© 2026 · <a href="/blog">Back to Blog</a> · <a href="/newsletter">Subscribe</a></p>
+</footer>
+
+<!-- ════════════════════════════════════════
+     ANIMATIONS
+════════════════════════════════════════ -->
+<script>
+// ══════════════════════════════════════
+// ANIM 1 — HVX 1024-bit Lane
+// ══════════════════════════════════════
+const HVX_LANES = 128;
+let hvxTimer = null, hvxRunning = false;
+
+function initHvx() {
+  ['hvxA','hvxB','hvxOut'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = '';
+    for (let i = 0; i < HVX_LANES; i++) {
+      const lane = document.createElement('div');
+      lane.className = 'hvx-lane';
+      lane.id = `${id}_${i}`;
+      el.appendChild(lane);
+    }
+  });
+  document.getElementById('hvxOp').textContent = 'vmpy — waiting for dispatch...';
+  document.getElementById('hvxOp').style.color = 'var(--muted)';
+  document.getElementById('hvxStatus').textContent = '';
+}
+
+function startHvxAnim() {
+  if (hvxRunning) return;
+  resetHvxAnim();
+  hvxRunning = true;
+
+  // Step 1: light up A
+  setTimeout(() => {
+    for (let i = 0; i < HVX_LANES; i++) {
+      setTimeout(() => {
+        const el = document.getElementById(`hvxA_${i}`);
+        if (el) el.className = 'hvx-lane active';
+      }, i * 6);
+    }
+    document.getElementById('hvxLabel').textContent = 'Step 1: 128 INT8 activations loaded into 1024-bit register A';
+  }, 200);
+
+  // Step 2: light up B
+  setTimeout(() => {
+    for (let i = 0; i < HVX_LANES; i++) {
+      setTimeout(() => {
+        const el = document.getElementById(`hvxB_${i}`);
+        if (el) el.className = 'hvx-lane active';
+      }, i * 6);
+    }
+    document.getElementById('hvxLabel').textContent = 'Step 2: 128 INT8 weights loaded into 1024-bit register B';
+  }, 1200);
+
+  // Step 3: fire instruction
+  setTimeout(() => {
+    document.getElementById('hvxOp').textContent = '⚡ vmpy — DISPATCH — one instruction, 128 simultaneous multiplies';
+    document.getElementById('hvxOp').style.color = 'var(--purple)';
+    document.getElementById('hvxLabel').textContent = 'Step 3: ONE instruction fires — all 128 lanes multiply simultaneously';
+  }, 2200);
+
+  // Step 4: mark A and B done, light up output
+  setTimeout(() => {
+    for (let i = 0; i < HVX_LANES; i++) {
+      const a = document.getElementById(`hvxA_${i}`);
+      const b = document.getElementById(`hvxB_${i}`);
+      if (a) a.className = 'hvx-lane done';
+      if (b) b.className = 'hvx-lane done';
+    }
+    for (let i = 0; i < HVX_LANES; i++) {
+      setTimeout(() => {
+        const el = document.getElementById(`hvxOut_${i}`);
+        if (el) el.className = 'hvx-lane active';
+      }, i * 5);
+    }
+    document.getElementById('hvxOp').textContent = '✓ vmpy complete — 128 INT16 products in accumulator';
+    document.getElementById('hvxOp').style.color = 'var(--teal)';
+    document.getElementById('hvxStatus').textContent = '128 multiply-accumulates. One clock cycle. 2 × 1024-bit registers consumed.';
+    document.getElementById('hvxLabel').textContent = '✓ Result: 128 products in one instruction — HVX throughput at maximum';
+    hvxRunning = false;
+  }, 2800);
+}
+
+function resetHvxAnim() {
+  if (hvxTimer) clearTimeout(hvxTimer);
+  hvxRunning = false;
+  initHvx();
+  document.getElementById('hvxLabel').textContent = 'One vmpy instruction — 128 multiplies, one clock cycle';
+}
+
+initHvx();
+
+// ══════════════════════════════════════
+// ANIM 2 — HMX Systolic Flow
+// ══════════════════════════════════════
+const SYS_SIZE = 4;
+let hmxTimer = null, hmxRunning = false;
+
+function initHmx() {
+  const grid = document.getElementById('systolicGrid');
+  const actRow = document.getElementById('actTokenRow');
+  const wtCol = document.getElementById('wtTokenCol');
+  if (!grid) return;
+  grid.innerHTML = ''; actRow.innerHTML = ''; wtCol.innerHTML = '';
+
+  // Activation tokens (top row)
+  for (let c = 0; c < SYS_SIZE; c++) {
+    const t = document.createElement('div');
+    t.className = 'flow-token act-token';
+    t.style.opacity = '0';
+    t.id = `act_${c}`;
+    t.textContent = `A${c}`;
+    actRow.appendChild(t);
+  }
+
+  // Weight tokens (left column)
+  for (let r = 0; r < SYS_SIZE; r++) {
+    const t = document.createElement('div');
+    t.className = 'flow-token wt-token';
+    t.style.opacity = '0';
+    t.id = `wt_${r}`;
+    t.textContent = `W${r}`;
+    wtCol.appendChild(t);
+  }
+
+  // MAC cells
+  for (let r = 0; r < SYS_SIZE; r++) {
+    for (let c = 0; c < SYS_SIZE; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'mac-cell';
+      cell.id = `mac_${r}_${c}`;
+      cell.innerHTML = `<span style="font-size:0.45rem;color:var(--muted)">MAC</span><span style="font-size:0.5rem;">[${r},${c}]</span>`;
+      grid.appendChild(cell);
+    }
+  }
+  document.getElementById('hmxAccum').textContent = '';
+}
+
+function startHmxAnim() {
+  if (hmxRunning) return;
+  resetHmxAnim();
+  hmxRunning = true;
+  let step = 0;
+
+  // Show activation and weight tokens
+  setTimeout(() => {
+    for (let c = 0; c < SYS_SIZE; c++) {
+      const el = document.getElementById(`act_${c}`);
+      if (el) el.style.opacity = '1';
+    }
+    for (let r = 0; r < SYS_SIZE; r++) {
+      const el = document.getElementById(`wt_${r}`);
+      if (el) el.style.opacity = '1';
+    }
+    document.getElementById('hmxLabel').textContent = 'Weights flow ↓ columns, activations flow → rows, MACs accumulate';
+  }, 300);
+
+  // Wave diagonal activation
+  function fireWave(diag) {
+    if (diag >= SYS_SIZE * 2 - 1) {
+      document.getElementById('hmxAccum').textContent = '✓ All MAC cells have accumulated — output matrix complete';
+      document.getElementById('hmxLabel').textContent = '✓ Systolic flow complete. Each cell holds one dot-product partial sum.';
+      hmxRunning = false;
+      return;
+    }
+    for (let r = 0; r < SYS_SIZE; r++) {
+      const c = diag - r;
+      if (c >= 0 && c < SYS_SIZE) {
+        const cell = document.getElementById(`mac_${r}_${c}`);
+        if (cell) {
+          cell.className = 'mac-cell computing';
+          cell.innerHTML = `<span style="font-size:0.45rem;">MAC</span><span style="font-size:0.52rem;font-weight:700;">W${r}×A${c}</span>`;
+        }
+      }
+    }
+    document.getElementById('hmxAccum').textContent = `Diagonal wave ${diag + 1} / ${SYS_SIZE * 2 - 1} — MACs firing`;
+
+    setTimeout(() => {
+      for (let r = 0; r < SYS_SIZE; r++) {
+        const c = diag - r;
+        if (c >= 0 && c < SYS_SIZE) {
+          const cell = document.getElementById(`mac_${r}_${c}`);
+          if (cell) {
+            cell.className = 'mac-cell done';
+            cell.innerHTML = `<span style="font-size:0.45rem;">✓</span><span style="font-size:0.52rem;">[${r},${c}]</span>`;
+          }
+        }
+      }
+      fireWave(diag + 1);
+    }, 500);
+  }
+
+  setTimeout(() => fireWave(0), 800);
+}
+
+function resetHmxAnim() {
+  hmxRunning = false;
+  initHmx();
+  document.getElementById('hmxLabel').textContent = 'Weights flow ↓, activations flow →, MACs accumulate at each cell';
+}
+
+initHmx();
+
+// ══════════════════════════════════════
+// ANIM 3 — INT4 Packing
+// ══════════════════════════════════════
+let int4Running = false, int4Timer = null;
+const BYTE_BITS  = [0,0,1,1,1,0,1,0]; // example byte: 0x3A = 0b00111010 → W0=0011=3, W1=1010=10
+const W0_BITS = BYTE_BITS.slice(0,4); // upper nibble
+const W1_BITS = BYTE_BITS.slice(4,8); // lower nibble
+
+function initInt4() {
+  ['byteBits','nibble0','nibble1'].forEach((id, idx) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = '';
+    const bits = id === 'byteBits' ? BYTE_BITS : (id === 'nibble0' ? W0_BITS : W1_BITS);
+    bits.forEach((b, i) => {
+      const cell = document.createElement('div');
+      cell.className = 'bit-cell';
+      cell.textContent = b;
+      cell.id = `${id}_${i}`;
+      el.appendChild(cell);
+    });
+  });
+  document.getElementById('w0val').style.opacity = '0';
+  document.getElementById('w1val').style.opacity = '0';
+  document.getElementById('dequantRow').style.opacity = '0';
+  document.getElementById('int4Status').textContent = '';
+  document.getElementById('int4Label').textContent = '8 bits → 2 × INT4 weights → 2 FP32 values after dequant';
+}
+
+function startInt4Anim() {
+  if (int4Running) return;
+  resetInt4Anim();
+  int4Running = true;
+
+  // Step 1: show raw byte
+  setTimeout(() => {
+    BYTE_BITS.forEach((b, i) => {
+      const el = document.getElementById(`byteBits_${i}`);
+      if (el) el.classList.add('active');
+    });
+    document.getElementById('int4Status').textContent = 'Raw byte in weight memory: 0x3A = 00111010';
+    document.getElementById('int4Label').textContent = 'Step 1: One byte loaded from LPDDR5X weight buffer';
+  }, 300);
+
+  // Step 2: highlight upper nibble (W0)
+  setTimeout(() => {
+    BYTE_BITS.forEach((b, i) => {
+      const el = document.getElementById(`byteBits_${i}`);
+      if (el) { el.classList.remove('active'); el.className = 'bit-cell ' + (i < 4 ? 'w0' : ''); }
+    });
+    W0_BITS.forEach((b, i) => {
+      const el = document.getElementById(`nibble0_${i}`);
+      if (el) { el.className = 'bit-cell w0 active'; el.textContent = b; }
+    });
+    document.getElementById('int4Status').textContent = 'Upper nibble extracted → W0 = 0011 = 3 (INT4)';
+    document.getElementById('int4Label').textContent = 'Step 2: Upper nibble (bits 7–4) = first weight W0';
+  }, 1100);
+
+  // Step 3: highlight lower nibble (W1)
+  setTimeout(() => {
+    BYTE_BITS.forEach((b, i) => {
+      const el = document.getElementById(`byteBits_${i}`);
+      if (el) el.className = 'bit-cell ' + (i < 4 ? 'w0' : 'w1');
+    });
+    W1_BITS.forEach((b, i) => {
+      const el = document.getElementById(`nibble1_${i}`);
+      if (el) { el.className = 'bit-cell w1 active'; el.textContent = b; }
+    });
+    document.getElementById('int4Status').textContent = 'Lower nibble extracted → W1 = 1010 = 10 (INT4)';
+    document.getElementById('int4Label').textContent = 'Step 3: Lower nibble (bits 3–0) = second weight W1';
+  }, 1900);
+
+  // Step 4: dequant
+  setTimeout(() => {
+    const w0el = document.getElementById('w0val');
+    const w1el = document.getElementById('w1val');
+    if (w0el) { w0el.textContent = 'W0_int4 = 3 → W0_float = (3 − 8) × 0.0062 = −0.031'; w0el.style.opacity = '1'; }
+    if (w1el) { w1el.textContent = 'W1_int4 = 10 → W1_float = (10 − 8) × 0.0062 = +0.012'; w1el.style.opacity = '1'; }
+    document.getElementById('dequantRow').style.opacity = '1';
+    document.getElementById('dequantValues').textContent = 'zero_point = 8 (symmetric), scale = 0.0062 (per-channel)';
+    document.getElementById('int4Status').textContent = '✓ Two FP32 weights recovered from one byte — ready for HMX accumulator';
+    document.getElementById('int4Label').textContent = '✓ 1 byte → 2 weights → 2 FP32 values. 4× memory savings vs FP16.';
+    int4Running = false;
+  }, 2800);
+}
+
+function resetInt4Anim() {
+  if (int4Timer) clearTimeout(int4Timer);
+  int4Running = false;
+  initInt4();
+}
+
+initInt4();
+
+// ══════════════════════════════════════
+// ANIM 4 — TCM Tile Fitting
+// ══════════════════════════════════════
+const tileConfigs = [
+  { label: '256×256 × INT4 = 0.5MB', pct: 6, color: 'var(--teal)',
+    result: '✓ Fits easily — 6% of TCM used. DMA prefetch margin is large. HMX runs with zero DMA stalls. <strong style="color:var(--teal)">Optimal for decode.</strong>' },
+  { label: '512×512 × INT4 = 2MB', pct: 25, color: 'var(--teal)',
+    result: '✓ Fits comfortably — 25% of TCM. Room for double buffering. DMA can prefetch next tile while HMX computes current. <strong style="color:var(--teal)">Good balance for prefill.</strong>' },
+  { label: '1024×1024 × INT4 = 8MB', pct: 100, color: 'var(--orange)',
+    result: '⚠️ Exactly fills TCM — 100%. No room for double buffering. HMX must wait for each DMA load to complete before computing. <strong style="color:var(--orange)">DMA stalls visible in profiler.</strong>' },
+  { label: '2048×2048 × INT4 = 32MB', pct: 100, color: 'var(--pink)',
+    result: '❌ Does NOT fit — 32MB vs 8MB TCM. Tile spills to DRAM. Every HMX operation incurs DRAM latency (50–100ns). <strong style="color:var(--pink)">TCM_SPILL_EVENTS counter spikes. 3–5× slower.</strong>' },
+];
+let selectedTile = -1;
+
+function selectTile(idx) {
+  selectedTile = idx;
+  document.querySelectorAll('.tile-btn').forEach((btn, i) => {
+    btn.className = 'tile-btn' + (i === idx ? ' selected' : '');
+  });
+  const cfg = tileConfigs[idx];
+  const fill = document.getElementById('tcmFill');
+  const pct = document.getElementById('tcmPct');
+  const result = document.getElementById('tcmResult');
+  const overflow = idx === 3;
+  fill.style.width = Math.min(cfg.pct, 100) + '%';
+  fill.style.background = cfg.color;
+  fill.style.color = cfg.pct >= 100 ? '#000' : '#fff';
+  fill.textContent = cfg.label;
+  pct.textContent = cfg.pct + '%';
+  pct.style.color = cfg.color;
+  document.getElementById('tcmFill').parentElement.style.borderColor = cfg.color.replace('var(--','').replace(')','');
+  result.innerHTML = cfg.result;
+  result.style.borderColor = cfg.color;
+  if (overflow) {
+    setTimeout(() => {
+      fill.style.animation = 'none';
+      fill.style.boxShadow = '0 0 12px rgba(255,107,157,0.5)';
+    }, 650);
+  } else {
+    fill.style.boxShadow = 'none';
+  }
+}
+
+// ══════════════════════════════════════
+// ANIM 5 — Multi-channel DMA
+// ══════════════════════════════════════
+let dmaRunning = false, dmaTimer = null;
+let dmaPhase = 0;
+
+function resetDmaAnim() {
+  if (dmaTimer) clearTimeout(dmaTimer);
+  dmaRunning = false;
+  ['dma0fill','dma1fill','hmxfill'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.width = '0%';
+  });
+  ['dma0label','dma1label','hmxlabel'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = 'idle';
+  });
+  document.getElementById('dmaStatus').textContent = '';
+  document.getElementById('dmaTimeline').innerHTML = '';
+  document.getElementById('dmaLabel').textContent = 'Two DMA channels + HMX = fully pipelined, zero stall steady state';
+}
+
+function addDmaTick(text, color) {
+  const tl = document.getElementById('dmaTimeline');
+  const tick = document.createElement('div');
+  tick.style.cssText = `padding:0.2rem 0.5rem;border-radius:3px;background:${color};font-family:'JetBrains Mono',monospace;font-size:0.5rem;font-weight:700;color:#000;white-space:nowrap;`;
+  tick.textContent = text;
+  tl.appendChild(tick);
+}
+
+function startDmaAnim() {
+  if (dmaRunning) return;
+  resetDmaAnim();
+  dmaRunning = true;
+
+  const phases = [
+    { delay: 300, fn: () => {
+      animBar('dma0fill', 0, 70, 600);
+      document.getElementById('dma0label').textContent = 'Loading W-tile 0 from LPDDR5X → TCM Buf A...';
+      document.getElementById('dmaStatus').textContent = 'Phase 1: DMA Channel 0 loading first weight tile. HMX idle — needs data.';
+      addDmaTick('DMA0:W0', 'rgba(255,179,71,0.8)');
+    }},
+    { delay: 900, fn: () => {
+      animBar('dma0fill', 70, 100, 300);
+      setTimeout(() => {
+        document.getElementById('dma0label').textContent = '✓ W-tile 0 in TCM Buf A';
+        animBar('dma1fill', 0, 70, 600);
+        document.getElementById('dma1label').textContent = 'Loading A-tile 0 from LPDDR5X → TCM Buf B...';
+        animBar('hmxfill', 0, 50, 600);
+        document.getElementById('hmxlabel').textContent = 'HMX computing: W-tile 0 × activation...';
+        document.getElementById('dmaStatus').textContent = 'Phase 2: HMX starts computing. Both DMA channels now active simultaneously.';
+        addDmaTick('HMX:tile0', 'rgba(0,217,180,0.8)');
+        addDmaTick('DMA1:A0', 'rgba(80,160,255,0.8)');
+      }, 300);
+    }},
+    { delay: 1800, fn: () => {
+      animBar('dma0fill', 100, 100, 100);
+      animBar('dma1fill', 70, 100, 300);
+      animBar('hmxfill', 50, 100, 400);
+      document.getElementById('dma0label').textContent = 'Loading W-tile 1 → TCM Buf A (next tile)...';
+      animBar('dma0fill', 0, 60, 400);
+      document.getElementById('dma1label').textContent = '✓ A-tile 0 ready';
+      document.getElementById('hmxlabel').textContent = '✓ Tile 0 complete → starting tile 1';
+      document.getElementById('dmaStatus').textContent = 'Phase 3: SWAP. HMX switches buffers. DMA Ch0 prefetches next weight tile. Zero idle time.';
+      addDmaTick('SWAP', 'rgba(124,107,255,0.8)');
+      addDmaTick('DMA0:W1', 'rgba(255,179,71,0.8)');
+    }},
+    { delay: 2700, fn: () => {
+      animBar('dma0fill', 60, 100, 400);
+      animBar('hmxfill', 0, 80, 600);
+      document.getElementById('hmxlabel').textContent = 'HMX computing tile 1. DMA prefetching tile 2. Steady state.';
+      document.getElementById('dmaStatus').textContent = '✓ Steady state reached: HMX always computing, DMA always loading. HMX utilization ~100%.';
+      document.getElementById('dmaLabel').textContent = '✓ Steady state: DMA hides memory latency completely. Zero HMX idle cycles.';
+      addDmaTick('HMX:tile1', 'rgba(0,217,180,0.8)');
+      addDmaTick('...', 'rgba(124,107,255,0.4)');
+      dmaRunning = false;
+    }},
+  ];
+
+  let cumDelay = 0;
+  phases.forEach(p => {
+    cumDelay += p.delay;
+    dmaTimer = setTimeout(p.fn, cumDelay);
+  });
+}
+
+function animBar(id, from, to, duration) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const start = performance.now();
+  function step(now) {
+    const t = Math.min((now - start) / duration, 1);
+    const ease = t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
+    el.style.width = (from + (to - from) * ease) + '%';
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+</script>
+
+</body>
+</html>
