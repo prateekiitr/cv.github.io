@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#0a0a0f" />
+  <title>Why MoE on Mobile is Hard — And How MobileMoE Cracked It | Prateek Singh</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0a0a0f;
+      --surface: #12121a;
+      --surface2: #1a1a26;
+      --border: #2a2a3f;
+      --accent:  #7c6bff;
+      --accent2: #ff6b9d;
+      --accent3: #00d9b4;
+      --accent4: #ffb347;
+      --text: #f0f0f8;
+      --text-muted: #b0b0c8;
+      --text-dim: #6a6a8a;
+      --code-bg: #0f0f1a;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg) !important;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      line-height: 1.8;
+      overflow-x: hidden;
+    }
+
+    /* noise overlay */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 9999; opacity: .4;
+    }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent3); }
+
+    /* ── HEADER ── */
+    .site-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.2rem 2.5rem;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(10,10,15,.92);
+      backdrop-filter: blur(14px);
+    }
+    .site-logo {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .95rem; color: var(--accent3);
+      text-decoration: none; letter-spacing: .03em;
+    }
+    .site-logo span { color: var(--text-muted); }
+    .back-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .8rem; color: var(--text-dim);
+      text-decoration: none; letter-spacing: .05em;
+      border: 1px solid var(--border); padding: .35rem .8rem;
+      border-radius: 4px; transition: all .2s;
+    }
+    .back-btn:hover { color: var(--accent3); border-color: var(--accent3); }
+
+    /* ── HERO ── */
+    .hero {
+      max-width: 860px; margin: 0 auto;
+      padding: 5rem 2rem 3rem;
+      animation: fadeUp .7s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(22px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .hero-tags { display: flex; gap: .6rem; flex-wrap: wrap; margin-bottom: 1.4rem; }
+    .tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .72rem; letter-spacing: .08em; text-transform: uppercase;
+      padding: .25rem .7rem; border-radius: 3px;
+    }
+    .tag-purple { background: rgba(124,107,255,.15); color: var(--accent); border: 1px solid rgba(124,107,255,.3); }
+    .tag-teal   { background: rgba(0,217,180,.12);  color: var(--accent3); border: 1px solid rgba(0,217,180,.3); }
+    .tag-pink   { background: rgba(255,107,157,.12); color: var(--accent2); border: 1px solid rgba(255,107,157,.3); }
+    .tag-orange { background: rgba(255,179,71,.12);  color: var(--accent4); border: 1px solid rgba(255,179,71,.3); }
+
+    .hero-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 900; line-height: 1.15;
+      color: var(--text); margin-bottom: 1.2rem;
+    }
+    .hero-title em { font-style: italic; color: var(--accent3); }
+
+    .hero-sub {
+      font-size: 1.1rem; color: var(--text-muted);
+      max-width: 640px; margin-bottom: 2rem; line-height: 1.7;
+    }
+    .hero-meta {
+      display: flex; align-items: center; gap: 1.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .78rem; color: var(--text-dim);
+    }
+    .hero-meta span { display: flex; align-items: center; gap: .4rem; }
+    .hero-divider {
+      width: 100%; height: 1px;
+      background: linear-gradient(90deg, var(--accent) 0%, var(--accent3) 50%, transparent 100%);
+      margin: 3rem 0 0; opacity: .4;
+    }
+
+    /* ── CONTENT ── */
+    .content {
+      max-width: 860px; margin: 0 auto;
+      padding: 3rem 2rem 6rem;
+    }
+
+    .content p {
+      font-size: 1.05rem; color: var(--text-muted);
+      margin-bottom: 1.5rem; line-height: 1.85;
+    }
+    .content p strong { color: var(--text); font-weight: 500; }
+
+    h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.7rem; font-weight: 700;
+      color: var(--text); margin: 3.5rem 0 1rem;
+      padding-bottom: .5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    h3 {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1.1rem; font-weight: 500;
+      color: var(--accent3); margin: 2rem 0 .8rem;
+      letter-spacing: .02em;
+    }
+
+    /* code blocks */
+    .code-block {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent3);
+      border-radius: 6px; padding: 1.4rem 1.6rem;
+      margin: 1.5rem 0; overflow-x: auto;
+    }
+    .code-block pre {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .82rem; line-height: 1.75;
+      color: #c8c8e8; white-space: pre;
+    }
+    .code-block pre .c  { color: var(--text-dim); }       /* comment */
+    .code-block pre .hi { color: var(--accent3); }         /* highlight teal */
+    .code-block pre .pu { color: var(--accent); }          /* purple */
+    .code-block pre .pk { color: var(--accent2); }         /* pink */
+    .code-block pre .or { color: var(--accent4); }         /* orange */
+    .code-block pre .ok { color: #7defa1; }                /* green ok */
+    .code-block pre .no { color: #ff8080; }                /* red bad */
+
+    /* callout cards */
+    .callout {
+      border-radius: 8px; padding: 1.4rem 1.6rem;
+      margin: 2rem 0; border-left: 3px solid;
+    }
+    .callout-teal   { background: rgba(0,217,180,.06);  border-color: var(--accent3); }
+    .callout-purple { background: rgba(124,107,255,.07); border-color: var(--accent); }
+    .callout-pink   { background: rgba(255,107,157,.07); border-color: var(--accent2); }
+    .callout-orange { background: rgba(255,179,71,.07);  border-color: var(--accent4); }
+    .callout-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .72rem; letter-spacing: .1em; text-transform: uppercase;
+      margin-bottom: .5rem; font-weight: 600;
+    }
+    .callout-teal   .callout-label { color: var(--accent3); }
+    .callout-purple .callout-label { color: var(--accent); }
+    .callout-pink   .callout-label { color: var(--accent2); }
+    .callout-orange .callout-label { color: var(--accent4); }
+    .callout p { margin-bottom: 0; font-size: 1rem; }
+
+    /* stat grid */
+    .stat-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem; margin: 2rem 0;
+    }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 1.2rem 1.4rem; text-align: center;
+      transition: border-color .2s, transform .2s;
+    }
+    .stat-card:hover { border-color: var(--accent3); transform: translateY(-2px); }
+    .stat-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem; font-weight: 900;
+      background: linear-gradient(135deg, var(--accent3), var(--accent));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; display: block; margin-bottom: .3rem;
+    }
+    .stat-label { font-size: .82rem; color: var(--text-dim); font-family: 'JetBrains Mono', monospace; }
+
+    /* solution steps */
+    .solution-steps { display: flex; flex-direction: column; gap: 1.5rem; margin: 2rem 0; }
+    .step {
+      display: grid; grid-template-columns: 60px 1fr;
+      gap: 1.2rem; align-items: start;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 1.4rem;
+      transition: border-color .2s;
+    }
+    .step:hover { border-color: var(--accent3); }
+    .step-num {
+      font-family: 'Playfair Display', serif; font-size: 2.5rem; font-weight: 900;
+      line-height: 1; color: var(--accent3); opacity: .5; text-align: center;
+      padding-top: .2rem;
+    }
+    .step-content h3 { margin-top: 0; font-size: 1rem; }
+    .step-content p { font-size: .95rem; margin-bottom: .6rem; }
+    .step-content p:last-child { margin-bottom: 0; }
+
+    /* result table */
+    .result-table {
+      width: 100%; border-collapse: collapse; margin: 1.5rem 0;
+      font-size: .9rem;
+    }
+    .result-table th {
+      font-family: 'JetBrains Mono', monospace; font-size: .75rem;
+      text-transform: uppercase; letter-spacing: .08em;
+      color: var(--text-dim); padding: .7rem 1rem;
+      border-bottom: 1px solid var(--border); text-align: left;
+    }
+    .result-table td {
+      padding: .75rem 1rem; border-bottom: 1px solid rgba(255,255,255,.04);
+      color: var(--text-muted);
+    }
+    .result-table tr:hover td { background: var(--surface); }
+    .result-table .good { color: var(--accent3); font-weight: 500; }
+    .result-table .bad  { color: var(--accent2); }
+    .result-table .model-name { color: var(--text); font-weight: 500; }
+
+    /* inline code */
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .83em; background: var(--surface2);
+      padding: .15em .45em; border-radius: 3px;
+      color: var(--accent3);
+    }
+
+    /* section divider */
+    .section-divider {
+      display: flex; align-items: center; gap: 1rem;
+      margin: 3rem 0;
+    }
+    .section-divider::before, .section-divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+    .section-divider span {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .7rem; color: var(--text-dim); letter-spacing: .1em;
+    }
+
+    /* quote */
+    blockquote {
+      border-left: 3px solid var(--accent);
+      padding: .8rem 1.4rem; margin: 2rem 0;
+      background: rgba(124,107,255,.06); border-radius: 0 6px 6px 0;
+    }
+    blockquote p {
+      font-family: 'Playfair Display', serif;
+      font-style: italic; font-size: 1.1rem;
+      color: var(--text); margin-bottom: 0;
+    }
+
+    /* footer */
+    .post-footer {
+      margin-top: 5rem; padding-top: 2rem;
+      border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 1rem;
+    }
+    .author-block { display: flex; align-items: center; gap: 1rem; }
+    .author-avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent3));
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Playfair Display', serif; font-weight: 700;
+      color: #fff; font-size: 1rem; flex-shrink: 0;
+    }
+    .author-name { font-weight: 500; color: var(--text); font-size: .95rem; }
+    .author-role { font-size: .8rem; color: var(--text-dim); font-family: 'JetBrains Mono', monospace; }
+    .share-btn {
+      font-family: 'JetBrains Mono', monospace; font-size: .78rem;
+      color: var(--accent3); border: 1px solid rgba(0,217,180,.3);
+      padding: .5rem 1.1rem; border-radius: 4px;
+      background: rgba(0,217,180,.06); cursor: pointer;
+      transition: all .2s; text-decoration: none;
+    }
+    .share-btn:hover { background: rgba(0,217,180,.14); }
+
+    @media (max-width: 640px) {
+      .site-header { padding: 1rem 1.2rem; }
+      .hero, .content { padding-left: 1.2rem; padding-right: 1.2rem; }
+      .step { grid-template-columns: 40px 1fr; }
+      .step-num { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <a class="site-logo" href="/">prateek<span>singhphd</span>.in</a>
+  <a class="back-btn" href="https://prateeksinghphd.in/blogs.html">← Back to Blog</a>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-tags">
+    <span class="tag tag-purple">On-Device AI</span>
+    <span class="tag tag-teal">MoE</span>
+    <span class="tag tag-pink">Mobile Inference</span>
+    <span class="tag tag-orange">MobileMoE</span>
+  </div>
+
+  <h1 class="hero-title">
+    Why <em>MoE on Mobile</em> is a Nightmare —<br>And How Meta Finally Cracked It
+  </h1>
+
+  <p class="hero-sub">
+    Mixture-of-Experts is the architecture behind every frontier LLM. But putting it on a smartphone? That's a completely different problem. Here's the full picture — the constraint, the cache thrashing, and the three engineering moves that made it work.
+  </p>
+
+  <div class="hero-meta">
+    <span>📅 May 27, 2026</span>
+    <span>✍️ Prateek Singh</span>
+    <span>⏱ 8 min read</span>
+    <span>📄 Based on MobileMoE (Meta AI, arXiv 2605.27358)</span>
+  </div>
+
+  <div class="hero-divider"></div>
+</section>
+
+<!-- CONTENT -->
+<article class="content">
+
+  <p>
+    Mixture-of-Experts has become the default architecture for the world's best language models — DeepSeek V3, Qwen3-MoE, Gemini, Grok. The idea is elegant: instead of one massive FFN block per transformer layer, you have many small <strong>expert networks</strong>, and each token only activates a few of them. You get the capacity of a large model at a fraction of the inference cost.
+  </p>
+  <p>
+    So the obvious question is: <strong>why hasn't this reached your phone?</strong>
+  </p>
+  <p>
+    On-device LLMs — MobileLLM, Gemma 3 1B, SmolLM2, Llama 3.2 1B — are all dense. Every single one. And it's not for lack of trying. The reason is fundamental to how mobile hardware works.
+  </p>
+
+  <h2>The Core Problem: Mobile is Memory-Bandwidth Bound</h2>
+
+  <p>
+    On a server GPU, inference is <strong>compute-bound</strong>. You have teraflops of math horsepower, giant HBM caches, NVLink between GPUs. The bottleneck is arithmetic.
+  </p>
+  <p>
+    On a smartphone, inference is <strong>memory-bandwidth-bound</strong>. The CPU or NPU sits largely idle, waiting for weight matrices to arrive from DRAM. The bottleneck is data movement, not math.
+  </p>
+
+  <div class="code-block"><pre>
+<span class="c">// Dense model — what happens every decode step</span>
+<span class="hi">Load FFN weights</span> (same every time, may still be in cache)
+<span class="ok">Compute</span>
+<span class="ok">Done ✓</span>
+
+<span class="c">// MoE model — what NAIVELY happens every decode step</span>
+<span class="hi">Router decides:</span> use experts 3, 7, 12, 45
+<span class="no">Load Expert 3 weights from DRAM  ← cache miss</span>
+<span class="no">Load Expert 7 weights from DRAM  ← cache miss</span>
+<span class="no">Load Expert 12 weights from DRAM ← cache miss</span>
+<span class="no">Load Expert 45 weights from DRAM ← cache miss</span>
+Next token → different 4 experts → repeat
+<span class="no">DRAM thrashing every single token ✗</span>
+  </pre></div>
+
+  <p>
+    This is the fundamental tension. MoE's whole value proposition — sparse activation — becomes a <strong>pathological access pattern</strong> on mobile hardware. The router changes which experts are needed every token. SRAM (the fast on-chip cache) is tiny — maybe 4–8 MB. Each expert weight matrix is several MB. You can't keep all 60 experts cached. You can't prefetch because you don't know the next routing decision. The result is guaranteed cache misses on every token.
+  </p>
+
+  <div class="callout callout-pink">
+    <div class="callout-label">⚠️ The Fundamental Tension</div>
+    <p>MoE's sparsity is its strength on servers (less compute). On mobile, that same sparsity becomes a weakness — unpredictable memory access patterns that thrash the tiny SRAM cache on every single token.</p>
+  </div>
+
+  <p>
+    Meta's MobileMoE paper (released today, May 27, 2026) is the first work to systematically solve this. They deploy sub-billion-active-parameter MoE models on the Samsung Galaxy S25 and iPhone 16 Pro with <strong>1.8–3.8× faster prefill</strong> and <strong>2.2–3.4× faster decode</strong> than a comparable dense baseline. Here's exactly how.
+  </p>
+
+  <div class="section-divider"><span>THREE SOLUTIONS</span></div>
+
+  <h2>How MobileMoE Solved It</h2>
+
+  <div class="solution-steps">
+
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-content">
+        <h3>Token Reordering via Counting Sort</h3>
+        <p>
+          Before any expert computation happens, MobileMoE <strong>sorts all tokens by their expert assignment</strong>. Every token headed to Expert 3 is grouped together. Every token headed to Expert 12 is grouped together.
+        </p>
+        <div class="code-block"><pre>
+<span class="c">// Before reordering (naive)</span>
+Token 1  → Expert 3
+Token 2  → Expert 47
+Token 3  → Expert 3   <span class="no">← forces reload of Expert 3</span>
+Token 4  → Expert 12
+
+<span class="c">// After counting sort</span>
+Expert 3  → [Token 1, Token 3, Token 8, Token 15 ...]
+Expert 12 → [Token 4, Token 9 ...]
+Expert 47 → [Token 2, Token 6 ...]
+
+<span class="c">// Now process expert-by-expert:</span>
+<span class="ok">Load Expert 3  ONCE → process ALL its tokens → done</span>
+<span class="ok">Load Expert 12 ONCE → process ALL its tokens → done</span>
+<span class="ok">Load Expert 47 ONCE → process ALL its tokens → done</span>
+        </pre></div>
+        <p>Result: instead of one cache miss per token, you get <strong>one cache miss per active expert</strong>. With 4 active experts and 60 tokens in a batch, that's 4 loads instead of 60.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-content">
+        <h3>Grouped MLP — One Big GEMM Instead of Many Small Ones</h3>
+        <p>
+          Here's the second problem that token reordering alone can't fix: MobileMoE's experts are tiny. Each expert FFN in MobileMoE-S is <code>768×384</code>. Compare that to Mixtral's experts at <code>4096×14336</code> — roughly <strong>200× larger</strong>.
+        </p>
+        <p>
+          Small matrix multiplications are horribly inefficient. Mobile hardware (CPU, GPU, NPU) is designed for large dense operations. When you call a tiny GEMM kernel, most of the time is spent on kernel launch overhead and memory access setup — not actual math. Hardware utilization drops to ~20%.
+        </p>
+        <div class="code-block"><pre>
+<span class="c">// Naive: many small GEMMs</span>
+<span class="no">Expert 3  weights × its tokens  → tiny GEMM, ~20% util</span>
+<span class="no">Expert 12 weights × its tokens  → tiny GEMM, ~20% util</span>
+<span class="no">Expert 47 weights × its tokens  → tiny GEMM, ~20% util</span>
+
+<span class="c">// Grouped MLP: stack all active experts into ONE matrix</span>
+<span class="ok">[ Expert 3  weights  ]</span>
+<span class="ok">[ Expert 12 weights  ]  ×  all tokens  →  ONE big GMM</span>
+<span class="ok">[ Expert 47 weights  ]</span>
+<span class="c">                              hardware utilization: ~80%</span>
+        </pre></div>
+        <p>By batching all expert computations into a single grouped matrix multiplication (GMM) kernel, MobileMoE makes the hardware operate at full efficiency. One kernel call, one memory read, all experts computed together.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-content">
+        <h3>Fused MoE Kernel — Zero Intermediate DRAM Writes</h3>
+        <p>
+          Even with token reordering and grouped GEMM, there's still a problem: the MoE FFN block has <strong>9 separate sub-operations</strong>. In a naive implementation, each step writes its output to DRAM and the next step reads it back.
+        </p>
+        <div class="code-block"><pre>
+<span class="c">// Naive: 9 kernel calls, 9 DRAM round-trips</span>
+<span class="no">1. Router logits         → write to DRAM</span>
+<span class="no">2. Top-k selection       → read/write DRAM</span>
+<span class="no">3. Token dispatch        → read/write DRAM</span>
+<span class="no">4. Gate projection       → read/write DRAM</span>
+<span class="no">5. Up projection         → read/write DRAM</span>
+<span class="no">6. SwiGLU activation     → read/write DRAM</span>
+<span class="no">7. Down projection       → read/write DRAM</span>
+<span class="no">8. Weighted scatter      → read/write DRAM</span>
+<span class="no">9. Unpermute tokens      → write to DRAM</span>
+
+<span class="c">// Fused kernel: 1 call, everything stays in SRAM/registers</span>
+<span class="ok">Route → dispatch → gate+up → SwiGLU → down → scatter</span>
+<span class="ok">All in one op. Zero intermediate DRAM writes.</span>
+        </pre></div>
+        <p>
+          XNNPACK (the standard mobile inference backend) has no native MoE operator. Meta built a custom fused MoE operator inside ExecuTorch. Attention layers still use XNNPACK's optimized INT4 dense path. Only the MoE FFN blocks route through the custom op.
+        </p>
+
+        <div class="callout callout-teal">
+          <div class="callout-label">💡 Why DRAM Writes Hurt So Much</div>
+          <p>Mobile SRAM (on-chip cache) is maybe 4–8 MB and extremely fast. DRAM is 50–80× slower. Every intermediate write forces the CPU to stall waiting for data. The fused kernel keeps everything in fast registers and SRAM until the final output — no stalls.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="section-divider"><span>THE NUMBERS</span></div>
+
+  <h2>What This Looks Like in Practice</h2>
+
+  <div class="stat-grid">
+    <div class="stat-card">
+      <span class="stat-num">3.8×</span>
+      <span class="stat-label">Max prefill speedup<br>vs dense baseline</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num">3.4×</span>
+      <span class="stat-label">Max decode speedup<br>vs dense baseline</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num">22%</span>
+      <span class="stat-label">Less peak RAM<br>at 8k context</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num">+12.3</span>
+      <span class="stat-label">Accuracy points<br>over MobileLLM-Pro</span>
+    </div>
+  </div>
+
+  <p>
+    Tested on real hardware — Samsung Galaxy S25 (Snapdragon 8 Elite) and iPhone 16 Pro (Apple A18 Pro) — using real prompts across code, math, and knowledge tasks (not dummy tokens, which would underestimate MoE memory by up to 2×).
+  </p>
+
+  <table class="result-table">
+    <thead>
+      <tr>
+        <th>Model</th>
+        <th>Active Params</th>
+        <th>INT4 Memory</th>
+        <th>Avg Accuracy</th>
+        <th>Decode (S25)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="model-name">MobileLLM-Pro (dense)</td>
+        <td>1.1B</td>
+        <td>0.55 GB</td>
+        <td>45.5%</td>
+        <td class="bad">56.5 tok/s</td>
+      </tr>
+      <tr>
+        <td class="model-name">MobileMoE-S</td>
+        <td>0.3B</td>
+        <td>0.68 GB</td>
+        <td>44.0%</td>
+        <td class="good">130.0 tok/s</td>
+      </tr>
+      <tr>
+        <td class="model-name">MobileMoE-M</td>
+        <td>0.5B</td>
+        <td>1.48 GB</td>
+        <td>52.5%</td>
+        <td class="good">77.1 tok/s</td>
+      </tr>
+      <tr>
+        <td class="model-name">MobileMoE-L</td>
+        <td>0.9B</td>
+        <td>2.75 GB</td>
+        <td>57.8%</td>
+        <td>43.0 tok/s</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    MobileMoE-S delivers a dense-comparable accuracy at <strong>2.3× faster decode</strong> than MobileLLM-Pro with similar memory. MobileMoE-M gains +7 accuracy points while still matching or beating the dense baseline on speed. MobileMoE-L pushes the frontier — the highest accuracy of any sub-2B active-parameter model, period.
+  </p>
+
+  <div class="section-divider"><span>THE BIGGER PICTURE</span></div>
+
+  <h2>What This Means for On-Device AI</h2>
+
+  <p>
+    The three-solution stack — <strong>token reordering → grouped GEMM → fused kernel</strong> — is not just a MobileMoE trick. It's a blueprint for any sparse model running on memory-bandwidth-constrained hardware.
+  </p>
+
+  <blockquote>
+    <p>"Sort tokens first, batch all expert compute together, never leave the fast cache until done."</p>
+  </blockquote>
+
+  <p>
+    The paper explicitly lists <strong>NPU deployment</strong> as unsolved future work. This is the next frontier. Snapdragon's Hexagon DSP, Apple's Neural Engine, Samsung's Exynos NPU — all designed for fixed, static computation graphs. MoE's dynamic routing (which experts activate depends on the input) is fundamentally at odds with how NPUs are compiled.
+  </p>
+
+  <p>
+    Solving dynamic routing on NPUs — whether through hybrid CPU+NPU execution, static compilation of all expert paths, or constrained routing with small E — is where the next 3–5× efficiency gains are hiding. The CPU path MobileMoE uses gets you 3.8× over dense. The NPU path could get you another 5–10× on top of that.
+  </p>
+
+  <div class="callout callout-purple">
+    <div class="callout-label">🔭 What's Next</div>
+    <p>The unsolved problems: NPU deployment of MoE (dynamic routing vs. static graphs), task-conditional expert loading (load only the experts relevant to your app), and hybrid MoE+SSM architectures that eliminate KV cache growth at long context while keeping routing efficiency. Each of these is a publishable research direction on its own.</p>
+  </div>
+
+  <h2>Summary</h2>
+
+  <div class="code-block"><pre>
+<span class="c">// The problem</span>
+MoE on mobile = constant DRAM thrashing
+Different experts every token = guaranteed cache misses = slow
+
+<span class="c">// Solution 1: Token Reordering</span>
+<span class="hi">Sort all tokens by expert assignment before compute</span>
+→ Load each expert ONCE per batch, not once per token
+
+<span class="c">// Solution 2: Grouped GEMM</span>
+<span class="hi">Stack all active expert weights into one big matrix</span>
+→ Hardware utilization 20% → 80%
+
+<span class="c">// Solution 3: Fused Kernel</span>
+<span class="hi">All 9 MoE sub-ops fused into one ExecuTorch operator</span>
+→ Zero intermediate DRAM writes
+
+<span class="c">// Result</span>
+<span class="ok">1.8–3.8× faster prefill</span>
+<span class="ok">2.2–3.4× faster decode</span>
+<span class="ok">22% less RAM at 8k context</span>
+<span class="ok">vs comparable dense baseline on real flagship smartphones</span>
+  </pre></div>
+
+  <!-- FOOTER -->
+  <div class="post-footer">
+    <div class="author-block">
+      <div class="author-avatar">PS</div>
+      <div>
+        <div class="author-name">Prateek Singh</div>
+        <div class="author-role">Senior Manager, GenAI · Samsung Research</div>
+      </div>
+    </div>
+    <a class="share-btn" href="https://prateeksinghphd.in/blogs">← More Posts</a>
+  </div>
+
+</article>
+
+</body>
+</html>
