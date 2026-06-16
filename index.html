@@ -1348,7 +1348,7 @@
     <a href="#publications" class="mobile-link">Research</a>
     <a href="blogs.html" class="mobile-link">Blogs</a>
     <a href="#contact" class="mobile-link">Contact</a>
-    <a href="https://drive.google.com/uc?export=download&id=1tVeXWipJAWXlDcdZ-KwmBigfUgjYlEXK" class="mobile-link" target="_blank">CV ↓</a>
+    <a href="https://drive.google.com/uc?export=download&id=14gdos6ddnlDyDwy4nHHKoLFCtV171YbR" class="mobile-link" target="_blank">CV ↓</a>
   </div>
 
   <!-- HERO -->
@@ -1366,12 +1366,12 @@
       </p>
       <div class="hero-stats">
         <div class="stat-item">
-          <div class="stat-value">10<span>+</span></div>
+          <div class="stat-value">11<span>+</span></div>
           <div class="stat-label">Years in AI/ML</div>
         </div>
         <div class="stat-divider"></div>
         <div class="stat-item">
-          <div class="stat-value">20<span>+</span></div>
+          <div class="stat-value">15<span>+</span></div>
           <div class="stat-label">Publications</div>
         </div>
         <div class="stat-divider"></div>
@@ -1381,7 +1381,7 @@
         </div>
         <div class="stat-divider"></div>
         <div class="stat-item">
-          <div class="stat-value">H100</div>
+          <div class="stat-value">H200</div>
           <div class="stat-label">GPU Research</div>
         </div>
       </div>
@@ -1591,6 +1591,28 @@
       <p class="section-sub">End-to-end AI systems — from wearable signal processing to LLM deployment on edge devices.</p>
       <div class="fw-grid">
 
+        <div class="fw-card c-purple">
+          <div class="fw-card-head">
+            <div class="fw-icon">🤝</div>
+            <div class="fw-title-group">
+              <div class="fw-badge">On-Device Agentic AI · Current</div>
+              <div class="fw-name">On-Device LLM Agent Framework</div>
+              <div class="fw-sub">Privacy-First Agentic AI Architecture for Mobile</div>
+            </div>
+          </div>
+          <ul class="fw-bullets">
+            <li>Architecture &amp; design contributions to an on-device LLM agent runtime — tool execution, memory, and multi-step reasoning that runs locally</li>
+            <li>Privacy-first design: inference kept on-device with no data egress for sensitive workloads</li>
+            <li>Provider-agnostic LLM abstraction with fallback and streaming for production reliability</li>
+            <li>Retrieval-augmented memory and token-budgeting for constrained mobile hardware</li>
+            <li>Consent-gated tool execution and safety boundaries for agent actions</li>
+          </ul>
+          <div class="fw-impact">
+            <span class="fw-impact-icon">💡</span>
+            <span><strong>Impact:</strong> Bringing safe, private, fully on-device AI agents to consumer mobile platforms.</span>
+          </div>
+        </div>
+
         <div class="fw-card c-teal">
           <div class="fw-card-head">
             <div class="fw-icon">🧠</div>
@@ -1689,7 +1711,7 @@
             <li>LLMs deployed via GGUF / llama.cpp, TensorRT-LLM, and Qualcomm QNN SDK</li>
             <li>GPTQ + AWQ quantization for memory footprint and latency reduction</li>
             <li>Benchmarked across NVIDIA GPU, CPU, and Qualcomm NPU environments</li>
-            <li>Targeting 7B–13B models on mobile hardware at Samsung production scale</li>
+            <li>Targeting 0.6B–4B models on mobile hardware at Samsung production scale</li>
           </ul>
           <div class="fw-impact">
             <span class="fw-impact-icon">💡</span>
@@ -1880,22 +1902,22 @@
       <h2 class="section-title">Latest <em>Blogs</em></h2>
       <p class="section-sub">Technical deep-dives into LLMs, quantization, inference runtimes, and digital health AI.</p>
       <div class="blog-preview-grid">
-        <a href="quantization-llms.html" class="blog-card">
-          <div class="blog-card-date">Mar 21, 2026</div>
-          <div class="blog-card-title">Quantization in LLMs</div>
-          <div class="blog-card-excerpt">From GPTQ to AWQ to NF4 — the art of making 70B models fit in 24 GB without making them dumber.</div>
+        <a href="moe-mobile-blog.html" class="blog-card">
+          <div class="blog-card-date">May 27, 2026</div>
+          <div class="blog-card-title">MoE on Mobile</div>
+          <div class="blog-card-excerpt">Making Mixture-of-Experts work on a phone — expert routing, INT4 sparse packing, TCM-resident hot experts, and dynamic offload.</div>
           <span class="blog-card-arrow">↗</span>
         </a>
-        <a href="inference-runtimes.html" class="blog-card">
-          <div class="blog-card-date">Mar 22, 2026</div>
-          <div class="blog-card-title">LLM Inference Runtimes</div>
-          <div class="blog-card-excerpt">GGUF, TensorRT-LLM, QNN, ONNX — a deep dive into every major inference runtime across all hardware.</div>
+        <a href="hexagon-deep-dive-blog.html" class="blog-card">
+          <div class="blog-card-date">May 16, 2026</div>
+          <div class="blog-card-title">Inside Hexagon</div>
+          <div class="blog-card-excerpt">Qualcomm's NPU from silicon to inference — VLIW scalar core, 1024-bit HVX lanes, HMX systolic tensor accelerator, and TCM, from first principles.</div>
           <span class="blog-card-arrow">↗</span>
         </a>
-        <a href="turboquant.html" class="blog-card">
-          <div class="blog-card-date">Mar 29, 2026</div>
-          <div class="blog-card-title">TurboQuant</div>
-          <div class="blog-card-excerpt">Google solved the KV cache bottleneck — 6× compression, 8× speedup, zero accuracy loss.</div>
+        <a href="qnn-execution-blog.html" class="blog-card">
+          <div class="blog-card-date">May 9, 2026</div>
+          <div class="blog-card-title">Inside QNN's Execution Engine</div>
+          <div class="blog-card-excerpt">Threads, tiles & tensor ops on Snapdragon — tiling, wavefronts, shared memory, DMA double buffering, and operator fusion explained step by step.</div>
           <span class="blog-card-arrow">↗</span>
         </a>
       </div>
@@ -1994,7 +2016,7 @@
           </div>
 
           <div class="nl-count">
-            Delivered every day at <span>9:00 AM IST</span> · Powered by AI agent
+            Delivered every day at <span>11:00 AM IST</span> · Powered by AI agent
           </div>
         </div>
 
@@ -2097,7 +2119,7 @@
             body: JSON.stringify({ email: email, source: 'newsletter-section' })
           });
           if (res.ok) {
-            status.innerHTML = '<i class="fas fa-check-circle"></i> You\'re in! First email arrives tomorrow at 9 AM IST.';
+            status.innerHTML = '<i class="fas fa-check-circle"></i> You\'re in! First email arrives tomorrow at 11 AM IST.';
             status.className = 'nl-status success';
             inp.value = '';
             btn.innerHTML = '<i class="fas fa-check"></i> Subscribed';
