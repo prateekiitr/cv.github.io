@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KV Cache & TurboQuant — Prateek Singh PhD</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --card: #1a1a26;
+    --border: #2a2a3d;
+    --accent: #7c6fff;
+    --accent-dim: #3d3880;
+    --green: #4ade80;
+    --red: #f87171;
+    --yellow: #fbbf24;
+    --text: #e2e0ff;
+    --muted: #6b6a8a;
+    --k-color: #a78bfa;
+    --v-color: #34d399;
+    --orange: #fb923c;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
+    line-height: 1.7;
+    font-size: 16px;
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,10,15,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex; align-items: center; gap: 0;
+    height: 54px;
+  }
+  .nav-logo { font-weight: 800; font-size: 15px; color: var(--text); margin-right: auto; }
+  .nav-logo span { color: var(--accent); }
+  .nav-parts { display: flex; gap: 4px; }
+  .nav-part {
+    padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all 0.2s; border: none; background: transparent;
+    color: var(--muted);
+  }
+  .nav-part.active { background: var(--accent-dim); color: var(--text); }
+  .nav-part:hover:not(.active) { color: var(--text); background: var(--surface); }
+
+  /* ── PROGRESS BAR ── */
+  #progress-bar {
+    position: fixed; top: 0; left: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--green));
+    z-index: 200; transition: width 0.1s linear; width: 0%;
+  }
+
+  /* ── LAYOUT ── */
+  .page { display: none; }
+  .page.active { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
+
+  .container { max-width: 780px; margin: 0 auto; padding: 0 24px; }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 72px 0 56px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 64px;
+  }
+  .hero-tags { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .tag {
+    display: inline-block;
+    background: rgba(124,111,255,0.12);
+    color: var(--accent);
+    border: 1px solid rgba(124,111,255,0.25);
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 3px 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .tag.green { background: rgba(74,222,128,0.1); color: var(--green); border-color: rgba(74,222,128,0.2); }
+  .tag.yellow { background: rgba(251,191,36,0.1); color: var(--yellow); border-color: rgba(251,191,36,0.2); }
+  .tag.red { background: rgba(248,113,113,0.1); color: var(--red); border-color: rgba(248,113,113,0.2); }
+
+  .hero h1 {
+    font-size: clamp(32px, 5.5vw, 56px);
+    font-weight: 900; line-height: 1.08;
+    background: linear-gradient(135deg, var(--text) 40%, var(--accent));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 20px;
+  }
+  .hero-sub { font-size: 18px; color: var(--muted); max-width: 580px; line-height: 1.7; }
+
+  .hero-stats {
+    display: flex; gap: 32px; margin-top: 36px; flex-wrap: wrap;
+  }
+  .stat { }
+  .stat-val { font-size: 28px; font-weight: 800; color: var(--accent); font-family: 'JetBrains Mono', monospace; }
+  .stat-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  /* ── SECTION ── */
+  .section { margin-bottom: 80px; }
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--muted);
+    letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .section h2 { font-size: 28px; font-weight: 800; margin-bottom: 10px; }
+  .section p { color: var(--muted); margin-bottom: 16px; line-height: 1.8; }
+  .section p strong { color: var(--text); }
+
+  /* ── CALLOUT ── */
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: rgba(124,111,255,0.08);
+    border-radius: 0 10px 10px 0;
+    padding: 16px 20px; margin: 24px 0;
+    color: var(--text); font-size: 15px; line-height: 1.75;
+  }
+  .callout.green { border-color: var(--green); background: rgba(74,222,128,0.06); }
+  .callout.red { border-color: var(--red); background: rgba(248,113,113,0.06); }
+  .callout.yellow { border-color: var(--yellow); background: rgba(251,191,36,0.06); }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .card-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 1px;
+    text-transform: uppercase; margin-bottom: 16px;
+    color: var(--muted);
+  }
+
+  /* ── BUTTON ── */
+  .btn {
+    background: var(--accent); color: #fff;
+    border: none; border-radius: 8px;
+    padding: 10px 22px; font-weight: 600; font-size: 14px;
+    cursor: pointer; transition: all 0.2s;
+    font-family: inherit;
+  }
+  .btn:hover { background: #9d8fff; transform: translateY(-1px); }
+  .btn:disabled { background: var(--accent-dim); cursor: not-allowed; transform: none; }
+  .btn.secondary {
+    background: var(--surface); color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn.secondary:hover { border-color: var(--accent); }
+
+  /* ── TOKEN CHIPS ── */
+  .token-chip {
+    display: inline-block;
+    padding: 7px 13px; border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    border: 1px solid var(--border); color: rgba(226,224,255,0.2);
+    background: transparent;
+    transition: all 0.3s ease;
+  }
+  .token-chip.visible {
+    background: #1e1b3a; border-color: var(--accent);
+    color: var(--text);
+  }
+  .token-chip.new {
+    transform: scale(1.12);
+    box-shadow: 0 0 18px rgba(124,111,255,0.5);
+  }
+
+  /* ── GRID 2 COL ── */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 600px) { .grid2 { grid-template-columns: 1fr; } }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  @media (max-width: 700px) { .grid3 { grid-template-columns: 1fr; } }
+
+  /* ── RANGE SLIDER ── */
+  input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+
+  /* ── MONO CODE ── */
+  .mono {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 16px;
+    font-size: 13px; color: var(--text);
+    margin: 16px 0; overflow-x: auto;
+    line-height: 1.7;
+  }
+  .mono .c-purple { color: var(--k-color); }
+  .mono .c-green { color: var(--green); }
+  .mono .c-yellow { color: var(--yellow); }
+  .mono .c-red { color: var(--red); }
+  .mono .c-muted { color: var(--muted); }
+  .mono .c-accent { color: var(--accent); font-weight: 700; }
+
+  /* ── PROGRESS BARS ── */
+  .pbar-wrap {
+    background: var(--border); border-radius: 6px;
+    height: 14px; overflow: hidden; margin: 8px 0;
+  }
+  .pbar-fill {
+    height: 100%; border-radius: 6px;
+    transition: width 0.35s ease, background 0.35s;
+    display: flex; align-items: center; justify-content: flex-end;
+    padding-right: 6px; font-size: 10px; font-weight: 700; color: #000;
+  }
+
+  /* ── PIPELINE STEPS ── */
+  .pipeline { display: flex; gap: 0; align-items: stretch; margin: 24px 0; overflow-x: auto; }
+  .pipe-step {
+    flex: 1; min-width: 160px;
+    background: var(--card); border: 1px solid var(--border);
+    padding: 20px 16px; position: relative;
+    transition: all 0.3s;
+  }
+  .pipe-step:first-child { border-radius: 10px 0 0 10px; }
+  .pipe-step:last-child { border-radius: 0 10px 10px 0; }
+  .pipe-step.active { border-color: var(--accent); background: rgba(124,111,255,0.08); }
+  .pipe-step.done { border-color: var(--green); background: rgba(74,222,128,0.06); }
+  .pipe-arrow {
+    position: absolute; right: -12px; top: 50%; transform: translateY(-50%);
+    z-index: 2; color: var(--muted); font-size: 18px;
+  }
+  .pipe-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+  .pipe-title { font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+  .pipe-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .pipe-result { font-size: 11px; margin-top: 10px; padding: 4px 8px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; }
+
+  /* ── TABLE ── */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .data-table th {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: var(--muted); font-weight: 500;
+    padding: 10px 12px; text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .data-table td { padding: 10px 12px; border-bottom: 1px solid rgba(42,42,61,0.5); }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: rgba(124,111,255,0.04); }
+  .highlight-row td { color: var(--green); font-weight: 600; }
+
+  /* ── DIVIDER ── */
+  .divider {
+    border: none; border-top: 1px solid var(--border);
+    margin: 64px 0;
+  }
+
+  /* ── PART 2 HERO ── */
+  .part2-banner {
+    background: linear-gradient(135deg, rgba(124,111,255,0.15), rgba(74,222,128,0.08));
+    border: 1px solid rgba(124,111,255,0.3);
+    border-radius: 16px; padding: 32px 28px; margin-bottom: 48px;
+  }
+
+  /* ── SCROLL REVEAL ── */
+  .reveal { opacity: 0; transform: translateY(20px); transition: all 0.5s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* ── TABS ── */
+  .tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tab {
+    padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all 0.2s; border: 1px solid var(--border);
+    background: var(--surface); color: var(--muted); font-family: inherit;
+  }
+  .tab.active { background: var(--accent-dim); border-color: var(--accent); color: var(--text); }
+  .tab:hover:not(.active) { color: var(--text); }
+
+  /* ── TOOLTIP ── */
+  .tooltip-wrap { position: relative; display: inline-block; }
+  .tooltip-wrap .tooltip-box {
+    display: none; position: absolute; bottom: calc(100% + 8px); left: 50%;
+    transform: translateX(-50%);
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--text);
+    white-space: nowrap; z-index: 50; pointer-events: none;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  .tooltip-wrap:hover .tooltip-box { display: block; }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 40px 24px; text-align: center;
+    color: var(--muted); font-size: 14px;
+    margin-top: 80px;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<nav>
+  <div class="nav-logo">prateek<span>singh</span>.phd</div>
+  <div class="nav-parts">
+    <button class="nav-part active" onclick="showPage('p1', this)">Part 1 · KV Cache</button>
+    <button class="nav-part" onclick="showPage('p2', this)">Part 2 · TurboQuant</button>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════ PART 1 ═══ -->
+<div id="p1" class="page active">
+<div class="container">
+
+  <div class="hero reveal">
+    <div class="hero-tags">
+      <span class="tag">Part 1</span>
+      <span class="tag green">On-Device AI</span>
+      <span class="tag yellow">Beginner Friendly</span>
+    </div>
+    <h1>KV Cache:<br>Why Your GPU Runs<br>Out of Memory</h1>
+    <p class="hero-sub">A language model generates one token at a time. That simple fact hides a surprisingly expensive problem — and an elegant fix.</p>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-val">10×</div><div class="stat-label">Compute saved per step</div></div>
+      <div class="stat"><div class="stat-val">32 GB</div><div class="stat-label">KV Cache for 100K tokens (70B model)</div></div>
+      <div class="stat"><div class="stat-val">2×</div><div class="stat-label">Memory per 2× context length</div></div>
+    </div>
+  </div>
+
+  <!-- SECTION 1 -->
+  <div class="section reveal">
+    <div class="section-label">Step 1</div>
+    <h2>How a model actually writes text</h2>
+    <p>Think of an LLM like an author who can only write <strong>one word at a time</strong>, and every new word depends on everything written before it. Press play to watch it happen.</p>
+
+    <div class="card" id="token-demo">
+      <div class="card-label">Token Generation — one at a time</div>
+      <div id="token-stream" style="display:flex; flex-wrap:wrap; gap:10px; min-height:50px; margin-bottom:20px;"></div>
+      <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+        <button class="btn" id="token-btn" onclick="runTokenStream()">▶ Watch it generate</button>
+        <span id="token-status" style="font-size:13px; color:var(--green);"></span>
+      </div>
+    </div>
+
+    <div class="callout">
+      Every token the model outputs becomes part of the input for the <strong>next</strong> prediction. The context window grows with every step — and so does the work attention has to do.
+    </div>
+  </div>
+
+  <!-- SECTION 2: ANALOGY -->
+  <div class="section reveal">
+    <div class="section-label">Step 2</div>
+    <h2>The problem: reading the whole book every time</h2>
+    <p>Here's where it gets wasteful. Pick an analogy that clicks for you:</p>
+
+    <div class="tabs" id="analogy-tabs"></div>
+    <div class="grid2" id="analogy-content"></div>
+
+    <div class="callout red" style="margin-top:20px;">
+      In attention, the "re-reading" is computing <strong>Keys</strong> and <strong>Values</strong> for every past token — from scratch — every single generation step. Token 1001? Compute 1000 K,V pairs. Token 1002? Compute 1001. Again. And again.
+    </div>
+  </div>
+
+  <!-- SECTION 3: NAIVE vs CACHE -->
+  <div class="section reveal">
+    <div class="section-label">Step 3</div>
+    <h2>Naive vs KV Cache, side by side</h2>
+    <p>Watch both approaches generate the same sentence. Every row on the left is <strong>wasted work</strong> — the right computes each K,V exactly once.</p>
+
+    <div class="grid2" id="compare-grid">
+      <div class="card" style="border-color: rgba(248,113,113,0.3);">
+        <div class="card-label" style="color:var(--red);">✗ Naive — recompute everything</div>
+        <div id="naive-ops" style="display:flex;flex-direction:column;gap:5px;min-height:120px;"></div>
+        <div id="naive-count" style="margin-top:12px;font-size:13px;color:var(--red);"></div>
+      </div>
+      <div class="card" style="border-color: rgba(74,222,128,0.3);">
+        <div class="card-label" style="color:var(--green);">✓ KV Cache — compute once, reuse</div>
+        <div id="cached-ops" style="display:flex;flex-direction:column;gap:5px;min-height:120px;"></div>
+        <div id="cached-count" style="margin-top:12px;font-size:13px;color:var(--green);"></div>
+      </div>
+    </div>
+
+    <div class="card" id="savings-bar-wrap" style="display:none; margin-top:4px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="color:var(--muted);font-size:13px;min-width:90px;">Ops saved:</span>
+        <div class="pbar-wrap" style="flex:1;height:18px;">
+          <div class="pbar-fill" id="savings-bar" style="background: linear-gradient(90deg, var(--accent), var(--green)); width:0%;"></div>
+        </div>
+        <span id="savings-pct" style="color:var(--green);font-weight:700;font-size:14px;min-width:42px;"></span>
+      </div>
+    </div>
+
+    <button class="btn" style="margin-top:16px;" id="compare-btn" onclick="runComparison()">▶ Run comparison</button>
+  </div>
+
+  <!-- SECTION 4: SPEED -->
+  <div class="section reveal">
+    <div class="section-label">Step 4</div>
+    <h2>How much faster is it?</h2>
+    <p>Short contexts: modest speedup. Long contexts: the difference is <strong>enormous</strong>. At 10k tokens the naive approach computes ~50 million K,V operations. KV Cache computes exactly 10,000.</p>
+
+    <div class="card">
+      <div class="card-label">Speed Race — generating 20 tokens</div>
+      <div style="margin-bottom:18px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+          <span style="color:var(--red);font-family:'JetBrains Mono',monospace;font-size:13px;">🐢 Naive (recompute)</span>
+          <span id="naive-race-count" style="color:var(--muted);font-size:12px;">0/20</span>
+        </div>
+        <div class="pbar-wrap" style="height:22px;">
+          <div class="pbar-fill" id="naive-race" style="background:var(--red);width:0%;"></div>
+        </div>
+      </div>
+      <div style="margin-bottom:20px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+          <span style="color:var(--green);font-family:'JetBrains Mono',monospace;font-size:13px;">🚀 KV Cache</span>
+          <span id="cached-race-count" style="color:var(--muted);font-size:12px;">0/20</span>
+        </div>
+        <div class="pbar-wrap" style="height:22px;">
+          <div class="pbar-fill" id="cached-race" style="background:var(--green);width:0%;"></div>
+        </div>
+      </div>
+      <div id="race-result" style="display:none;" class="callout green" style="margin:0 0 16px;">
+        🚀 KV Cache finished ~4× faster. At 10k tokens, this gap becomes 10–100×.
+      </div>
+      <button class="btn" id="race-btn" onclick="runRace()">▶ Start race</button>
+    </div>
+  </div>
+
+  <!-- SECTION 5: MEMORY -->
+  <div class="section reveal">
+    <div class="section-label">Step 5</div>
+    <h2>But storage isn't free</h2>
+    <p>The cache stores K and V tensors for every token, every layer, every head. Drag the sliders — see how quickly it eats your GPU memory.</p>
+
+    <div class="card">
+      <div class="card-label">KV Cache Size Calculator</div>
+      <div class="grid3" style="margin-bottom:24px;">
+        <div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Context tokens</div>
+          <input type="range" min="128" max="128000" step="128" value="512" id="sl-tokens" oninput="updateMemCalc()">
+          <div id="val-tokens" style="font-family:'JetBrains Mono',monospace;font-size:16px;margin-top:4px;">512</div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Layers</div>
+          <input type="range" min="1" max="96" step="1" value="32" id="sl-layers" oninput="updateMemCalc()">
+          <div id="val-layers" style="font-family:'JetBrains Mono',monospace;font-size:16px;margin-top:4px;">32</div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Head dim (d)</div>
+          <input type="range" min="64" max="256" step="64" value="128" id="sl-dim" oninput="updateMemCalc()">
+          <div id="val-dim" style="font-family:'JetBrains Mono',monospace;font-size:16px;margin-top:4px;">128</div>
+        </div>
+      </div>
+
+      <div class="mono" id="mem-formula">Loading...</div>
+
+      <div style="margin-bottom:8px;font-size:13px;color:var(--muted);">% of a 24 GB GPU used by KV cache alone</div>
+      <div class="pbar-wrap" style="height:20px;margin-bottom:10px;">
+        <div class="pbar-fill" id="mem-bar" style="width:0%;background:var(--green);"></div>
+      </div>
+      <div id="mem-status"></div>
+    </div>
+
+    <div class="callout yellow">
+      <strong>This is why long contexts are expensive.</strong> Double the tokens → double the cache. A 128k context on LLaMA-3-70B can demand 30–80 GB for the KV cache alone, before you've even loaded the model weights.
+    </div>
+  </div>
+
+  <!-- SUMMARY P1 -->
+  <div class="section reveal">
+    <h2>The one-line summary</h2>
+    <div style="background:linear-gradient(135deg,rgba(124,111,255,0.15),var(--card));border:1px solid rgba(124,111,255,0.35);border-radius:16px;padding:32px 28px;margin-bottom:48px;">
+      <p style="font-size:18px;line-height:1.8;color:var(--text);margin:0;">
+        KV Cache trades <span style="color:var(--red);">repeated compute</span> for <span style="color:var(--yellow);">memory storage</span> — giving you speed at the cost of GPU RAM. The smarter the cache management, the longer the context your model can handle without running out of memory.
+      </p>
+    </div>
+
+    <!-- METHODS LANDSCAPE -->
+    <div class="section-label" style="margin-bottom:12px;">What researchers did next</div>
+    <h2 style="margin-bottom:10px;">So people tried to fix the memory problem</h2>
+    <p style="margin-bottom:28px;">KV Cache solved compute. But the memory wall remained. Over the next few years, five major research directions emerged — each attacking the problem from a different angle. None of them is perfect alone.</p>
+
+    <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:40px;">
+
+      <div class="card" style="border-color:rgba(167,139,250,0.3);padding:20px 24px;">
+        <div style="display:flex;align-items:flex-start;gap:16px;">
+          <div style="font-size:28px;min-width:40px;">🗑️</div>
+          <div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap;">
+              <span style="font-weight:700;font-size:16px;">Token Eviction</span>
+              <span class="tag" style="background:rgba(167,139,250,0.1);color:var(--k-color);border-color:rgba(167,139,250,0.25);">H2O · StreamingLLM</span>
+            </div>
+            <p style="color:var(--muted);font-size:14px;margin:0 0 8px;">Identify which cached tokens are "unimportant" using attention scores, then permanently delete them. Only the most-attended tokens survive.</p>
+            <div style="display:flex;gap:20px;flex-wrap:wrap;">
+              <span style="font-size:12px;color:var(--green);">✓ Up to 10× compression</span>
+              <span style="font-size:12px;color:var(--red);">✗ Permanently loses context — risky for retrieval tasks</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="border-color:rgba(74,222,128,0.3);padding:20px 24px;">
+        <div style="display:flex;align-items:flex-start;gap:16px;">
+          <div style="font-size:28px;min-width:40px;">📄</div>
+          <div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap;">
+              <span style="font-weight:700;font-size:16px;">Paged Allocation</span>
+              <span class="tag green">vLLM · PagedAttention</span>
+            </div>
+            <p style="color:var(--muted);font-size:14px;margin:0 0 8px;">Don't change what's stored — change how memory is allocated. Instead of pre-reserving huge contiguous blocks, allocate small pages on demand. Eliminates fragmentation entirely.</p>
+            <div style="display:flex;gap:20px;flex-wrap:wrap;">
+              <span style="font-size:12px;color:var(--green);">✓ Memory utilization 33% → 99%</span>
+              <span style="font-size:12px;color:var(--red);">✗ Values still stored at full FP16 precision</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="border-color:rgba(251,191,36,0.3);padding:20px 24px;">
+        <div style="display:flex;align-items:flex-start;gap:16px;">
+          <div style="font-size:28px;min-width:40px;">🏗️</div>
+          <div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap;">
+              <span style="font-weight:700;font-size:16px;">Architecture-Level Sharing</span>
+              <span class="tag yellow">GQA · MQA · MLA</span>
+            </div>
+            <p style="color:var(--muted);font-size:14px;margin:0 0 8px;">Redesign the model itself to need fewer K,V heads. Grouped Query Attention (used in LLaMA 3) shares KV heads across query groups, giving a 4–8× reduction. DeepSeek's MLA projects into a latent space for 64× compression.</p>
+            <div style="display:flex;gap:20px;flex-wrap:wrap;">
+              <span style="font-size:12px;color:var(--green);">✓ 4–64× reduction, no quality loss</span>
+              <span style="font-size:12px;color:var(--red);">✗ Must be baked in at training time — can't apply post-hoc</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="border-color:rgba(248,113,113,0.3);padding:20px 24px;">
+        <div style="display:flex;align-items:flex-start;gap:16px;">
+          <div style="font-size:28px;min-width:40px;">🔮</div>
+          <div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap;">
+              <span style="font-weight:700;font-size:16px;">Predictive Skipping</span>
+              <span class="tag red">SnapKV · PyramidKV</span>
+            </div>
+            <p style="color:var(--muted);font-size:14px;margin:0 0 8px;">Use early-layer attention patterns to predict which tokens will matter in later layers. Skip computing or storing the ones predicted as unimportant.</p>
+            <div style="display:flex;gap:20px;flex-wrap:wrap;">
+              <span style="font-size:12px;color:var(--green);">✓ Moderate compression, task-adaptive</span>
+              <span style="font-size:12px;color:var(--red);">✗ Prediction errors compound — depends heavily on task type</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="border-color:rgba(74,222,128,0.3);padding:20px 24px;">
+        <div style="display:flex;align-items:flex-start;gap:16px;">
+          <div style="font-size:28px;min-width:40px;">🗜️</div>
+          <div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap;">
+              <span style="font-weight:700;font-size:16px;">Simple INT8 Quantization</span>
+              <span class="tag green">Naive Quant</span>
+            </div>
+            <p style="color:var(--muted);font-size:14px;margin:0 0 8px;">Store each K,V value in 8 bits instead of 16. No architecture changes, no retraining, drop-in replacement. Gets you a free 2× memory reduction with acceptable quality.</p>
+            <div style="display:flex;gap:20px;flex-wrap:wrap;">
+              <span style="font-size:12px;color:var(--green);">✓ Easy, safe, works everywhere</span>
+              <span style="font-size:12px;color:var(--red);">✗ Only 2×. Goes bad fast below 4 bits</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TEASER: TURBOQUANT -->
+    <div style="background:linear-gradient(135deg,rgba(124,111,255,0.18),rgba(74,222,128,0.08));border:1px solid rgba(124,111,255,0.4);border-radius:16px;padding:32px 28px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:16px;right:20px;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--accent);letter-spacing:1px;text-transform:uppercase;">ICLR 2026 · Google</div>
+      <div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;">Coming up in Part 2</div>
+      <h3 style="font-size:24px;font-weight:800;margin-bottom:12px;">TurboQuant: the missing piece</h3>
+      <p style="color:var(--muted);font-size:15px;line-height:1.75;margin-bottom:20px;">
+        All five methods above leave something on the table. What if you could compress KV values to <strong style="color:var(--text);">3 bits</strong> — 5× smaller than INT8, 5.3× smaller than FP16 — without losing any tokens, without retraining, and with less than 0.6 point quality drop on every benchmark?
+      </p>
+      <p style="color:var(--muted);font-size:15px;line-height:1.75;margin-bottom:24px;">
+        That's what TurboQuant does. It's a three-step mathematical pipeline — random rotation, optimal scalar quantization, and bias correction — that pushes into bit-depth territory where all previous approaches fail. Google published it at ICLR 2026. We break it down completely in Part 2.
+      </p>
+      <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:24px;">
+        <div><div style="font-size:22px;font-weight:800;color:var(--accent);font-family:'JetBrains Mono',monospace;">6×</div><div style="font-size:12px;color:var(--muted);">memory reduction</div></div>
+        <div><div style="font-size:22px;font-weight:800;color:var(--green);font-family:'JetBrains Mono',monospace;">&lt;0.3pt</div><div style="font-size:12px;color:var(--muted);">quality drop at 4-bit</div></div>
+        <div><div style="font-size:22px;font-weight:800;color:var(--yellow);font-family:'JetBrains Mono',monospace;">0</div><div style="font-size:12px;color:var(--muted);">retraining required</div></div>
+        <div><div style="font-size:22px;font-weight:800;color:var(--k-color);font-family:'JetBrains Mono',monospace;">5×</div><div style="font-size:12px;color:var(--muted);">more concurrent users</div></div>
+      </div>
+      <button class="btn" onclick="showPage('p2', document.querySelectorAll('.nav-part')[1])">Read Part 2: TurboQuant →</button>
+    </div>
+  </div>
+
+</div><!-- /container -->
+</div><!-- /p1 -->
+
+
+<!-- ═══════════════════════════════════════════════════════════ PART 2 ═══ -->
+<div id="p2" class="page">
+<div class="container">
+
+  <div class="hero reveal">
+    <div class="hero-tags">
+      <span class="tag">Part 2</span>
+      <span class="tag green">KV Compression</span>
+      <span class="tag red">Research</span>
+    </div>
+    <h1>TurboQuant:<br>Shrink the Cache<br>6× Without Losing Quality</h1>
+    <p class="hero-sub">Google's ICLR 2026 paper that compresses KV cache to 3 bits using random rotation, optimal quantization, and bias correction — zero retraining required.</p>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-val">6×</div><div class="stat-label">KV cache memory reduction</div></div>
+      <div class="stat"><div class="stat-val">&lt;0.3pt</div><div class="stat-label">Quality drop at 4-bit (MMLU)</div></div>
+      <div class="stat"><div class="stat-val">5×</div><div class="stat-label">More concurrent users</div></div>
+    </div>
+  </div>
+
+  <!-- WHY COMPRESSION -->
+  <div class="section reveal">
+    <div class="section-label">The Problem</div>
+    <h2>Real numbers on a real problem</h2>
+    <p>We know the KV cache grows linearly with context. Now let's see the actual GB numbers that motivate compression.</p>
+
+    <div class="card">
+      <div class="card-label">KV Cache Memory (FP16) per request — hover rows</div>
+      <div style="overflow-x:auto;">
+        <table class="data-table">
+          <thead>
+            <tr><th>Model</th><th>4K tokens</th><th>32K tokens</th><th>100K tokens</th><th>1M tokens</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>LLaMA 3 8B</td><td>537 MB</td><td>4.3 GB</td><td>13.1 GB</td><td style="color:var(--red);">131 GB 💥</td></tr>
+            <tr><td>LLaMA 3 70B</td><td>1.3 GB</td><td>10.7 GB</td><td style="color:var(--yellow);">32.8 GB ⚠</td><td style="color:var(--red);">327 GB 💥</td></tr>
+            <tr><td>Mistral 7B</td><td>537 MB</td><td>4.3 GB</td><td>13.1 GB</td><td style="color:var(--red);">131 GB 💥</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin-top:12px;font-size:13px;color:var(--muted);">An A100 80GB GPU has ~30–40 GB left after loading 70B weights. At 100K context, you can <em>barely serve one user</em> before OOM.</p>
+    </div>
+
+    <div class="card" style="border-color:rgba(74,222,128,0.3);">
+      <div class="card-label" style="color:var(--green);">With TurboQuant (3-bit, ~5× reduction)</div>
+      <div style="overflow-x:auto;">
+        <table class="data-table">
+          <thead>
+            <tr><th>Model</th><th>4K tokens</th><th>32K tokens</th><th>100K tokens</th><th>1M tokens</th></tr>
+          </thead>
+          <tbody>
+            <tr class="highlight-row"><td>LLaMA 3 8B</td><td>107 MB</td><td>859 MB</td><td>2.6 GB</td><td>26.2 GB</td></tr>
+            <tr class="highlight-row"><td>LLaMA 3 70B</td><td>268 MB</td><td>2.1 GB</td><td>6.6 GB</td><td>65.5 GB</td></tr>
+            <tr class="highlight-row"><td>Mistral 7B</td><td>107 MB</td><td>859 MB</td><td>2.6 GB</td><td>26.2 GB</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin-top:12px;font-size:13px;color:var(--muted);">LLaMA 3 70B at 100K drops from <span style="color:var(--red);">32.8 GB</span> to <span style="color:var(--green);">6.6 GB</span>. Same GPU now serves <strong>5 concurrent users</strong> instead of 1.</p>
+    </div>
+  </div>
+
+  <!-- THE PIPELINE -->
+  <div class="section reveal">
+    <div class="section-label">The Algorithm</div>
+    <h2>TurboQuant's 3-step pipeline</h2>
+    <p>Each step solves a specific problem the previous step reveals. You can't skip any of them.</p>
+
+    <div class="pipeline" id="pipeline-viz">
+      <div class="pipe-step" id="ps0">
+        <div class="pipe-num">STEP 1</div>
+        <div class="pipe-title">🌀 Random Rotation</div>
+        <div class="pipe-desc">Spreads lopsided KV values evenly across all dimensions using a Hadamard transform.</div>
+        <div class="pipe-result" style="background:rgba(167,139,250,0.1);color:var(--k-color);">Result: balanced distribution</div>
+        <span class="pipe-arrow">›</span>
+      </div>
+      <div class="pipe-step" id="ps1">
+        <div class="pipe-num">STEP 2</div>
+        <div class="pipe-title">📦 Scalar Quantization</div>
+        <div class="pipe-desc">Maps rotated FP16 values to 3-bit centroids using Lloyd-Max Gaussian codebooks.</div>
+        <div class="pipe-result" style="background:rgba(74,222,128,0.1);color:var(--green);">Result: 5.3× smaller storage</div>
+        <span class="pipe-arrow">›</span>
+      </div>
+      <div class="pipe-step" id="ps2">
+        <div class="pipe-num">STEP 3</div>
+        <div class="pipe-title">🔧 QJL Bias Correction</div>
+        <div class="pipe-desc">Uses 1-bit sign sketches (Johnson-Lindenstrauss) to cancel systematic quantization error.</div>
+        <div class="pipe-result" style="background:rgba(251,191,36,0.1);color:var(--yellow);">Result: attention scores preserved</div>
+      </div>
+    </div>
+
+    <button class="btn" onclick="animatePipeline()">▶ Animate pipeline</button>
+  </div>
+
+  <!-- STEP 1 DEEP DIVE -->
+  <div class="section reveal">
+    <div class="section-label">Deep Dive — Step 1</div>
+    <h2>The lopsided distribution problem</h2>
+    <p>Raw KV vectors are not evenly distributed. A few dimensions dominate with huge values. If you try to quantize this directly to 3 bits, you waste all your resolution on those outliers — the small dimensions lose all precision.</p>
+
+    <div class="card">
+      <div class="card-label">Raw KV vector vs After Rotation — click to rotate</div>
+      <div id="dist-chart" style="height:160px;position:relative;display:flex;align-items:flex-end;gap:3px;padding-bottom:20px;"></div>
+      <div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap;">
+        <button class="btn" id="rotate-btn" onclick="toggleRotation()">🌀 Apply rotation</button>
+        <span id="rotate-status" style="font-size:13px;color:var(--muted);align-self:center;"></span>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>The key insight:</strong> A random orthogonal rotation preserves all inner products (the geometric structure stays identical) but spreads the energy evenly across all dimensions. After rotation, no single dimension dominates — the uniform quantizer can work efficiently.
+    </div>
+  </div>
+
+  <!-- STEP 2 DEEP DIVE -->
+  <div class="section reveal">
+    <div class="section-label">Deep Dive — Step 2</div>
+    <h2>How 3-bit quantization actually works</h2>
+    <p>After rotation, values follow a near-Gaussian distribution. Instead of 16 bits (65,536 levels), we only need 3 bits (8 levels). We store the <em>index</em> of the nearest centroid, not the value itself.</p>
+
+    <div class="card">
+      <div class="card-label">Quantization Error vs Bit Depth — interactive</div>
+      <div style="overflow-x:auto;">
+        <table class="data-table" id="quant-table">
+          <thead>
+            <tr><th>Bits</th><th>Levels</th><th>Avg Error</th><th>Compression</th><th>Quality</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>16 (FP16)</td><td>65,536</td><td>~0</td><td>1× (baseline)</td><td><span style="color:var(--green);">████████ Perfect</span></td></tr>
+            <tr><td>8</td><td>256</td><td>0.005</td><td>2× smaller</td><td><span style="color:var(--green);">███████░ Excellent</span></td></tr>
+            <tr style="background:rgba(124,111,255,0.06);"><td><strong>4 (TurboQuant)</strong></td><td>16</td><td>0.094</td><td><strong>4× smaller</strong></td><td><span style="color:var(--accent);">█████░░░ Great ✓</span></td></tr>
+            <tr style="background:rgba(74,222,128,0.06);"><td><strong>3 (sweet spot)</strong></td><td>8</td><td>0.177</td><td><strong>5.3× smaller</strong></td><td><span style="color:var(--yellow);">████░░░░ Good ✓</span></td></tr>
+            <tr><td>2</td><td>4</td><td>0.494</td><td>8× smaller</td><td><span style="color:var(--red);">██░░░░░░ Risky</span></td></tr>
+            <tr><td>1</td><td>2</td><td>1.700</td><td>16× smaller</td><td><span style="color:var(--red);">█░░░░░░░ Broken</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="mono" style="margin-top:16px;">
+<span class="c-muted">// FP16 vs 3-bit storage for a single value</span>
+FP16: <span class="c-red">3.14159</span> → stored as <span class="c-purple">0100001001001000</span> (<span class="c-yellow">16 bits</span>, 2 bytes)
+3-bit: <span class="c-red">3.14159</span> → centroid index <span class="c-purple">5</span> → stored as <span class="c-green">101</span> (<span class="c-yellow">3 bits</span>, 0.375 bytes)
+<span class="c-accent">Compression: 5.3×</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3 DEEP DIVE -->
+  <div class="section reveal">
+    <div class="section-label">Deep Dive — Step 3</div>
+    <h2>The hidden danger: quantization bias</h2>
+    <p>Even after rotation, 3-bit quantization introduces a <strong>systematic bias</strong> in attention scores. A 25% error in one attention score can shift which token the model "looks at" — causing hallucinations in long contexts.</p>
+
+    <div class="card">
+      <div class="card-label">Attention score error before and after QJL correction</div>
+      <div style="overflow-x:auto;">
+        <table class="data-table">
+          <thead><tr><th>Bits</th><th>True Score</th><th>Quantized Score</th><th>Error</th><th>After QJL</th></tr></thead>
+          <tbody>
+            <tr><td>8-bit</td><td>-8.57</td><td>-8.62</td><td style="color:var(--green);">0.5%</td><td style="color:var(--green);">~0 ✓</td></tr>
+            <tr><td>4-bit</td><td>-8.57</td><td>-8.97</td><td style="color:var(--yellow);">4.7%</td><td style="color:var(--green);">0.1 ✓</td></tr>
+            <tr style="background:rgba(248,113,113,0.06);"><td>3-bit (no fix)</td><td>-8.57</td><td style="color:var(--red);">-6.42</td><td style="color:var(--red);">25.1% ✗</td><td style="color:var(--green);">0.54 ✓</td></tr>
+            <tr><td>2-bit</td><td>-8.57</td><td>-8.76</td><td style="color:var(--yellow);">2.2%</td><td style="color:var(--green);">0.05 ✓</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:24px;">
+        <div class="card-label">Token ranking recovery — watch QJL fix the wrong rankings</div>
+        <div id="ranking-demo" style="margin-bottom:16px;">
+          <!-- built by JS -->
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <button class="btn" id="ranking-btn" onclick="runRankingDemo()">▶ Animate ranking recovery</button>
+          <button class="btn secondary" onclick="resetRankingDemo()">↩ Reset</button>
+          <span id="ranking-status" style="font-size:13px;color:var(--muted);"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>Johnson-Lindenstrauss insight:</strong> Store just 1 bit per random projection of each Key vector (sign: +1 or -1). These 64 bits form an <em>unbiased estimator</em> of the true attention score. Across thousands of tokens, individual sign-bit errors cancel out statistically. The attention ranking is fully recovered.
+    </div>
+  </div>
+
+  <!-- STORAGE BREAKDOWN -->
+  <div class="section reveal">
+    <div class="section-label">The Math</div>
+    <h2>What actually gets stored</h2>
+    <p>For one attention head with 128 dimensions, here's the complete storage breakdown after TurboQuant:</p>
+
+    <div class="card">
+      <div style="margin-bottom:8px;font-size:13px;color:var(--muted);">Original FP16 — 4,096 bits per head (512 bytes)</div>
+      <div class="pbar-wrap" style="height:28px;margin-bottom:20px;">
+        <div class="pbar-fill" style="width:100%;background:var(--red);font-size:11px;">4,096 bits</div>
+      </div>
+
+      <div style="margin-bottom:8px;font-size:13px;color:var(--muted);">TurboQuant compressed — 928 bits per head (116 bytes)</div>
+      <div style="display:flex;gap:2px;height:28px;border-radius:6px;overflow:hidden;margin-bottom:8px;">
+        <div style="width:41.4%;background:var(--k-color);display:flex;align-items:center;justify-content:center;font-size:11px;color:#000;font-weight:700;">K: 384b</div>
+        <div style="width:41.4%;background:var(--v-color);display:flex;align-items:center;justify-content:center;font-size:11px;color:#000;font-weight:700;">V: 384b</div>
+        <div style="width:6.9%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:700;"></div>
+        <div style="width:6.9%;background:var(--yellow);display:flex;align-items:center;justify-content:center;font-size:10px;color:#000;font-weight:700;"></div>
+        <div style="width:3.4%;background:var(--orange);"></div>
+      </div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:16px;">
+        <span><span style="color:var(--k-color);">■</span> K values (3-bit × 128)</span>
+        <span><span style="color:var(--v-color);">■</span> V values (3-bit × 128)</span>
+        <span><span style="color:var(--accent);">■</span> QJL sketch K (64 × 1-bit)</span>
+        <span><span style="color:var(--yellow);">■</span> QJL sketch V (64 × 1-bit)</span>
+        <span><span style="color:var(--orange);">■</span> Scale factors (2 × 16-bit)</span>
+      </div>
+
+      <div style="text-align:center;padding:16px;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);border-radius:10px;">
+        <div style="font-size:28px;font-weight:800;color:var(--green);font-family:'JetBrains Mono',monospace;">4.41× compression</div>
+        <div style="font-size:14px;color:var(--muted);margin-top:4px;">928 bits vs 4,096 bits per head · No quality loss at 4-bit</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BENCHMARK -->
+  <div class="section reveal">
+    <div class="section-label">Results</div>
+    <h2>Quality benchmarks vs FP16</h2>
+    <p>The 3-bit setting is the sweet spot: 5× compression with quality drops that remain within benchmark noise on most tasks.</p>
+
+    <div class="card">
+      <div class="card-label">Benchmark scores — click a row to highlight</div>
+      <div style="overflow-x:auto;">
+        <table class="data-table" id="bench-table">
+          <thead>
+            <tr><th>Benchmark</th><th>FP16</th><th>4-bit TQ</th><th>3-bit TQ</th><th>2-bit TQ</th><th>Task</th></tr>
+          </thead>
+          <tbody>
+            <tr onclick="highlightRow(this)" style="cursor:pointer;">
+              <td>MMLU (5-shot)</td>
+              <td>85.1</td><td style="color:var(--green);">84.9</td><td style="color:var(--green);">84.7</td><td style="color:var(--yellow);">83.2</td>
+              <td><span class="tag">Knowledge</span></td>
+            </tr>
+            <tr onclick="highlightRow(this)" style="cursor:pointer;">
+              <td>HumanEval (code)</td>
+              <td>62.2</td><td style="color:var(--green);">62.0</td><td style="color:var(--yellow);">61.8</td><td style="color:var(--red);">59.1</td>
+              <td><span class="tag">Coding</span></td>
+            </tr>
+            <tr onclick="highlightRow(this)" style="cursor:pointer;">
+              <td>GSM8K (math)</td>
+              <td>78.4</td><td style="color:var(--green);">78.1</td><td style="color:var(--green);">77.8</td><td style="color:var(--yellow);">74.2</td>
+              <td><span class="tag">Math</span></td>
+            </tr>
+            <tr onclick="highlightRow(this)" style="cursor:pointer;">
+              <td>Needle-in-Haystack</td>
+              <td>97.2</td><td style="color:var(--green);">96.8</td><td style="color:var(--green);">96.3</td><td style="color:var(--red);">88.4</td>
+              <td><span class="tag red">Retrieval</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:13px;color:var(--muted);margin-top:12px;">4-bit TurboQuant: &lt;0.3 point drop — within benchmark noise. 3-bit: &lt;0.6 point drop — the recommended sweet spot for production.</p>
+    </div>
+
+    <!-- THROUGHPUT -->
+    <div class="card" style="margin-top:0;">
+      <div class="card-label">Concurrent users per GPU (LLaMA 3 8B, 30 GB KV budget)</div>
+      <div id="throughput-bars"></div>
+    </div>
+  </div>
+
+  <!-- WHY EACH STEP MATTERS -->
+  <div class="section reveal">
+    <div class="section-label">System Design</div>
+    <h2>What happens if you skip a step?</h2>
+    <p>The three steps are interdependent. Removing any one causes a specific failure.</p>
+
+    <div style="display:flex;flex-direction:column;gap:12px;" id="skip-steps"></div>
+  </div>
+
+  <!-- COMPARISON TABLE -->
+  <div class="section reveal">
+    <div class="section-label">Landscape</div>
+    <h2>TurboQuant vs other KV compression approaches</h2>
+    <p>TurboQuant is <strong>uniquely positioned</strong>: the most aggressive compression available for already-trained models, without permanently losing any tokens.</p>
+
+    <div class="card">
+      <div style="overflow-x:auto;">
+        <table class="data-table">
+          <thead>
+            <tr><th>Technique</th><th>Mechanism</th><th>Compression</th><th>Loses tokens?</th><th>Needs retraining?</th></tr>
+          </thead>
+          <tbody>
+            <tr style="background:rgba(124,111,255,0.06);">
+              <td><strong>TurboQuant</strong></td><td>Precision (rotation + quant)</td>
+              <td style="color:var(--green);">4–6×</td><td style="color:var(--green);">No ✓</td><td style="color:var(--green);">No ✓</td>
+            </tr>
+            <tr><td>H2O / StreamingLLM</td><td>Token eviction</td><td style="color:var(--yellow);">Up to 10×</td><td style="color:var(--red);">Yes ✗</td><td style="color:var(--green);">No</td></tr>
+            <tr><td>SnapKV / PyramidKV</td><td>Layer prediction</td><td>Moderate</td><td>Partial</td><td style="color:var(--green);">No</td></tr>
+            <tr><td>DeepSeek MLA</td><td>Latent projection</td><td style="color:var(--green);">64×</td><td style="color:var(--green);">No ✓</td><td style="color:var(--red);">Yes ✗</td></tr>
+            <tr><td>Simple INT8</td><td>8-bit quant</td><td>2×</td><td style="color:var(--green);">No ✓</td><td style="color:var(--green);">No ✓</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIMITATIONS -->
+  <div class="section reveal">
+    <div class="section-label">Honest Assessment</div>
+    <h2>What TurboQuant does NOT do</h2>
+
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="callout red">
+        <strong>1. No weight compression.</strong> TurboQuant only compresses the KV cache — not the model weights themselves. A LLaMA 3 70B still needs ~140 GB for weights. Use GPTQ/AWQ alongside TurboQuant.
+      </div>
+      <div class="callout red">
+        <strong>2. Minimal benefit below 8K tokens.</strong> The rotation overhead isn't worth it for short contexts. Best value at 16K+ tokens.
+      </div>
+      <div class="callout red">
+        <strong>3. Research stage (ICLR 2026).</strong> Not yet a first-class feature in vLLM or TensorRT-LLM. Requires custom CUDA kernels today.
+      </div>
+      <div class="callout yellow">
+        <strong>4. The "8× faster" headline uses FP32 baseline, not FP16.</strong> Against a well-optimized FP16 system, the attention speedup is ~2–3×. Memory reduction (6×) is valid regardless of baseline.
+      </div>
+    </div>
+  </div>
+
+  <!-- FINAL -->
+  <div class="section reveal">
+    <h2>The conclusion</h2>
+    <div style="background:linear-gradient(135deg,rgba(124,111,255,0.15),var(--card));border:1px solid rgba(124,111,255,0.35);border-radius:16px;padding:32px 28px;margin-bottom:24px;">
+      <p style="font-size:18px;line-height:1.8;color:var(--text);margin:0;">
+        TurboQuant achieves <span style="color:var(--green);">5× memory compression</span> with under 0.6 point quality loss — turning a service that served 2 concurrent users into one that serves 11, on the same hardware. Long-context AI isn't held back by model intelligence. It's held back by the cost of memory. TurboQuant is one of the techniques that makes those applications economically viable.
+      </p>
+    </div>
+    <p style="font-size:14px;color:var(--muted);">
+      Next up: <strong>KurboQuant</strong> — a channel-aware extension to TurboQuant that exploits kurtosis structure in K weights, with per-head heterogeneity and self-calibrating thresholds. Coming soon on <a href="https://prateeksinghphd.in" style="color:var(--accent);">prateeksinghphd.in</a>.
+    </p>
+  </div>
+
+</div><!-- /container -->
+</div><!-- /p2 -->
+
+<footer>
+  <p>Written by <a href="https://prateeksinghphd.in">Prateek Singh</a> · Senior Manager, GenAI & Digital Health AI, Samsung Research · PhD, IIT Roorkee</p>
+  <p style="margin-top:8px;font-size:12px;">Part of the On-Device AI series · All demos run locally in your browser</p>
+</footer>
+
+<script>
+// ═══════════════ UTILITIES ═══════════════
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-part').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  setTimeout(initReveal, 100);
+}
+
+// Progress bar
+window.addEventListener('scroll', () => {
+  const h = document.documentElement;
+  const pct = (window.scrollY / (h.scrollHeight - h.clientHeight)) * 100;
+  document.getElementById('progress-bar').style.width = pct + '%';
+});
+
+// Scroll reveal
+function initReveal() {
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+}
+initReveal();
+
+// ═══════════════ PART 1 — TOKEN STREAM ═══════════════
+const TOKENS = ["The","cat","sat","on","the","mat","and","purred"];
+let tokenRunning = false;
+
+function buildTokenStream() {
+  const c = document.getElementById('token-stream');
+  c.innerHTML = '';
+  TOKENS.forEach((t,i) => {
+    const chip = document.createElement('div');
+    chip.className = 'token-chip';
+    chip.id = 'tc-'+i;
+    chip.textContent = t;
+    c.appendChild(chip);
+  });
+}
+buildTokenStream();
+
+async function runTokenStream() {
+  if (tokenRunning) return;
+  tokenRunning = true;
+  buildTokenStream();
+  document.getElementById('token-btn').disabled = true;
+  document.getElementById('token-status').textContent = '';
+  for (let i = 0; i < TOKENS.length; i++) {
+    await sleep(480);
+    const prev = document.getElementById('tc-'+(i-1));
+    if (prev) prev.classList.remove('new');
+    const chip = document.getElementById('tc-'+i);
+    chip.classList.add('visible','new');
+  }
+  document.getElementById('tc-'+(TOKENS.length-1)).classList.remove('new');
+  document.getElementById('token-status').textContent = '✓ '+TOKENS.length+' tokens written';
+  document.getElementById('token-btn').disabled = false;
+  tokenRunning = false;
+}
+
+// ═══════════════ PART 1 — ANALOGIES ═══════════════
+const ANALOGIES = [
+  {
+    emoji:'📚', label:'Student',
+    naive: 'Imagine you\'re reading a novel. Every time you finish a sentence, you close the book, go back to page 1, and re-read everything — just to write the next sentence. That\'s exactly what naive attention does.',
+    cached: 'KV Cache is like using a highlighter and sticky notes. You read each page once, mark the important bits, and just glance at your notes for context. You never re-read page 1 again.'
+  },
+  {
+    emoji:'🗂️', label:'Filing Clerk',
+    naive: 'A new document arrives. The clerk runs to the warehouse, pulls every file ever written, re-reads all of them, then decides what to write next. Every. Single. Time.',
+    cached: 'With KV Cache, each file is summarized once into a card (K = what it\'s about, V = what it says) and filed in a drawer. New document? Check the drawer. Takes seconds.'
+  },
+  {
+    emoji:'🎬', label:'Movie Editor',
+    naive: 'A movie editor needs to decide what frame comes next. So they rewind to frame 1 and watch the whole movie again. For every. Single. Frame.',
+    cached: 'KV Cache gives the editor a shot list — a summary of every scene already filmed. They only shoot the new scene, not the whole movie.'
+  }
+];
+let activeAnalogy = 0;
+
+function buildAnalogies() {
+  const tabs = document.getElementById('analogy-tabs');
+  tabs.innerHTML = '';
+  ANALOGIES.forEach((a,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'tab' + (i===activeAnalogy?' active':'');
+    btn.textContent = a.emoji+' '+a.label;
+    btn.onclick = () => { activeAnalogy=i; buildAnalogies(); };
+    tabs.appendChild(btn);
+  });
+  const a = ANALOGIES[activeAnalogy];
+  document.getElementById('analogy-content').innerHTML = `
+    <div class="card" style="border-color:rgba(248,113,113,0.3);">
+      <div class="card-label" style="color:var(--red);">WITHOUT CACHE</div>
+      <p style="color:var(--text);margin:0;">${a.naive}</p>
+    </div>
+    <div class="card" style="border-color:rgba(74,222,128,0.3);">
+      <div class="card-label" style="color:var(--green);">WITH KV CACHE</div>
+      <p style="color:var(--text);margin:0;">${a.cached}</p>
+    </div>
+  `;
+}
+buildAnalogies();
+
+// ═══════════════ PART 1 — COMPARISON ═══════════════
+let compareStep = 0, compareRunning = false;
+const cmpTokens = ["The","cat","sat","on","the","mat","and"];
+
+async function runComparison() {
+  if (compareRunning) return;
+  compareRunning = true;
+  compareStep = 0;
+  document.getElementById('compare-btn').disabled = true;
+  document.getElementById('naive-ops').innerHTML = '';
+  document.getElementById('cached-ops').innerHTML = '';
+  document.getElementById('naive-count').textContent = '';
+  document.getElementById('cached-count').textContent = '';
+  document.getElementById('savings-bar-wrap').style.display = 'none';
+
+  for (let s = 1; s <= cmpTokens.length; s++) {
+    await sleep(550);
+    // Naive row
+    const nRow = document.createElement('div');
+    nRow.style.cssText = 'display:flex;gap:4px;flex-wrap:wrap;';
+    for (let j = 0; j < s; j++) {
+      const chip = document.createElement('span');
+      chip.style.cssText = 'background:rgba(248,113,113,0.15);border:1px solid rgba(248,113,113,0.3);color:var(--red);border-radius:4px;padding:2px 6px;font-size:10px;font-family:monospace;';
+      chip.textContent = 'K,V('+cmpTokens[j]+')';
+      nRow.appendChild(chip);
+    }
+    document.getElementById('naive-ops').appendChild(nRow);
+    const naiveTotal = s*(s+1)/2;
+    document.getElementById('naive-count').textContent = 'Total: '+naiveTotal+' K,V ops';
+
+    // Cached
+    const cRow = document.createElement('div');
+    cRow.style.cssText = 'display:flex;gap:6px;align-items:center;';
+    const chip = document.createElement('span');
+    const isNew = s === 1 || true;
+    chip.style.cssText = `background:rgba(74,222,128,0.2);border:1px solid rgba(74,222,128,0.5);color:var(--green);border-radius:4px;padding:2px 7px;font-size:10px;font-family:monospace;`;
+    chip.textContent = 'K,V('+cmpTokens[s-1]+')';
+    cRow.appendChild(chip);
+    const lbl = document.createElement('span');
+    lbl.style.cssText = 'font-size:10px;color:var(--yellow);';
+    lbl.textContent = '← new';
+    cRow.appendChild(lbl);
+    document.getElementById('cached-ops').appendChild(cRow);
+    // mark previous as cached
+    const prevRows = document.getElementById('cached-ops').children;
+    for (let r = 0; r < prevRows.length - 1; r++) {
+      const span = prevRows[r].querySelector('span:last-child');
+      if (span) { span.textContent = 'cached ✓'; span.style.color='var(--muted)'; }
+    }
+    document.getElementById('cached-count').textContent = 'Total: '+s+' K,V ops';
+
+    if (s > 1) {
+      const pct = Math.round(((naiveTotal - s)/naiveTotal)*100);
+      document.getElementById('savings-bar-wrap').style.display = 'block';
+      document.getElementById('savings-bar').style.width = pct+'%';
+      document.getElementById('savings-bar').textContent = pct+'%';
+      document.getElementById('savings-pct').textContent = pct+'%';
+    }
+    compareStep = s;
+  }
+  document.getElementById('compare-btn').disabled = false;
+  compareRunning = false;
+}
+
+// ═══════════════ PART 1 — RACE ═══════════════
+let raceRunning = false;
+async function runRace() {
+  if (raceRunning) return;
+  raceRunning = true;
+  document.getElementById('race-btn').disabled = true;
+  document.getElementById('race-result').style.display = 'none';
+  document.getElementById('naive-race').style.width = '0%';
+  document.getElementById('cached-race').style.width = '0%';
+  document.getElementById('naive-race-count').textContent = '0/20';
+  document.getElementById('cached-race-count').textContent = '0/20';
+
+  let n = 0, c = 0;
+  const ni = setInterval(() => {
+    if (n < 20) { n++; document.getElementById('naive-race').style.width=(n/20*100)+'%'; document.getElementById('naive-race-count').textContent=n+'/20'; }
+    else clearInterval(ni);
+  }, 280);
+  const ci = setInterval(() => {
+    if (c < 20) { c++; document.getElementById('cached-race').style.width=(c/20*100)+'%'; document.getElementById('cached-race-count').textContent=c+'/20'; }
+    else clearInterval(ci);
+  }, 70);
+
+  await sleep(20*280+500);
+  document.getElementById('race-result').style.display = 'block';
+  document.getElementById('race-btn').disabled = false;
+  raceRunning = false;
+}
+
+// ═══════════════ PART 1 — MEMORY CALC ═══════════════
+function updateMemCalc() {
+  const tokens = +document.getElementById('sl-tokens').value;
+  const layers = +document.getElementById('sl-layers').value;
+  const dim = +document.getElementById('sl-dim').value;
+  document.getElementById('val-tokens').textContent = tokens.toLocaleString();
+  document.getElementById('val-layers').textContent = layers;
+  document.getElementById('val-dim').textContent = dim;
+
+  const bytes = 2 * tokens * layers * dim * 2;
+  const mb = (bytes/1024/1024).toFixed(1);
+  const gb = (bytes/1024/1024/1024).toFixed(3);
+  const gpuGB = 24;
+  const pct = Math.min((parseFloat(gb)/gpuGB)*100, 100);
+  const color = pct < 30 ? 'var(--green)' : pct < 60 ? 'var(--yellow)' : 'var(--red)';
+
+  document.getElementById('mem-formula').innerHTML =
+    `<span style="color:var(--k-color)">2</span> (K+V) × <span style="color:var(--text)">${tokens.toLocaleString()}</span> tokens × <span style="color:var(--v-color)">${layers}</span> layers × <span style="color:var(--yellow)">${dim}</span> dim × 2 bytes (fp16) = <span style="color:var(--accent);font-weight:700">${parseFloat(mb)>=1000?gb+' GB':mb+' MB'}</span>`;
+  document.getElementById('mem-bar').style.width = pct+'%';
+  document.getElementById('mem-bar').style.background = color;
+  document.getElementById('mem-bar').textContent = pct>8 ? pct.toFixed(1)+'%' : '';
+
+  let status = '';
+  if (pct >= 100) status = '<span style="color:var(--red)">💥 Out of memory — this is why long contexts crash your GPU.</span>';
+  else if (pct >= 60) status = '<span style="color:var(--yellow)">⚠ Cache is eating most of your GPU. No room for model weights or activations.</span>';
+  else status = '<span style="color:var(--green)">✓ Manageable — try pushing tokens to 32k or 128k.</span>';
+  document.getElementById('mem-status').innerHTML = status;
+}
+updateMemCalc();
+
+// ═══════════════ PART 2 — PIPELINE ANIMATION ═══════════════
+async function animatePipeline() {
+  for (let i = 0; i < 3; i++) {
+    document.querySelectorAll('.pipe-step').forEach((p,j) => {
+      p.classList.toggle('active', j===i);
+      p.classList.toggle('done', j<i);
+    });
+    await sleep(900);
+  }
+  document.querySelectorAll('.pipe-step').forEach(p => { p.classList.remove('active'); p.classList.add('done'); });
+}
+
+// ═══════════════ PART 2 — DISTRIBUTION CHART ═══════════════
+const rawVals = [7.744, 6.511, 0.05, 4.887, 0.095, 0.279, 0.064, 0.334, 0.127, 0.089, 0.211, 0.156, 0.302, 0.178, 0.044, 0.093];
+const rotVals = [4.909, 0.859, 2.029, 1.753, 4.978, 1.082, 2.777, 1.237, 4.611, 1.533, 3.102, 2.844, 1.991, 3.415, 2.688, 1.766];
+let isRotated = false;
+
+function buildDistChart(vals, label) {
+  const c = document.getElementById('dist-chart');
+  const max = Math.max(...vals);
+  c.innerHTML = vals.map((v,i) => {
+    const h = Math.round((v/max)*130);
+    const isOutlier = !isRotated && v > 3;
+    const col = isOutlier ? 'var(--red)' : isRotated ? 'var(--green)' : 'var(--accent)';
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:140px;">
+      <div style="font-size:9px;color:var(--muted);margin-bottom:2px;">${v.toFixed(1)}</div>
+      <div style="width:100%;background:${col};border-radius:3px 3px 0 0;height:${h}px;transition:all 0.5s;opacity:0.85;"></div>
+      <div style="font-size:9px;color:var(--muted);margin-top:3px;">${i}</div>
+    </div>`;
+  }).join('');
+}
+buildDistChart(rawVals);
+
+function toggleRotation() {
+  isRotated = !isRotated;
+  buildDistChart(isRotated ? rotVals : rawVals);
+  document.getElementById('rotate-btn').textContent = isRotated ? '↩ Remove rotation' : '🌀 Apply rotation';
+  document.getElementById('rotate-status').textContent = isRotated
+    ? '✓ Energy spread evenly — quantizer works perfectly now'
+    : 'Dims 0,1,3 dominate — outliers waste quantizer resolution';
+}
+
+// ═══════════════ PART 2 — RANKING DEMO (fixed) ═══════════════
+// True attention weights for 6 tokens (from the paper's table)
+const RANK_DATA = {
+  tokens: ['Tok0','Tok1','Tok2','Tok4','Tok5','Tok6'],
+  trueW:  [0.178, 0.100, 0.116, 0.168, 0.137, 0.167],
+  badW:   [0.116, 0.088, 0.095, 0.163, 0.178, 0.263],  // 2-bit no QJL — Tok5 inflated, wrong winner
+  fixedW: [0.169, 0.098, 0.113, 0.167, 0.143, 0.181],  // 2-bit + QJL — corrected
+};
+
+// top-3 indices for each
+function getTop3(arr) {
+  return arr.map((v,i)=>({v,i})).sort((a,b)=>b.v-a.v).slice(0,3).map(x=>x.i);
+}
+
+let rankingRunning = false;
+
+function buildRankingColumns(showCols) {
+  const c = document.getElementById('ranking-demo');
+  const cols = [
+    { key:'trueW',  label:'True FP16',       color:'#4ade80', note:'' },
+    { key:'badW',   label:'2-bit, no QJL',   color:'#f87171', note:'Tok5 wrong winner ✗' },
+    { key:'fixedW', label:'2-bit + QJL',      color:'#7c6fff', note:'Corrected ✓' },
+  ];
+
+  const maxW = Math.max(...RANK_DATA.trueW);
+
+  c.innerHTML = `<div style="display:grid;grid-template-columns:repeat(${showCols},1fr);gap:12px;">` +
+    cols.slice(0, showCols).map(col => {
+      const weights = RANK_DATA[col.key];
+      const top3 = getTop3(weights);
+      return `
+        <div>
+          <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:${col.color};margin-bottom:4px;font-weight:700;">${col.label}</div>
+          ${col.note ? `<div style="font-size:11px;color:${col.color};margin-bottom:10px;opacity:0.8;">${col.note}</div>` : '<div style="height:19px;margin-bottom:10px;"></div>'}
+          ${RANK_DATA.tokens.map((t,i) => {
+            const rank = top3.indexOf(i);
+            const isTop = rank !== -1;
+            const barW = Math.round((weights[i]/maxW)*100);
+            const isBug = col.key==='badW' && i===4; // Tok5 wrongly promoted
+            const isMiss = col.key==='badW' && i===0; // Tok0 wrongly demoted
+            return `
+              <div style="margin-bottom:7px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+                  <span style="font-size:12px;font-family:'JetBrains Mono',monospace;
+                    color:${isTop ? col.color : 'var(--muted)'};
+                    font-weight:${isTop?'700':'400'};">
+                    ${t} ${isTop ? '· #'+(rank+1) : ''}
+                    ${isBug ? ' 📈' : ''}${isMiss ? ' 📉' : ''}
+                  </span>
+                  <span style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;">${(weights[i]*100).toFixed(1)}%</span>
+                </div>
+                <div style="background:var(--border);border-radius:3px;height:8px;overflow:hidden;">
+                  <div style="width:${barW}%;height:100%;border-radius:3px;
+                    background:${isTop ? col.color : 'var(--border)'};
+                    opacity:${isTop?'1':'0.4'};
+                    transition:width 0.5s ease;">
+                  </div>
+                </div>
+              </div>`;
+          }).join('')}
+        </div>`;
+    }).join('') + '</div>';
+}
+
+async function runRankingDemo() {
+  if (rankingRunning) return;
+  rankingRunning = true;
+  document.getElementById('ranking-btn').disabled = true;
+  document.getElementById('ranking-status').textContent = 'Step 1: True FP16 attention weights...';
+
+  buildRankingColumns(1);
+  await sleep(1200);
+
+  document.getElementById('ranking-status').textContent = 'Step 2: 2-bit quantization breaks ranking — Tok5 inflated, Tok0 demoted...';
+  buildRankingColumns(2);
+  await sleep(1600);
+
+  document.getElementById('ranking-status').textContent = 'Step 3: QJL bias correction restores the correct top-3 ✓';
+  buildRankingColumns(3);
+
+  document.getElementById('ranking-btn').disabled = false;
+  rankingRunning = false;
+}
+
+function resetRankingDemo() {
+  rankingRunning = false;
+  document.getElementById('ranking-btn').disabled = false;
+  document.getElementById('ranking-demo').innerHTML = '<p style="color:var(--muted);font-size:14px;padding:12px 0;">Press ▶ to animate the ranking recovery.</p>';
+  document.getElementById('ranking-status').textContent = '';
+}
+resetRankingDemo();
+
+// ═══════════════ PART 2 — THROUGHPUT BARS ═══════════════
+const throughputData = [
+  { label:'4K context (short chat)', fp16:55, tq:279 },
+  { label:'32K context (medium)', fp16:6, tq:34 },
+  { label:'100K context (long)', fp16:2, tq:11 },
+];
+function buildThroughput() {
+  const c = document.getElementById('throughput-bars');
+  c.innerHTML = throughputData.map(d => {
+    const maxV = d.tq;
+    return `
+      <div style="margin-bottom:18px;">
+        <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">${d.label}</div>
+        <div style="margin-bottom:5px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <span style="font-size:12px;color:var(--red);">FP16 baseline</span>
+            <span style="font-size:12px;color:var(--red);">${d.fp16} users</span>
+          </div>
+          <div class="pbar-wrap"><div class="pbar-fill" style="width:${d.fp16/maxV*100}%;background:var(--red);">${d.fp16>5?d.fp16:''}</div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <span style="font-size:12px;color:var(--green);">TurboQuant</span>
+            <span style="font-size:12px;color:var(--green);">${d.tq} users (${Math.round(d.tq/d.fp16*10)/10}×)</span>
+          </div>
+          <div class="pbar-wrap"><div class="pbar-fill" style="width:100%;background:var(--green);">${d.tq}</div></div>
+        </div>
+      </div>`;
+  }).join('');
+}
+buildThroughput();
+
+// ═══════════════ PART 2 — SKIP STEPS ═══════════════
+const skipSteps = [
+  {
+    title:'Skip rotation, keep quantization',
+    fail:'Mathematical failure: outlier dimensions dictate step size. The quantizer wastes all resolution on 3 huge values — 90% of dimensions lose all precision.',
+    consequence:'Complete output degradation at ≤3 bits.',
+    color:'var(--red)'
+  },
+  {
+    title:'Rotate, but skip QJL correction',
+    fail:'Mathematical failure: residual quantization bias systematically skews inner products. Some tokens get consistently over-attended, others ignored.',
+    consequence:'Attention ranking drift. Bias accumulates over long contexts, causing hallucination.',
+    color:'var(--yellow)'
+  },
+  {
+    title:'QJL correction without rotation',
+    fail:'Mathematical failure: quantization error remains concentrated in massive outlier dimensions. QJL spreads correction effort uniformly — it cannot compensate for concentrated lopsided error.',
+    consequence:'QJL sketch mathematically cannot correct for lopsided error distribution.',
+    color:'var(--orange)'
+  }
+];
+document.getElementById('skip-steps').innerHTML = skipSteps.map(s => `
+  <div class="card" style="border-color:${s.color}44;">
+    <div style="color:${s.color};font-weight:700;font-size:14px;margin-bottom:10px;">✗ ${s.title}</div>
+    <p style="color:var(--muted);margin-bottom:8px;font-size:14px;">${s.fail}</p>
+    <div style="background:${s.color}15;border-radius:6px;padding:8px 12px;font-size:13px;color:${s.color};">→ ${s.consequence}</div>
+  </div>
+`).join('');
+
+// ═══════════════ BENCHMARK ROW HIGHLIGHT ═══════════════
+function highlightRow(row) {
+  document.querySelectorAll('#bench-table tbody tr').forEach(r => r.style.background='');
+  row.style.background = 'rgba(124,111,255,0.1)';
+}
+</script>
+</body>
+</html>
