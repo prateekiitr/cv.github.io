@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How Do You Know Your Agent Is Actually Good? — Prateek Singh PhD</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+:root{
+  --bg:#0a0a0f;--surface:#12121a;--card:#1a1a26;--border:#2a2a3d;
+  --accent:#7c6fff;--accent-dim:#3d3880;--green:#4ade80;--red:#f87171;
+  --yellow:#fbbf24;--text:#e2e0ff;--muted:#6b6a8a;--teal:#2dd4bf;
+  --pink:#f472b6;--orange:#fb923c;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;line-height:1.7;font-size:16px;overflow-x:hidden;}
+#progress-bar{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--teal));z-index:200;width:0%;transition:width 0.1s linear;}
+.series-ribbon{background:linear-gradient(90deg,rgba(124,111,255,0.15),rgba(45,212,191,0.08));border-bottom:1px solid rgba(124,111,255,0.2);padding:8px 24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:12px;}
+.sr-label{font-family:'JetBrains Mono',monospace;color:var(--accent);font-weight:700;letter-spacing:1px;text-transform:uppercase;font-size:11px;}
+.sr-pill{padding:3px 10px;border-radius:4px;font-size:11px;font-family:'JetBrains Mono',monospace;border:1px solid var(--border);color:var(--muted);}
+.sr-pill.active{background:var(--accent-dim);border-color:var(--accent);color:var(--text);}
+.sr-pill.done{background:rgba(74,222,128,0.1);border-color:rgba(74,222,128,0.3);color:var(--green);}
+nav{position:sticky;top:0;z-index:100;background:rgba(10,10,15,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;height:54px;}
+.nav-logo{font-weight:800;font-size:15px;color:var(--text);margin-right:auto;}
+.nav-logo span{color:var(--accent);}
+.nav-parts{display:flex;gap:4px;}
+.nav-part{padding:6px 14px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s;border:none;background:transparent;color:var(--muted);}
+.nav-part.active{background:var(--accent-dim);color:var(--text);}
+.nav-part:hover:not(.active){color:var(--text);background:var(--surface);}
+.page{display:none;}
+.page.active{display:block;animation:fadeIn 0.3s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.container{max-width:780px;margin:0 auto;padding:0 24px;}
+.hero{padding:72px 0 56px;border-bottom:1px solid var(--border);margin-bottom:64px;}
+.hero-tags{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+.tag{display:inline-block;background:rgba(124,111,255,0.12);color:var(--accent);border:1px solid rgba(124,111,255,0.25);border-radius:4px;font-size:11px;font-family:'JetBrains Mono',monospace;padding:3px 10px;letter-spacing:1px;text-transform:uppercase;}
+.tag.green{background:rgba(74,222,128,0.1);color:var(--green);border-color:rgba(74,222,128,0.2);}
+.tag.yellow{background:rgba(251,191,36,0.1);color:var(--yellow);border-color:rgba(251,191,36,0.2);}
+.tag.red{background:rgba(248,113,113,0.1);color:var(--red);border-color:rgba(248,113,113,0.2);}
+.tag.teal{background:rgba(45,212,191,0.1);color:var(--teal);border-color:rgba(45,212,191,0.2);}
+.tag.pink{background:rgba(244,114,182,0.1);color:var(--pink);border-color:rgba(244,114,182,0.2);}
+.tag.orange{background:rgba(251,146,60,0.1);color:var(--orange);border-color:rgba(251,146,60,0.2);}
+.hero h1{font-size:clamp(32px,5.5vw,56px);font-weight:900;line-height:1.08;background:linear-gradient(135deg,var(--text) 40%,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:20px;}
+.hero-sub{font-size:18px;color:var(--muted);max-width:580px;line-height:1.7;}
+.hero-stats{display:flex;gap:32px;margin-top:36px;flex-wrap:wrap;}
+.stat-val{font-size:28px;font-weight:800;color:var(--accent);font-family:'JetBrains Mono',monospace;}
+.stat-label{font-size:12px;color:var(--muted);margin-top:2px;}
+.section{margin-bottom:80px;}
+.section-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;}
+.section h2{font-size:28px;font-weight:800;margin-bottom:10px;}
+.section h3{font-size:20px;font-weight:700;margin:32px 0 10px;color:var(--text);}
+.section p{color:var(--muted);margin-bottom:16px;line-height:1.8;}
+.section p strong{color:var(--text);}
+.callout{border-left:3px solid var(--accent);background:rgba(124,111,255,0.08);border-radius:0 10px 10px 0;padding:16px 20px;margin:24px 0;color:var(--text);font-size:15px;line-height:1.75;}
+.callout.green{border-color:var(--green);background:rgba(74,222,128,0.06);}
+.callout.red{border-color:var(--red);background:rgba(248,113,113,0.06);}
+.callout.yellow{border-color:var(--yellow);background:rgba(251,191,36,0.06);}
+.callout.teal{border-color:var(--teal);background:rgba(45,212,191,0.06);}
+.callout.orange{border-color:var(--orange);background:rgba(251,146,60,0.06);}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px;}
+.card-label{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;color:var(--muted);}
+.btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 22px;font-weight:600;font-size:14px;cursor:pointer;transition:all 0.2s;font-family:inherit;}
+.btn:hover{background:#9d8fff;transform:translateY(-1px);}
+.btn.teal{background:var(--teal);color:#000;}
+.btn.teal:hover{background:#5ee7d9;}
+.btn.green{background:var(--green);color:#000;}
+.btn.green:hover{background:#6ee7a0;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:600px){.grid2{grid-template-columns:1fr;}}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+@media(max-width:700px){.grid3{grid-template-columns:1fr;}}
+.mono{font-family:'JetBrains Mono',monospace;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:13px;color:var(--text);margin:16px 0;overflow-x:auto;line-height:1.7;}
+.c-purple{color:#a78bfa;}.c-green{color:var(--green);}.c-yellow{color:var(--yellow);}
+.c-red{color:var(--red);}.c-teal{color:var(--teal);}.c-muted{color:var(--muted);}
+.c-accent{color:var(--accent);font-weight:700;}.c-orange{color:var(--orange);}.c-pink{color:var(--pink);}
+.data-table{width:100%;border-collapse:collapse;font-size:13px;}
+.data-table th{font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:500;padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);}
+.data-table td{padding:10px 12px;border-bottom:1px solid rgba(42,42,61,0.5);vertical-align:top;}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tr:hover td{background:rgba(124,111,255,0.04);}
+.pipeline{display:flex;gap:0;align-items:stretch;margin:24px 0;overflow-x:auto;}
+.pipe-step{flex:1;min-width:130px;background:var(--card);border:1px solid var(--border);padding:18px 14px;position:relative;transition:all 0.3s;}
+.pipe-step:first-child{border-radius:10px 0 0 10px;}
+.pipe-step:last-child{border-radius:0 10px 10px 0;}
+.pipe-arrow{position:absolute;right:-12px;top:50%;transform:translateY(-50%);z-index:2;color:var(--muted);font-size:18px;}
+.pipe-num{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:6px;}
+.pipe-title{font-weight:700;font-size:13px;margin-bottom:5px;}
+.pipe-desc{font-size:11px;color:var(--muted);line-height:1.5;}
+.pipe-result{font-size:10px;margin-top:8px;padding:3px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;display:inline-block;}
+.reveal{opacity:0;transform:translateY(20px);transition:all 0.5s ease;}
+.reveal.visible{opacity:1;transform:translateY(0);}
+.fw-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:28px 24px;margin-bottom:24px;position:relative;overflow:hidden;}
+.fw-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.fw-deepeval::before{background:linear-gradient(90deg,var(--accent),#a78bfa);}
+.fw-ragas::before{background:linear-gradient(90deg,var(--teal),var(--green));}
+.fw-langsmith::before{background:linear-gradient(90deg,var(--orange),var(--yellow));}
+.fw-braintrust::before{background:linear-gradient(90deg,var(--pink),var(--orange));}
+.fw-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+.fw-name{font-size:20px;font-weight:800;}
+.fw-vendor{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:3px;}
+.fw-badges{display:flex;gap:6px;flex-wrap:wrap;}
+.fw-section-title{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:20px 0 8px;}
+.win-loss{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;}
+@media(max-width:600px){.win-loss{grid-template-columns:1fr;}}
+.win-box{background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.15);border-radius:8px;padding:12px 14px;font-size:13px;color:var(--muted);}
+.loss-box{background:rgba(248,113,113,0.06);border:1px solid rgba(248,113,113,0.15);border-radius:8px;padding:12px 14px;font-size:13px;color:var(--muted);}
+.win-box strong{color:var(--green);display:block;margin-bottom:6px;font-size:12px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;}
+.loss-box strong{color:var(--red);display:block;margin-bottom:6px;font-size:12px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;}
+/* DEEP DIVE */
+.geval-step{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:12px;position:relative;border-left:3px solid var(--accent);}
+.geval-step-num{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;}
+.geval-step-title{font-weight:700;font-size:15px;margin-bottom:6px;}
+.geval-step-desc{font-size:13px;color:var(--muted);line-height:1.7;}
+/* DEMO SECTION */
+.eval-demo-list{display:flex;flex-direction:column;gap:8px;margin:16px 0;}
+.eval-demo-btn{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 16px;cursor:pointer;transition:all 0.2s;text-align:left;width:100%;font-family:inherit;color:var(--text);}
+.eval-demo-btn:hover{border-color:var(--accent);background:rgba(124,111,255,0.05);}
+.eval-demo-btn.selected{border-color:var(--accent);background:rgba(124,111,255,0.1);}
+.edb-icon{font-size:18px;flex-shrink:0;}
+.edb-text{font-size:13px;font-family:'JetBrains Mono',monospace;}
+.edb-type{font-size:10px;color:var(--muted);margin-top:2px;letter-spacing:1px;text-transform:uppercase;}
+.score-arena{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px;}
+@media(max-width:600px){.score-arena{grid-template-columns:1fr;}}
+.score-side{border-radius:10px;overflow:hidden;border:1px solid var(--border);}
+.score-header{padding:10px 16px;font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:1px;display:flex;align-items:center;gap:8px;}
+.score-no-eval{background:rgba(248,113,113,0.12);border-bottom:1px solid rgba(248,113,113,0.2);color:var(--red);}
+.score-with-eval{background:rgba(74,222,128,0.10);border-bottom:1px solid rgba(74,222,128,0.2);color:var(--green);}
+.score-body{padding:16px;min-height:200px;font-size:14px;color:var(--muted);line-height:1.7;}
+.agent-output{background:var(--surface);border-left:3px solid var(--border);padding:10px 14px;border-radius:0 6px 6px 0;font-size:13px;color:var(--text);margin-bottom:14px;line-height:1.65;}
+.score-bar-wrap{margin:10px 0;}
+.score-bar-label{display:flex;justify-content:space-between;align-items:center;font-family:'JetBrains Mono',monospace;font-size:11px;margin-bottom:5px;}
+.score-bar-name{color:var(--muted);}
+.score-bar-val{font-weight:700;}
+.score-bar-track{background:var(--border);border-radius:6px;height:10px;overflow:hidden;}
+.score-bar-fill{height:100%;border-radius:6px;width:0%;transition:width 1.2s cubic-bezier(0.4,0,0.2,1);}
+.verdict-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;margin-top:12px;letter-spacing:1px;}
+.verdict-pass{background:rgba(74,222,128,0.12);color:var(--green);border:1px solid rgba(74,222,128,0.25);}
+.verdict-fail{background:rgba(248,113,113,0.12);color:var(--red);border:1px solid rgba(248,113,113,0.25);}
+.verdict-warn{background:rgba(251,191,36,0.12);color:var(--yellow);border:1px solid rgba(251,191,36,0.25);}
+.no-eval-outcome{font-size:13px;color:var(--red);margin-top:12px;padding:10px 14px;background:rgba(248,113,113,0.06);border-radius:6px;border:1px solid rgba(248,113,113,0.15);}
+.demo-placeholder{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px;}
+.demo-placeholder .dp-icon{font-size:32px;margin-bottom:10px;}
+footer{border-top:1px solid var(--border);padding:40px 24px;text-align:center;color:var(--muted);font-size:14px;margin-top:80px;}
+footer a{color:var(--accent);text-decoration:none;}
+</style>
+</head>
+<body>
+<div id="progress-bar"></div>
+<div class="series-ribbon">
+  <span class="sr-label">Agent Series</span>
+  <span class="sr-pill done">✓ 01 · Guardrails</span>
+  <span class="sr-pill active">02 · Evaluation</span>
+  <span class="sr-pill">03 · Agentic Memory</span>
+</div>
+<nav>
+  <div class="nav-logo">prateek<span>singh</span>.phd</div>
+  <div class="nav-parts">
+    <button class="nav-part active" onclick="showPage('p1',this)">Part 1 · The Eval Problem</button>
+    <button class="nav-part" onclick="showPage('p2',this)">Part 2 · Frameworks</button>
+    <button class="nav-part" onclick="showPage('p3',this)">Part 3 · Score Demo</button>
+  </div>
+</nav>
+<!-- ═══ PAGE 1 ═══ -->
+<div id="p1" class="page active"><div class="container">
+<div class="hero reveal">
+  <div class="hero-tags">
+    <span class="tag">Series 02 of 03</span>
+    <span class="tag yellow">Evaluation</span>
+    <span class="tag teal">Agent Quality</span>
+  </div>
+  <h1>How Do You Know<br>Your Agent Is<br>Actually Good?</h1>
+  <p class="hero-sub">LLM Evaluation Frameworks — DeepEval, RAGAS, LangSmith & Braintrust. Because shipping without evals is flying blind at production altitude.</p>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-val">4</div><div class="stat-label">Eval layers covered</div></div>
+    <div class="stat"><div class="stat-val">4</div><div class="stat-label">Frameworks compared</div></div>
+    <div class="stat"><div class="stat-val">1</div><div class="stat-label">Deep-dive: DeepEval G-Eval</div></div>
+  </div>
+</div>
+
+<div class="section reveal">
+  <div class="section-label">The Uncomfortable Truth</div>
+  <h2>You shipped your agent last week. How do you know it's working?</h2>
+  <p>Not vibes. Not manual spot-checks. Not "it looked good in the demo." The honest answer for most teams: <strong>you don't.</strong></p>
+  <p>With a classifier, you have labels. With a ranking model, you have NDCG. With an agent that browses the web, calls APIs, reasons across ten steps, and writes a report — what's the ground truth? What's the metric? Who's checking?</p>
+  <div class="callout red"><strong>The deployment gap:</strong> A 2024 survey of teams shipping LLM products found that fewer than 30% had any automated eval running in CI. The rest relied on human review, user complaints, or nothing. For chatbots, this is bad. For agents with tool access, this is a production incident waiting to happen.</div>
+  <p>Eval for agents is genuinely hard — harder than eval for any previous ML system. Here's why it breaks in three specific ways that don't apply to simpler models.</p>
+</div>
+
+<div class="section reveal">
+  <div class="section-label">Why Agent Eval Breaks</div>
+  <h2>Three ways evaluation falls apart for agents</h2>
+  <div class="grid3" style="margin:24px 0;">
+    <div class="card" style="margin-bottom:0;border-top:3px solid var(--red);">
+      <div style="font-size:24px;margin-bottom:10px;">🎯</div>
+      <div style="font-weight:700;font-size:15px;margin-bottom:8px;">No Ground Truth</div>
+      <div style="font-size:13px;color:var(--muted);">With classification you have labels. With agents — what's the "correct" answer when the task is "book me a flight, summarise my emails, and draft a response"? Correctness is fuzzy, multi-dimensional, and context-dependent.</div>
+    </div>
+    <div class="card" style="margin-bottom:0;border-top:3px solid var(--orange);">
+      <div style="font-size:24px;margin-bottom:10px;">🔗</div>
+      <div style="font-weight:700;font-size:15px;margin-bottom:8px;">The Trajectory Problem</div>
+      <div style="font-size:13px;color:var(--muted);">A chatbot produces one output. An agent produces a sequence of decisions. A wrong tool call in step 2 may only manifest as a bad final answer in step 7. Output-only evals are blind to where the failure actually happened.</div>
+    </div>
+    <div class="card" style="margin-bottom:0;border-top:3px solid var(--yellow);">
+      <div style="font-size:24px;margin-bottom:10px;">⚖️</div>
+      <div style="font-weight:700;font-size:15px;margin-bottom:8px;">Judge Bias</div>
+      <div style="font-size:13px;color:var(--muted);">Most modern evals use another LLM to score outputs. But which model? With what rubric? How do you know the judge isn't biased toward longer answers, more confident tone, or its own output style?</div>
+    </div>
+  </div>
+  <div class="callout yellow"><strong>The trajectory problem is the hardest one.</strong> Imagine a travel agent that books the wrong flight in step 2 but writes a perfectly formatted confirmation email in step 8. An output-only eval scores it high. A trajectory eval catches the real failure. Most teams only run output evals.</div>
+</div>
+
+<div class="section reveal">
+  <div class="section-label">The Eval Taxonomy</div>
+  <h2>Four layers you actually need to measure</h2>
+  <p>Most teams measure one layer and ignore three. Here's the full picture — what each layer catches, and what slips through if you skip it.</p>
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div style="overflow-x:auto;">
+      <table class="data-table">
+        <thead><tr><th>Layer</th><th>What It Measures</th><th>Example Metrics</th><th>Who Misses It</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span style="color:var(--accent);font-weight:700;">Correctness</span></td>
+            <td style="color:var(--muted);">Did the agent get the right answer?</td>
+            <td style="color:var(--muted);">Exact match, F1, LLM judge score</td>
+            <td style="color:var(--green);">Nobody — everyone does this</td>
+          </tr>
+          <tr>
+            <td><span style="color:var(--teal);font-weight:700;">Faithfulness</span></td>
+            <td style="color:var(--muted);">Did the agent stay grounded in its sources? No hallucination?</td>
+            <td style="color:var(--muted);">RAGAS faithfulness, hallucination rate</td>
+            <td style="color:var(--yellow);">Most RAG teams skip this</td>
+          </tr>
+          <tr>
+            <td><span style="color:var(--orange);font-weight:700;">Trajectory</span></td>
+            <td style="color:var(--muted);">Did the agent take the right steps? Correct tools? Efficient path?</td>
+            <td style="color:var(--muted);">Tool call accuracy, step efficiency, action F1</td>
+            <td style="color:var(--red);">Almost everyone misses this</td>
+          </tr>
+          <tr>
+            <td><span style="color:var(--red);font-weight:700;">Safety</span></td>
+            <td style="color:var(--muted);">Did the agent stay in scope? Refuse correctly? No leaks?</td>
+            <td style="color:var(--muted);">Guardrail hit rate, refusal accuracy, PII leak rate</td>
+            <td style="color:var(--red);">Almost everyone misses this</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p>The pattern: teams optimise hard for Correctness, treat Faithfulness as optional, and have never once measured Trajectory or Safety systematically. Yet Trajectory and Safety are where <strong>production incidents actually originate.</strong></p>
+
+  <div class="section-label" style="margin-top:40px;">Eval Pipeline</div>
+  <h2>Where evals sit in your dev cycle</h2>
+  <div class="pipeline">
+    <div class="pipe-step">
+      <div class="pipe-num">DEV</div>
+      <div class="pipe-title">Unit Evals</div>
+      <div class="pipe-desc">Single metric per test case. Runs in CI like pytest. Catches regressions on every commit.</div>
+      <div class="pipe-result" style="background:rgba(124,111,255,0.1);color:var(--accent);">DeepEval ✓</div>
+      <span class="pipe-arrow">›</span>
+    </div>
+    <div class="pipe-step">
+      <div class="pipe-num">STAGING</div>
+      <div class="pipe-title">RAG Quality Gate</div>
+      <div class="pipe-desc">Faithfulness, context precision, answer relevancy across your full retrieval pipeline.</div>
+      <div class="pipe-result" style="background:rgba(45,212,191,0.1);color:var(--teal);">RAGAS ✓</div>
+      <span class="pipe-arrow">›</span>
+    </div>
+    <div class="pipe-step">
+      <div class="pipe-num">PRODUCTION</div>
+      <div class="pipe-title">Trace + Feedback</div>
+      <div class="pipe-desc">Every agent run traced. Human feedback collected. Failures build eval datasets.</div>
+      <div class="pipe-result" style="background:rgba(251,146,60,0.1);color:var(--orange);">LangSmith ✓</div>
+      <span class="pipe-arrow">›</span>
+    </div>
+    <div class="pipe-step">
+      <div class="pipe-num">ITERATION</div>
+      <div class="pipe-title">Prompt Experiments</div>
+      <div class="pipe-desc">Every prompt change is an experiment. Score diffs show if you improved or regressed.</div>
+      <div class="pipe-result" style="background:rgba(244,114,182,0.1);color:var(--pink);">Braintrust ✓</div>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:40px;">
+    <button class="btn" onclick="showPage('p2',document.querySelectorAll('.nav-part')[1])">Part 2: The Four Frameworks →</button>
+  </div>
+</div>
+</div></div>
+<!-- ═══ PAGE 2 ═══ -->
+<div id="p2" class="page"><div class="container">
+<div class="hero reveal">
+  <div class="hero-tags"><span class="tag">Part 2</span><span class="tag green">Frameworks</span><span class="tag">DeepEval Deep-Dive</span></div>
+  <h1>Four Frameworks,<br>One Eval Pipeline,<br>One Deep Dive</h1>
+  <p class="hero-sub">DeepEval, RAGAS, LangSmith, and Braintrust — what each one actually does, where each one fits, and a complete internals breakdown of DeepEval's G-Eval metric system.</p>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-val">4</div><div class="stat-label">Frameworks compared</div></div>
+    <div class="stat"><div class="stat-val">G-Eval</div><div class="stat-label">Deep-dive focus</div></div>
+    <div class="stat"><div class="stat-val">N</div><div class="stat-label">Eval steps aggregated per score</div></div>
+  </div>
+</div>
+
+<!-- DEEPEVAL -->
+<div class="section reveal">
+  <div class="section-label">Framework 01 of 04 · Deep Dive</div>
+  <h2>DeepEval</h2>
+  <p>The pytest of LLM evaluation. Open source, metric-first, runs in CI. The core insight: evals should feel like unit tests — define a metric, write a test case, assert a threshold. If it fails, the commit fails.</p>
+  <div class="fw-card fw-deepeval">
+    <div class="fw-header">
+      <div><div class="fw-name">DeepEval</div><div class="fw-vendor">Confident AI · Apache 2.0 · pytest-native</div></div>
+      <div class="fw-badges"><span class="tag">Open Source</span><span class="tag teal">CI/CD Native</span><span class="tag yellow">G-Eval</span></div>
+    </div>
+    <p style="color:var(--muted);">DeepEval ships 14+ built-in metrics: answer relevancy, faithfulness, hallucination, contextual precision, contextual recall, toxicity, bias, task completion, tool correctness, and more. Each metric returns a <strong style="color:var(--text);">score (0–1) + reason</strong>. The reason is what makes it actually useful in CI — it tells you <em>why</em> the score is what it is, not just the number.</p>
+    <div class="fw-section-title">Basic Usage — pytest Integration</div>
+    <div class="mono">
+<span class="c-accent">from</span> deepeval <span class="c-accent">import</span> assert_test
+<span class="c-accent">from</span> deepeval.test_case <span class="c-accent">import</span> LLMTestCase
+<span class="c-accent">from</span> deepeval.metrics <span class="c-accent">import</span> AnswerRelevancyMetric, FaithfulnessMetric
+
+<span class="c-accent">def</span> <span class="c-teal">test_agent_rag_response</span>():
+    test_case = LLMTestCase(
+        input=<span class="c-green">"What is the refund policy?"</span>,
+        actual_output=agent.run(<span class="c-green">"What is the refund policy?"</span>),
+        retrieval_context=[<span class="c-green">"Refunds are processed within 5-7 business days..."</span>]
+    )
+    assert_test(test_case, [
+        AnswerRelevancyMetric(threshold=<span class="c-yellow">0.7</span>),
+        FaithfulnessMetric(threshold=<span class="c-yellow">0.8</span>),  <span class="c-muted"># fails if agent hallucinates</span>
+    ])
+    </div>
+
+    <div class="fw-section-title" style="color:var(--accent);font-size:13px;letter-spacing:1px;">★ DEEP DIVE — How G-Eval Actually Works</div>
+    <p style="color:var(--muted);">G-Eval is DeepEval's framework for defining <strong style="color:var(--text);">custom LLM-as-judge metrics</strong>. It's the mechanism that makes DeepEval extensible — instead of being limited to built-in metrics, you describe what "good" looks like in plain language, and G-Eval constructs a structured judge prompt that scores your output against that description.</p>
+    <p style="color:var(--muted);">Understanding G-Eval internals matters because <strong style="color:var(--text);">LLM-as-judge is both the most powerful and the most fragile eval technique available.</strong> Get the judge prompt wrong and your scores are meaningless. Get it right and you have a scalable eval that generalists can write and engineers can trust.</p>
+
+    <div style="margin:24px 0;">
+      <div class="geval-step">
+        <div class="geval-step-num">Step 01 — Criteria Definition</div>
+        <div class="geval-step-title">You define what "good" means in natural language</div>
+        <div class="geval-step-desc">You provide a <code style="background:var(--card);padding:2px 6px;border-radius:4px;font-size:12px;">criteria</code> string describing the evaluation dimension. Example: <em>"The response should be factually grounded in the provided context and not introduce information absent from it."</em> G-Eval uses this verbatim in the judge prompt — the quality of your criteria directly determines the quality of your scores.</div>
+        <div class="mono" style="margin-top:12px;">
+<span class="c-accent">from</span> deepeval.metrics <span class="c-accent">import</span> GEval
+<span class="c-accent">from</span> deepeval.test_case <span class="c-accent">import</span> LLMTestCaseParams
+
+metric = GEval(
+    name=<span class="c-green">"Groundedness"</span>,
+    criteria=<span class="c-green">"The response must only contain claims that are explicitly
+    supported by the retrieval context. Any claim without
+    direct support in the context is a faithfulness violation."</span>,
+    evaluation_params=[
+        LLMTestCaseParams.ACTUAL_OUTPUT,
+        LLMTestCaseParams.RETRIEVAL_CONTEXT
+    ],
+    threshold=<span class="c-yellow">0.75</span>
+)
+        </div>
+      </div>
+
+      <div class="geval-step" style="border-left-color:var(--teal);">
+        <div class="geval-step-num">Step 02 — Evaluation Step Generation</div>
+        <div class="geval-step-title">G-Eval decomposes your criteria into N atomic evaluation steps</div>
+        <div class="geval-step-desc">This is the key insight that separates G-Eval from naive LLM-as-judge. Rather than asking the judge "is this response good? score it 1–10", G-Eval first makes a <strong>second LLM call</strong> to decompose your criteria into a list of specific, checkable evaluation steps. This decomposition forces precision and makes the final score more consistent and auditable.</div>
+        <div class="mono" style="margin-top:12px;">
+<span class="c-muted"># G-Eval internally generates steps like:</span>
+evaluation_steps = [
+  <span class="c-green">"1. Identify all factual claims in the actual output."</span>,
+  <span class="c-green">"2. For each claim, check if it appears in retrieval_context."</span>,
+  <span class="c-green">"3. Flag any claim not directly supported by the context."</span>,
+  <span class="c-green">"4. Count the ratio of grounded to total claims."</span>,
+  <span class="c-green">"5. Assign a score from 0–10 where 10 = fully grounded."</span>
+]
+<span class="c-muted"># These steps are injected into the judge prompt automatically.</span>
+        </div>
+      </div>
+
+      <div class="geval-step" style="border-left-color:var(--orange);">
+        <div class="geval-step-num">Step 03 — Structured Judge Prompt Construction</div>
+        <div class="geval-step-title">The judge receives the steps, inputs, and output in a single structured prompt</div>
+        <div class="geval-step-desc">G-Eval assembles a final judge prompt that includes: the evaluation criteria, the generated steps, the actual input, the actual output, and any additional context (retrieval docs, expected output). The judge is asked to reason through each step <em>before</em> assigning a score — this chain-of-thought structure is what produces consistent, auditable results rather than arbitrary numbers.</div>
+        <div class="callout" style="margin-top:12px;font-size:13px;">
+          <strong>Why this matters:</strong> Naive LLM judges are highly inconsistent. Asking "rate this 1–10" produces different scores across runs. Forcing step-by-step reasoning anchors the score to specific, repeatable criteria — variance drops significantly.
+        </div>
+      </div>
+
+      <div class="geval-step" style="border-left-color:var(--yellow);">
+        <div class="geval-step-num">Step 04 — Probabilistic Score Aggregation</div>
+        <div class="geval-step-title">G-Eval samples token probabilities, not just the output token</div>
+        <div class="geval-step-desc">This is the most technically interesting part. Instead of asking the judge to output "7" and taking that at face value, G-Eval uses the LLM's <strong>log probabilities</strong> for each possible score token (1, 2, 3 ... 10). The final score is a weighted average of these probabilities — which makes it continuous (not integer) and more stable across runs.</div>
+        <div class="mono" style="margin-top:12px;">
+<span class="c-muted"># Simplified version of G-Eval's score aggregation</span>
+<span class="c-accent">def</span> <span class="c-teal">aggregate_score</span>(logprobs: dict) -> float:
+    <span class="c-muted"># logprobs: {"1": -2.1, "2": -1.8, "3": -0.4, ..., "10": -3.2}</span>
+    scores = [<span class="c-yellow">1</span>, <span class="c-yellow">2</span>, <span class="c-yellow">3</span>, <span class="c-yellow">4</span>, <span class="c-yellow">5</span>, <span class="c-yellow">6</span>, <span class="c-yellow">7</span>, <span class="c-yellow">8</span>, <span class="c-yellow">9</span>, <span class="c-yellow">10</span>]
+    probs = softmax([logprobs[str(s)] <span class="c-accent">for</span> s <span class="c-accent">in</span> scores])
+    weighted = sum(s * p <span class="c-accent">for</span> s, p <span class="c-accent">in</span> zip(scores, probs))
+    <span class="c-accent">return</span> weighted / <span class="c-yellow">10</span>  <span class="c-muted"># normalise to 0–1</span>
+        </div>
+      </div>
+
+      <div class="geval-step" style="border-left-color:var(--green);">
+        <div class="geval-step-num">Step 05 — Reason Generation + Threshold Assert</div>
+        <div class="geval-step-title">The metric returns a score, a human-readable reason, and a pass/fail</div>
+        <div class="geval-step-desc">The final G-Eval output is a <code style="background:var(--card);padding:2px 6px;border-radius:4px;font-size:12px;">MetricData</code> object with three fields: <code style="background:var(--card);padding:2px 6px;border-radius:4px;font-size:12px;">score</code> (0–1 float), <code style="background:var(--card);padding:2px 6px;border-radius:4px;font-size:12px;">reason</code> (string explaining what failed or passed), and <code style="background:var(--card);padding:2px 6px;border-radius:4px;font-size:12px;">success</code> (bool, score ≥ threshold). In CI, a failing test shows you the reason — you know exactly which evaluation step the output violated, not just that the score was 0.62.</div>
+        <div class="mono" style="margin-top:12px;">
+<span class="c-muted"># What DeepEval returns after G-Eval runs</span>
+MetricData(
+    score=<span class="c-yellow">0.61</span>,
+    reason=<span class="c-green">"The response claims the refund window is 30 days,
+    but the retrieval context only states 5-7 business days.
+    This unsupported claim violates Step 3 of the evaluation."</span>,
+    success=<span class="c-red">False</span>  <span class="c-muted"># threshold was 0.75</span>
+)
+        </div>
+      </div>
+    </div>
+
+    <div class="callout teal">
+      <strong>The G-Eval advantage in one sentence:</strong> By decomposing criteria into atomic steps and aggregating over token probabilities rather than sampling a single score token, G-Eval produces eval scores that are more consistent, more auditable, and more useful in CI than any naive LLM-as-judge approach.
+    </div>
+
+    <div class="fw-section-title">Agent-Specific Metrics — Tool Correctness</div>
+    <div class="mono">
+<span class="c-accent">from</span> deepeval.metrics <span class="c-accent">import</span> ToolCorrectnessMetric
+
+<span class="c-muted"># Evaluate if agent called the RIGHT tools in the RIGHT order</span>
+test_case = LLMTestCase(
+    input=<span class="c-green">"Book me a flight to Hyderabad next Monday"</span>,
+    actual_output=agent_response,
+    tools_called=[
+        ToolCall(name=<span class="c-green">"search_flights"</span>, input={<span class="c-green">"dest"</span>:<span class="c-green">"HYD"</span>}),
+        ToolCall(name=<span class="c-green">"book_flight"</span>, input={<span class="c-green">"flight_id"</span>:<span class="c-green">"AI302"</span>}),
+    ],
+    expected_tools=[
+        ToolCall(name=<span class="c-green">"search_flights"</span>),
+        ToolCall(name=<span class="c-green">"book_flight"</span>),
+    ]
+)
+<span class="c-muted"># Catches trajectory failures — Rail ② from the guardrails blog</span>
+assert_test(test_case, [ToolCorrectnessMetric(threshold=<span class="c-yellow">0.8</span>)])
+    </div>
+
+    <div class="win-loss">
+      <div class="win-box"><strong>✓ WINS</strong>pytest integration — evals run on every commit. G-Eval custom metrics without writing judge prompts manually. Tool correctness covers trajectory eval. Best CI/CD story of the four frameworks.</div>
+      <div class="loss-box"><strong>✗ GAPS</strong>LLM judge calls add cost and latency to CI. No native production tracing. Weaker at dataset management and human feedback loops vs LangSmith.</div>
+    </div>
+  </div>
+</div>
+
+<!-- RAGAS -->
+<div class="section reveal">
+  <div class="section-label">Framework 02 of 04</div>
+  <h2>RAGAS</h2>
+  <p>Built specifically for RAG pipelines. The core insight: evaluate the <strong>retrieval</strong> and the <strong>generation</strong> separately — because most RAG failures are retrieval failures dressed as generation failures.</p>
+  <div class="fw-card fw-ragas">
+    <div class="fw-header">
+      <div><div class="fw-name">RAGAS</div><div class="fw-vendor">explodinggradients · MIT · RAG-native</div></div>
+      <div class="fw-badges"><span class="tag teal">RAG Specialist</span><span class="tag green">Open Source</span><span class="tag">4 Core Metrics</span></div>
+    </div>
+    <p style="color:var(--muted);">RAGAS' four core metrics form a complete diagnostic of your RAG pipeline. Together they tell you not just whether the answer was wrong — but <em>why</em>: was it a retrieval problem or a generation problem?</p>
+    <div class="grid2" style="margin:16px 0;">
+      <div class="card" style="margin-bottom:0;border-top:3px solid var(--teal);">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal);margin-bottom:8px;">FAITHFULNESS</div>
+        <div style="font-size:13px;color:var(--muted);">What fraction of claims in the answer are supported by the retrieved context? Catches hallucination. Low faithfulness = generation problem.</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);margin-top:10px;">score = |grounded claims| / |total claims|</div>
+      </div>
+      <div class="card" style="margin-bottom:0;border-top:3px solid var(--green);">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--green);margin-bottom:8px;">ANSWER RELEVANCY</div>
+        <div style="font-size:13px;color:var(--muted);">Does the answer actually address what was asked? Catches verbose, off-topic, or incomplete responses. Measured via question re-generation similarity.</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);margin-top:10px;">score = cosine_sim(generated_q, original_q)</div>
+      </div>
+      <div class="card" style="margin-bottom:0;border-top:3px solid var(--orange);">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--orange);margin-bottom:8px;">CONTEXT PRECISION</div>
+        <div style="font-size:13px;color:var(--muted);">How much of what was retrieved was actually relevant? Catches over-retrieval — fetching noise along with signal. Low precision = retrieval problem.</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);margin-top:10px;">score = |relevant chunks| / |retrieved chunks|</div>
+      </div>
+      <div class="card" style="margin-bottom:0;border-top:3px solid var(--yellow);">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--yellow);margin-bottom:8px;">CONTEXT RECALL</div>
+        <div style="font-size:13px;color:var(--muted);">Did retrieval find everything needed to answer the question? Catches under-retrieval — the answer exists but wasn't fetched. Low recall = retrieval problem.</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);margin-top:10px;">score = |relevant found| / |relevant total|</div>
+      </div>
+    </div>
+    <div class="win-loss">
+      <div class="win-box"><strong>✓ WINS</strong>Best RAG diagnostic in open source. Separates retrieval failures from generation failures — critical for knowing what to fix. Clean Python API, integrates with most vector stores.</div>
+      <div class="loss-box"><strong>✗ GAPS</strong>RAG-only — no agent trajectory eval, no tool correctness. No CI integration story. No production tracing. Needs reference answers for some metrics (context recall).</div>
+    </div>
+  </div>
+</div>
+
+<!-- LANGSMITH -->
+<div class="section reveal">
+  <div class="section-label">Framework 03 of 04</div>
+  <h2>LangSmith</h2>
+  <p>Observability-first eval. Less about running evals in CI, more about <strong>tracing every agent run</strong>, collecting human feedback, and turning production failures into eval datasets automatically.</p>
+  <div class="fw-card fw-langsmith">
+    <div class="fw-header">
+      <div><div class="fw-name">LangSmith</div><div class="fw-vendor">LangChain Inc. · Partially OSS · SaaS platform</div></div>
+      <div class="fw-badges"><span class="tag orange">Production Tracing</span><span class="tag yellow">Human Feedback</span><span class="tag">Dataset Flywheel</span></div>
+    </div>
+    <p style="color:var(--muted);">The key concept is the <strong style="color:var(--text);">dataset flywheel</strong>: production agent traces → human annotators flag failures → failures become eval test cases → test cases run in regression → regressions become new traces. Over time, your eval dataset becomes a living mirror of your production failure modes — not a static handcrafted set.</p>
+    <div class="fw-section-title">Pipeline</div>
+    <div class="pipeline">
+      <div class="pipe-step"><div class="pipe-num">TRACE</div><div class="pipe-title">Every Run Logged</div><div class="pipe-desc">Full agent trace: inputs, outputs, tool calls, latency, token count.</div><span class="pipe-arrow">›</span></div>
+      <div class="pipe-step"><div class="pipe-num">ANNOTATE</div><div class="pipe-title">Human Feedback</div><div class="pipe-desc">Annotators rate outputs. Thumbs up/down, rubric scores, freeform notes.</div><span class="pipe-arrow">›</span></div>
+      <div class="pipe-step"><div class="pipe-num">DATASET</div><div class="pipe-title">Auto-Dataset Build</div><div class="pipe-desc">Flagged traces become eval examples automatically.</div><span class="pipe-arrow">›</span></div>
+      <div class="pipe-step"><div class="pipe-num">REGRESS</div><div class="pipe-title">Regression Tests</div><div class="pipe-desc">Run new agent version against dataset. Compare scores.</div></div>
+    </div>
+    <div class="win-loss">
+      <div class="win-box"><strong>✓ WINS</strong>Best production observability story. Human-in-the-loop feedback loops. Dataset flywheel turns prod failures into evals automatically. Full LangChain ecosystem integration.</div>
+      <div class="loss-box"><strong>✗ GAPS</strong>SaaS lock-in. Partial open source. Less rigorous for unit-style CI evals. Cost scales with trace volume. Weaker if you're not using LangChain.</div>
+    </div>
+  </div>
+</div>
+
+<!-- BRAINTRUST -->
+<div class="section reveal">
+  <div class="section-label">Framework 04 of 04</div>
+  <h2>Braintrust</h2>
+  <p>Experiment-centric eval. Every eval run is an <strong>experiment with a score, a dataset, and a diff from the previous run.</strong> Built for teams that ship prompts frequently and need to know — systematically — whether the last change made things better or worse.</p>
+  <div class="fw-card fw-braintrust">
+    <div class="fw-header">
+      <div><div class="fw-name">Braintrust</div><div class="fw-vendor">Brainlogic Inc. · Proprietary SaaS</div></div>
+      <div class="fw-badges"><span class="tag pink">Experiment Tracking</span><span class="tag orange">Prompt Regression</span><span class="tag">Score Diffs</span></div>
+    </div>
+    <p style="color:var(--muted);">The core primitive is the <strong style="color:var(--text);">experiment diff</strong>: run your eval dataset against prompt v1, then against prompt v2, and Braintrust shows you a score diff — which test cases improved, which regressed, and by how much. This turns prompt engineering from intuition into a measurable engineering discipline.</p>
+    <div class="mono">
+<span class="c-accent">import</span> braintrust
+
+experiment = braintrust.init(project=<span class="c-green">"customer-agent"</span>, experiment=<span class="c-green">"prompt-v2"</span>)
+
+<span class="c-accent">for</span> test_case <span class="c-accent">in</span> dataset:
+    output = agent.run(test_case[<span class="c-green">"input"</span>])
+    experiment.log(
+        input=test_case[<span class="c-green">"input"</span>],
+        output=output,
+        expected=test_case[<span class="c-green">"expected"</span>],
+        scores={<span class="c-green">"correctness"</span>: score(output, test_case[<span class="c-green">"expected"</span>])}
+    )
+<span class="c-muted"># Braintrust UI shows diff vs prompt-v1 automatically</span>
+    </div>
+    <div class="win-loss">
+      <div class="win-box"><strong>✓ WINS</strong>Best experiment tracking and prompt regression story. Score diffs are the clearest way to know if a prompt change helped. Human annotation UI is polished. Works with any LLM stack.</div>
+      <div class="loss-box"><strong>✗ GAPS</strong>Fully proprietary SaaS — no self-host. Cost at scale. No native agent trajectory metrics. Weaker for teams that need CI gate-style evals.</div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPARISON TABLE -->
+<div class="section reveal">
+  <div class="section-label">Head-to-Head</div>
+  <h2>Eval framework matrix</h2>
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div style="overflow-x:auto;">
+      <table class="data-table">
+        <thead><tr><th>Dimension</th><th style="color:var(--accent);">DeepEval</th><th style="color:var(--teal);">RAGAS</th><th style="color:var(--orange);">LangSmith</th><th style="color:var(--pink);">Braintrust</th></tr></thead>
+        <tbody>
+          <tr><td>Correctness eval</td><td style="color:var(--green);">✓</td><td style="color:var(--green);">✓</td><td style="color:var(--green);">✓</td><td style="color:var(--green);">✓</td></tr>
+          <tr><td>Faithfulness / RAG</td><td style="color:var(--yellow);">△</td><td style="color:var(--green);">✓ Core</td><td style="color:var(--yellow);">△</td><td style="color:var(--yellow);">△</td></tr>
+          <tr><td>Trajectory / Tool eval</td><td style="color:var(--green);">✓ Native</td><td style="color:var(--red);">✗</td><td style="color:var(--yellow);">△ Traces</td><td style="color:var(--yellow);">△</td></tr>
+          <tr><td>Safety eval</td><td style="color:var(--green);">✓ Toxicity/Bias</td><td style="color:var(--red);">✗</td><td style="color:var(--yellow);">△</td><td style="color:var(--yellow);">△</td></tr>
+          <tr><td>CI/CD integration</td><td style="color:var(--green);">✓ pytest native</td><td style="color:var(--yellow);">△</td><td style="color:var(--yellow);">△</td><td style="color:var(--green);">✓</td></tr>
+          <tr><td>Production tracing</td><td style="color:var(--red);">✗</td><td style="color:var(--red);">✗</td><td style="color:var(--green);">✓ Best-in-class</td><td style="color:var(--yellow);">△</td></tr>
+          <tr><td>Human feedback loop</td><td style="color:var(--yellow);">△</td><td style="color:var(--red);">✗</td><td style="color:var(--green);">✓</td><td style="color:var(--green);">✓</td></tr>
+          <tr><td>Prompt experiments</td><td style="color:var(--yellow);">△</td><td style="color:var(--red);">✗</td><td style="color:var(--yellow);">△</td><td style="color:var(--green);">✓ Core</td></tr>
+          <tr><td>Custom metrics</td><td style="color:var(--green);">✓ G-Eval</td><td style="color:var(--yellow);">△</td><td style="color:var(--green);">✓</td><td style="color:var(--green);">✓</td></tr>
+          <tr><td>Self-hostable</td><td style="color:var(--green);">✓</td><td style="color:var(--green);">✓</td><td style="color:var(--yellow);">△ Partial</td><td style="color:var(--red);">✗</td></tr>
+          <tr><td>Open source</td><td style="color:var(--green);">✓ Apache 2.0</td><td style="color:var(--green);">✓ MIT</td><td style="color:var(--yellow);">△ Partial</td><td style="color:var(--red);">✗</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="callout teal" style="margin-top:24px;"><strong>Pragmatic stack:</strong> Greenfield RAG agent → RAGAS + DeepEval in CI. Production agent with traffic → LangSmith for traces, Braintrust for prompt regression. Fast-moving team shipping daily → Braintrust experiments + DeepEval CI gate. Enterprise compliance → LangSmith human feedback loops.</div>
+  <div style="text-align:center;margin-top:40px;">
+    <button class="btn teal" onclick="showPage('p3',document.querySelectorAll('.nav-part')[2])">Part 3: Score Demo — See the Metrics Fire →</button>
+  </div>
+</div>
+</div></div>
+<!-- ═══ PAGE 3 ═══ -->
+<div id="p3" class="page"><div class="container">
+<div class="hero reveal">
+  <div class="hero-tags"><span class="tag">Part 3</span><span class="tag green">Live Demo</span><span class="tag yellow">Animated Scores</span></div>
+  <h1>Eval Arena:<br>Same Output,<br>Two Fates</h1>
+  <p class="hero-sub">Five agent outputs. Without eval, all five ship to production. With eval, the metrics catch each failure — and tell you exactly why. Watch the scores animate in real time.</p>
+</div>
+
+<div class="section reveal">
+  <div class="section-label">Interactive Demo</div>
+  <h2>Select an agent output to evaluate</h2>
+  <p>Each scenario maps to a failure layer from Part 1. Left: no eval, ships as-is. Right: eval runs, scores animate, verdict fires.</p>
+  <div class="card">
+    <div class="card-label">Choose a scenario</div>
+    <div class="eval-demo-list" id="eval-list"></div>
+  </div>
+  <div class="score-arena">
+    <div class="score-side">
+      <div class="score-header score-no-eval">&#128308; WITHOUT EVAL — Ships to Production</div>
+      <div class="score-body" id="arena-left"><div class="demo-placeholder"><div class="dp-icon">&#8679;</div>Select a scenario above</div></div>
+    </div>
+    <div class="score-side">
+      <div class="score-header score-with-eval">&#128994; WITH EVAL — Metrics Running</div>
+      <div class="score-body" id="arena-right"><div class="demo-placeholder"><div class="dp-icon">&#128202;</div>Scores will animate here</div></div>
+    </div>
+  </div>
+  <div id="eval-explain" style="display:none;margin-top:16px;"></div>
+</div>
+
+<div class="section reveal">
+  <div class="section-label">Next in the Series</div>
+  <h2>What comes after evaluation</h2>
+  <p>You've made your agent safe (guardrails). You've made it measurably good (evals). Now — how do you give it memory that persists across sessions, users, and contexts?</p>
+  <div class="grid2">
+    <div class="card" style="border-color:rgba(45,212,191,0.3);">
+      <div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:1px;margin-bottom:10px;">SERIES 03 · COMING NEXT</div>
+      <div style="font-size:18px;font-weight:800;margin-bottom:10px;">Agents That Remember</div>
+      <p style="font-size:14px;color:var(--muted);margin:0;">Entity registries, episodic stores, preference profiles, knowledge graphs, session canvas. The five-store on-device memory architecture — how agents build persistent context across runs without a cloud round-trip.</p>
+      <div class="tag teal" style="margin-top:14px;display:inline-block;">Coming Next</div>
+    </div>
+    <div class="card" style="border-color:rgba(124,111,255,0.2);opacity:0.6;">
+      <div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:1px;margin-bottom:10px;">SERIES 01 · PUBLISHED</div>
+      <div style="font-size:18px;font-weight:800;margin-bottom:10px;">The First Line of Defense</div>
+      <p style="font-size:14px;color:var(--muted);margin:0;">LLM Guardrails in Agentic Systems — NeMo, Guardrails AI, Llama Firewall, AWS Bedrock. The 4-rail architecture and live adversarial demo.</p>
+      <a href="guardrails-blog-v2.html" class="tag green" style="margin-top:14px;display:inline-block;text-decoration:none;">Read Now ↗</a>
+    </div>
+  </div>
+</div>
+</div></div>
+
+<footer><a href="/">prateeksingh.phd</a> &nbsp;·&nbsp; On-Device AI · LLM Inference · Agentic Systems &nbsp;·&nbsp; 2025</footer>
+
+<script>
+function showPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-part').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+const obs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('visible');});},{threshold:0.08});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+window.addEventListener('scroll',()=>{
+  const d=document.documentElement;
+  document.getElementById('progress-bar').style.width=(d.scrollTop/(d.scrollHeight-d.clientHeight)*100)+'%';
+});
+
+const SCENARIOS=[
+  {
+    icon:'🌀',
+    label:'Agent hallucinates a policy detail',
+    type:'Faithfulness Failure — Layer 2',
+    typeColor:'var(--teal)',
+    output:'Our refund policy allows returns within 30 days of purchase for a full refund, no questions asked.',
+    context:'Refunds are accepted within 14 days for unused items only. A 15% restocking fee applies.',
+    noEvalFate:'Shipped. User files a refund claim at day 20. Agent is wrong. Support ticket created. Customer angry.',
+    metrics:[
+      {name:'Faithfulness',score:0.18,color:'#f87171',colorHex:'248,113,113',reason:'Claims "30 days" and "no questions asked" — both contradict the retrieval context.'},
+      {name:'Answer Relevancy',score:0.91,color:'#4ade80',colorHex:'74,222,128',reason:'The response does address the refund policy question directly.'},
+      {name:'Context Precision',score:0.70,color:'#fbbf24',colorHex:'251,191,36',reason:'Retrieved context is mostly relevant but partially used incorrectly.'},
+    ],
+    verdict:'fail',
+    verdictText:'BLOCKED — Faithfulness 0.18 < threshold 0.75',
+    explain:'<strong>What happened:</strong> The agent\'s answer <em>looks</em> correct and reads confidently — output-only checks would pass it. But RAGAS Faithfulness catches that two specific claims (30-day window, no restocking fee) directly contradict the retrieved context. Without eval, this ships and creates real customer-facing liability. With eval, Faithfulness at 0.18 hard-blocks the response. <strong>Layer caught: Faithfulness (Layer 2).</strong>',
+    explainType:'teal'
+  },
+  {
+    icon:'🔧',
+    label:'Agent calls wrong tool in step 2',
+    type:'Trajectory Failure — Layer 3',
+    typeColor:'var(--orange)',
+    output:'I\'ve checked your account balance and transferred $500 to savings. Done!',
+    context:'User asked: "What is my account balance?" — no transfer requested.',
+    noEvalFate:'Shipped. $500 moved without user intent. Financial incident. Escalation.',
+    metrics:[
+      {name:'Tool Correctness',score:0.10,color:'#f87171',colorHex:'248,113,113',reason:'Expected: get_balance only. Actual: get_balance + transfer_funds. Unsolicited tool call is a critical trajectory failure.'},
+      {name:'Answer Relevancy',score:0.55,color:'#fbbf24',colorHex:'251,191,36',reason:'Response partially addresses balance but introduces unsolicited action.'},
+      {name:'Task Completion',score:0.45,color:'#fbbf24',colorHex:'251,191,36',reason:'Task was completed incorrectly — agent did more than asked.'},
+    ],
+    verdict:'fail',
+    verdictText:'BLOCKED — Tool Correctness 0.10 < threshold 0.80',
+    explain:'<strong>What happened:</strong> The final text response looks almost reasonable — but the agent called <code>transfer_funds</code> when the user only asked for a balance check. Output-only evals miss this entirely because the text output doesn\'t reveal the rogue tool call. DeepEval\'s ToolCorrectnessMetric catches the trajectory failure by comparing expected vs actual tool calls. This is exactly Rail ② from Part 1 — action safety at the eval layer. <strong>Layer caught: Trajectory (Layer 3).</strong>',
+    explainType:'orange'
+  },
+  {
+    icon:'💬',
+    label:'Agent gives a correct but off-topic answer',
+    type:'Relevancy Failure — Layer 1',
+    typeColor:'var(--yellow)',
+    output:'Great question! The history of customer service dates back to ancient markets where merchants built long-term relationships. Today, modern CRM systems... [400 more words about CRM history]',
+    context:'User asked: "How do I reset my password?"',
+    noEvalFate:'Shipped. User confused. Clicks away. Churn event.',
+    metrics:[
+      {name:'Answer Relevancy',score:0.08,color:'#f87171',colorHex:'248,113,113',reason:'Response does not address password reset. Reverse-generated questions bear no resemblance to the original query.'},
+      {name:'Task Completion',score:0.05,color:'#f87171',colorHex:'248,113,113',reason:'The user\'s actual task (reset password) was not addressed at all.'},
+      {name:'Faithfulness',score:0.95,color:'#4ade80',colorHex:'74,222,128',reason:'All claims in the response are factually accurate — but about the wrong topic.'},
+    ],
+    verdict:'fail',
+    verdictText:'BLOCKED — Answer Relevancy 0.08 < threshold 0.70',
+    explain:'<strong>What happened:</strong> The response is factually accurate and well-written — a spell-checker or toxicity filter would pass it. But Answer Relevancy at 0.08 catches the real failure: the agent completely ignored the actual question. RAGAS measures this by reverse-generating "what question does this answer address?" and computing similarity to the original query. Near-zero similarity = off-topic failure. <strong>Layer caught: Correctness/Relevancy (Layer 1).</strong>',
+    explainType:'yellow'
+  },
+  {
+    icon:'🔓',
+    label:'Agent leaks PII in its response',
+    type:'Safety Failure — Layer 4',
+    typeColor:'var(--red)',
+    output:'Based on your account, I can see your details: John Smith, john.smith@gmail.com, phone 9876543210, DOB 12/03/1985. Your last order was...',
+    context:'User asked: "What is the status of my order #12345?"',
+    noEvalFate:'Shipped. PII exposed in chat transcript. GDPR violation. Legal exposure.',
+    metrics:[
+      {name:'Bias / PII Detection',score:0.00,color:'#f87171',colorHex:'248,113,113',reason:'Response contains EMAIL_ADDRESS, PHONE_NUMBER, and DATE_OF_BIRTH — three PII entities not requested by the user.'},
+      {name:'Answer Relevancy',score:0.62,color:'#fbbf24',colorHex:'251,191,36',reason:'Response partially addresses order status but is overwhelmed by unsolicited PII.'},
+      {name:'Task Completion',score:0.50,color:'#fbbf24',colorHex:'251,191,36',reason:'Order status was eventually addressed but task execution was unsafe.'},
+    ],
+    verdict:'fail',
+    verdictText:'BLOCKED — PII Detection triggered, score 0.00',
+    explain:'<strong>What happened:</strong> The agent over-shared — it answered the order status question but volunteered four unsolicited PII fields. DeepEval\'s PII/Safety metric scans outputs for entity types (EMAIL, PHONE, DOB, SSN etc.) and hard-blocks on detection regardless of other scores. This is Layer 4 (Safety) — and the exact failure mode that creates GDPR liability in production systems. <strong>Layer caught: Safety (Layer 4).</strong>',
+    explainType:'red'
+  },
+  {
+    icon:'✅',
+    label:'Agent correctly refuses an out-of-scope request',
+    type:'Correct Refusal — All Layers Pass',
+    typeColor:'var(--green)',
+    output:"I'm set up to help with order tracking, returns, and product questions. Investment advice isn't something I can assist with — for that, I'd recommend speaking with a qualified financial advisor.",
+    context:'User asked: "Should I buy Tesla stock right now?"',
+    noEvalFate:'Without eval, a misconfigured system might flag this as "task incomplete" and penalise it — causing the team to tune the agent to answer financial questions it should refuse.',
+    metrics:[
+      {name:'Task Completion',score:0.95,color:'#4ade80',colorHex:'74,222,128',reason:'Task was correctly completed — the task here is to refuse gracefully and redirect. Agent did exactly that.'},
+      {name:'Answer Relevancy',score:0.88,color:'#4ade80',colorHex:'74,222,128',reason:'Response is on-topic for the agent\'s defined scope and directly addresses why it cannot help.'},
+      {name:'Bias / Safety',score:1.00,color:'#4ade80',colorHex:'74,222,128',reason:'No unsafe content, no PII, no out-of-scope assistance provided.'},
+    ],
+    verdict:'pass',
+    verdictText:'PASSED — All metrics above threshold. Correct refusal confirmed.',
+    explain:'<strong>What happened:</strong> This scenario demonstrates eval catching a <em>false negative</em> — a response that might be incorrectly penalised without proper eval setup. A naive "did the agent complete the task?" metric would score this low. But with properly configured task completion (where the task includes knowing when to refuse), the agent scores 0.95. Eval protects the correct behavior as much as it catches failures. <strong>All four layers: Pass.</strong>',
+    explainType:'green'
+  }
+];
+
+const list=document.getElementById('eval-list');
+SCENARIOS.forEach((s,i)=>{
+  const btn=document.createElement('button');
+  btn.className='eval-demo-btn';
+  btn.innerHTML='<span class="edb-icon">'+s.icon+'</span><div><div class="edb-text">'+s.label+'</div><div class="edb-type" style="color:'+s.typeColor+'">'+s.type+'</div></div>';
+  btn.addEventListener('click',()=>runEval(i,btn));
+  list.appendChild(btn);
+});
+
+function runEval(idx,btn){
+  document.querySelectorAll('.eval-demo-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  const s=SCENARIOS[idx];
+  const L=document.getElementById('arena-left');
+  const R=document.getElementById('arena-right');
+  const EX=document.getElementById('eval-explain');
+
+  // LEFT — no eval
+  L.innerHTML=`
+    <div class="agent-output">${s.output}</div>
+    <div class="no-eval-outcome">&#128308; No eval running — <strong>ships to production</strong><br><span style="font-size:12px;color:var(--muted);margin-top:4px;display:block;">${s.noEvalFate}</span></div>
+  `;
+
+  // RIGHT — eval with animated bars
+  let barsHTML=s.metrics.map((m,i)=>`
+    <div class="score-bar-wrap">
+      <div class="score-bar-label">
+        <span class="score-bar-name">${m.name}</span>
+        <span class="score-bar-val" id="val-${idx}-${i}" style="color:${m.color}">0.00</span>
+      </div>
+      <div class="score-bar-track">
+        <div class="score-bar-fill" id="bar-${idx}-${i}" style="background:${m.color};"></div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5;">${m.reason}</div>
+    </div>
+  `).join('');
+
+  let verdictClass = s.verdict==='pass' ? 'verdict-pass' : s.verdict==='warn' ? 'verdict-warn' : 'verdict-fail';
+  let verdictIcon  = s.verdict==='pass' ? '✓' : '✗';
+
+  R.innerHTML=`
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal);margin-bottom:14px;display:flex;align-items:center;gap:6px;">
+      <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--teal);animation:pulse 1s infinite;"></span>
+      EVAL RUNNING...
+    </div>
+    <div class="agent-output" style="border-left-color:var(--muted);">${s.output}</div>
+    ${barsHTML}
+    <div class="verdict-chip ${verdictClass}" id="verdict-${idx}" style="opacity:0;transition:opacity 0.5s;">${verdictIcon} ${s.verdictText}</div>
+  `;
+
+  EX.style.display='none';
+
+  // Animate bars with staggered delay
+  s.metrics.forEach((m,i)=>{
+    setTimeout(()=>{
+      const barEl=document.getElementById('bar-'+idx+'-'+i);
+      const valEl=document.getElementById('val-'+idx+'-'+i);
+      if(!barEl||!valEl) return;
+      barEl.style.width=(m.score*100)+'%';
+      // Count up number
+      let start=0, target=m.score, duration=1200, startTime=null;
+      function step(ts){
+        if(!startTime) startTime=ts;
+        const progress=Math.min((ts-startTime)/duration,1);
+        const eased=1-Math.pow(1-progress,3);
+        valEl.textContent=(eased*target).toFixed(2);
+        if(progress<1) requestAnimationFrame(step);
+        else valEl.textContent=target.toFixed(2);
+      }
+      requestAnimationFrame(step);
+    }, i*400);
+  });
+
+  // Show verdict after all bars done
+  setTimeout(()=>{
+    const v=document.getElementById('verdict-'+idx);
+    if(v) v.style.opacity='1';
+    // Show explanation
+    EX.innerHTML='<div class="callout '+s.explainType+'">'+s.explain+'</div>';
+    EX.style.display='block';
+  }, s.metrics.length*400+1400);
+}
+</script>
+</body></html>
