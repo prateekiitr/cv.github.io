@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>The Numbers Are In: RDQ, Residual Drift, and What Actually Happens Below 4-Bit | Prateek Singh</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0d0d12;
+      --bg-card: #13131a;
+      --bg-card2: #1a1a24;
+      --teal: #00d9b4;
+      --purple: #7c6bff;
+      --pink: #ff6b9d;
+      --orange: #ffb347;
+      --text: #e2e2ef;
+      --muted: #8888aa;
+      --border: rgba(255,255,255,0.07);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 17px;
+      line-height: 1.75;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    .site-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.4rem 2.5rem;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(13,13,18,0.92);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+    .site-logo {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: 1.15rem;
+      color: var(--teal);
+      text-decoration: none;
+      letter-spacing: 0.02em;
+    }
+    .site-nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-left: 1.8rem;
+      transition: color 0.2s;
+    }
+    .site-nav a:hover { color: var(--teal); }
+
+    /* ── HERO ── */
+    .hero {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 5rem 2rem 3.5rem;
+      animation: fadeUp 0.6s ease both;
+    }
+    .hero-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.6rem;
+      flex-wrap: wrap;
+    }
+    .tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.3em 0.85em;
+      border-radius: 20px;
+      background: rgba(0,217,180,0.12);
+      color: var(--teal);
+      border: 1px solid rgba(0,217,180,0.25);
+    }
+    .tag.purple { background: rgba(124,107,255,0.12); color: var(--purple); border-color: rgba(124,107,255,0.25); }
+    .tag.orange { background: rgba(255,179,71,0.12); color: var(--orange); border-color: rgba(255,179,71,0.25); }
+    .hero-date {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      line-height: 1.12;
+      margin-bottom: 1.3rem;
+      letter-spacing: -0.01em;
+    }
+    .hero h1 em {
+      font-style: italic;
+      background: linear-gradient(90deg, var(--teal), var(--purple));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .hero-subtitle {
+      font-size: 1.15rem;
+      color: var(--muted);
+      max-width: 640px;
+      line-height: 1.6;
+    }
+
+    /* ── SERIES NOTE ── */
+    .series-note {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 0 2rem 1rem;
+    }
+    .series-note a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--purple);
+      text-decoration: none;
+      border: 1px solid rgba(124,107,255,0.25);
+      background: rgba(124,107,255,0.08);
+      padding: 0.5em 1em;
+      border-radius: 8px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .series-note a:hover { border-color: var(--purple); background: rgba(124,107,255,0.14); }
+
+    .divider {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+    .divider::after {
+      content: "";
+      display: block;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── ARTICLE ── */
+    .article {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 3rem 2rem 2rem;
+      animation: fadeUp 0.7s ease both;
+    }
+    .article p { margin-bottom: 1.3rem; color: var(--text); }
+    .article strong { color: #fff; font-weight: 600; }
+    .article em { color: var(--teal); font-style: italic; }
+    .article a { color: var(--teal); }
+
+    .article h2 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: 1.7rem;
+      margin: 2.6rem 0 1.1rem;
+      letter-spacing: -0.005em;
+    }
+    .article h3 {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      font-size: 1.15rem;
+      margin: 1.8rem 0 0.9rem;
+      color: var(--teal);
+    }
+
+    .section-accent {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      margin: 2.8rem 0 0.4rem;
+    }
+    .section-accent .accent-line {
+      width: 28px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--teal), var(--purple));
+    }
+    .section-accent span {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ── CALLOUT ── */
+    .callout {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--teal);
+      border-radius: 10px;
+      padding: 1.2rem 1.4rem;
+      margin: 1.5rem 0;
+      font-size: 0.96rem;
+      color: var(--text);
+    }
+    .callout.purple { border-color: var(--purple); }
+    .callout.orange { border-color: var(--orange); }
+    .callout.pink   { border-color: var(--pink); }
+
+    /* ── HIGHLIGHT BOX ── */
+    .highlight-box {
+      background: linear-gradient(135deg, rgba(0,217,180,0.06), rgba(124,107,255,0.06));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.8rem;
+      margin: 2rem 0;
+    }
+    .highlight-box .big-stat {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: 1.6rem;
+      color: var(--teal);
+      margin-bottom: 0.2rem;
+    }
+    .highlight-box .stat-label {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .stats-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      text-align: center;
+    }
+    .stat-item { flex: 1; min-width: 130px; }
+
+    /* ── METHOD GRID (reused from Part 1) ── */
+    .method-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin: 1.5rem 0 2rem;
+    }
+    .method-card {
+      position: relative;
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.3rem;
+      overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .method-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.16); }
+    .method-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .method-card.gptq::before  { background: var(--purple); }
+    .method-card.awq::before   { background: var(--orange); }
+    .method-card.quarot::before { background: var(--teal); }
+    .method-card.spinquant::before { background: var(--pink); }
+    .method-card.rdq::before   { background: linear-gradient(90deg, var(--teal), var(--purple)); }
+    .method-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.66rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 0.3rem;
+    }
+    .method-name {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: 1.3rem;
+      margin-bottom: 0.6rem;
+    }
+    .method-badge {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    /* ── TABLE ── */
+    .feat-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0 2rem;
+      font-size: 0.9rem;
+    }
+    .feat-table th {
+      text-align: left;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      padding: 0.7rem 0.9rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .feat-table td {
+      padding: 0.8rem 0.9rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .feat-table tr:hover td { background: rgba(255,255,255,0.025); }
+    .feat-table td:first-child { color: var(--text); font-weight: 500; }
+    .feat-table td.num { font-family: 'JetBrains Mono', monospace; color: var(--text); }
+    .feat-table td.best { color: var(--teal); font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+    .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+    .dot-teal   { background: var(--teal); }
+    .dot-orange { background: var(--orange); }
+    .dot-muted  { background: var(--muted); }
+
+    /* ── MATH BLOCK ── */
+    .math-block {
+      background: #0a0a0e;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.1rem 1.4rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.87rem;
+      color: var(--text);
+      margin: 1.4rem 0;
+      overflow-x: auto;
+      line-height: 1.7;
+    }
+    .math-block .comment { color: var(--muted); }
+
+    /* ── FLOW LIST ── */
+    .flow-list { list-style: none; margin: 1.5rem 0 2rem; }
+    .flow-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.9rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      margin-bottom: 0.7rem;
+      font-size: 0.92rem;
+      transition: border-color 0.2s;
+    }
+    .flow-list li:hover { border-color: rgba(0,217,180,0.25); }
+    .flow-icon { font-size: 1.1rem; line-height: 1.6; }
+    .flow-list strong { color: #fff; }
+
+    /* ── CHIP LIST ── */
+    .chip-list { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 1.2rem 0 1.8rem; }
+    .chip {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 0.4em 0.9em;
+      color: var(--muted);
+    }
+
+    /* ── FOOTER ── */
+    .site-footer {
+      max-width: 820px;
+      margin: 3rem auto 0;
+      padding: 2rem 2rem 3rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .site-footer a { color: var(--teal); text-decoration: none; }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      .site-header { padding: 1rem 1.25rem; }
+      .site-nav { display: none; }
+      .hero, .article, .series-note { padding-left: 1.25rem; padding-right: 1.25rem; }
+      .divider { padding: 0 1.25rem; }
+      .hero h1 { font-size: 2rem; }
+      .method-grid { grid-template-columns: 1fr 1fr; }
+      .stats-row { gap: 1rem; }
+      .feat-table { font-size: 0.78rem; }
+      .feat-table th, .feat-table td { padding: 0.6rem 0.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <a href="/" class="site-logo">Prateek Singh, PhD</a>
+  <nav class="site-nav">
+    <a href="/">Home</a>
+    <a href="/blog">Blog</a>
+    <a href="/research">Research</a>
+    <a href="/contact">Contact</a>
+  </nav>
+</header>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-meta">
+    <span class="tag">Quantization</span>
+    <span class="tag purple">LLM Research</span>
+    <span class="tag orange">Results</span>
+    <span class="hero-date">July 14, 2026</span>
+  </div>
+  <h1>The Numbers Are In: RDQ, Residual Drift, and What Actually Happens <em>Below 4-Bit</em></h1>
+  <p class="hero-subtitle">
+    A follow-up to "The Rotation Trick That Separates Good Quantization from Great." CEC's real numbers across three architectures, the ablation that answers "isn't this just AWQ with different data," and an honest update on the RotRDQ hypothesis I floated last time.
+  </p>
+</section>
+
+<div class="series-note">
+  <a href="/blog/rotation-trick-quantization">← Part 1: The Rotation Trick That Separates Good Quantization from Great</a>
+</div>
+
+<div class="divider"></div>
+
+<!-- ── ARTICLE ── -->
+<article class="article">
+
+  <p>
+    Last post I mapped the field — GPTQ, AWQ, QuaRot, SpinQuant — and left two things open. First, an intuition about CEC that I hadn't yet backed with numbers: <em>"CEC minimizes cumulative error — it asks what codebook produces the best output given the drifted inputs this layer will actually receive."</em> Second, the RotRDQ hypothesis: rotate first to kill outliers, then apply CEC to clean up the residual drift.
+  </p>
+  <p>
+    The Gemma 4 MoE run is still going. But the RDQ paper is done — full experiments across three dense architectures, two bit-widths, against every baseline from Part 1. Here's what held up, what surprised me, and where RotRDQ actually stands.
+  </p>
+
+  <!-- MECHANISM RECAP -->
+  <div class="section-accent"><div class="accent-line"></div><span>The Mechanism, Tightened</span></div>
+  <h2>Why 3-Bit Breaks: It's Not the Outliers This Time</h2>
+
+  <p>
+    Part 1 was about outliers — a few channels with values 100–1000× the median, destroying resolution when squeezed into 16 buckets. That's a real failure mode, and rotation fixes it well. But on LLaMA-3-8B, RTN-128 goes from <strong>5.83 PPL at W4 to 14.09 PPL at W3</strong> — a 2.42× perplexity hit for only 1.33× more compression. Outliers alone don't explain a cliff that steep.
+  </p>
+  <p>
+    The residual stream <code>h</code> is shared across every layer — each one reads from it and writes back to it. Quantize layer <em>l</em>, and its error <code>ε<sup>l</sup></code> doesn't stay local. It gets carried into <code>h<sup>l+1</sup></code>, and every downstream layer inherits it on top of whatever error it introduces itself:
+  </p>
+
+  <div class="math-block">
+    ĥ<sup>l</sup> = h<sup>l</sup> + Σ<sub>j&lt;l</sub> ε<sup>j</sup><br/>
+    <span class="comment">// layer l's real input, drifted by every upstream quantization error</span><br/>
+    <span class="comment">// standard PTQ calibrates against h^l, not ĥ^l — a distribution that no longer exists at inference</span>
+  </div>
+
+  <div class="callout">
+    <strong>The single-number payoff:</strong> total KL drift from the FP16 baseline correlates with log-perplexity at <strong>Pearson r = 0.999</strong> (p &lt; 0.001), across every method and bit-width tested. Quantization quality isn't a black box — it's predictable from one scalar, and that scalar is controllable layer-by-layer.
+  </div>
+
+  <!-- THREE FINDINGS -->
+  <div class="section-accent"><div class="accent-line"></div><span>Diagnosis</span></div>
+  <h2>Three Things the Residual Stream Was Doing That Nobody Was Measuring</h2>
+
+  <div class="chip-list">
+    <span class="chip">r = 0.999 drift ↔ log-PPL</span>
+    <span class="chip">σ² grows 6,548× across depth</span>
+    <span class="chip">27 / 32 layers fail KS normality</span>
+    <span class="chip">84% non-Gaussian residuals</span>
+  </div>
+
+  <p>
+    Two findings sharpen the diagnosis. Per-layer residual variance grows <strong>6,548× from early to late layers</strong> — early layers sit around σ² ≈ 10⁻⁴, late layers reach ≈ 0.65. Later layers aren't just "further along the network," they're categorically more fragile to whatever error arrives from upstream. That's exactly where a drift-correcting method should earn its keep.
+  </p>
+  <p>
+    The second finding is the one I didn't expect going in: <strong>27 of 32 layers fail a Kolmogorov–Smirnov normality test</strong>. Only six layers — {1, 7, 20, 26, 28, 30} — look Gaussian. Non-Gaussianity is the rule, not the exception, and it quietly invalidates the Gaussian assumption baked into most PTQ theory, including my own perplexity bound (more on that below).
+  </p>
+
+  <!-- CEC WITH TEETH -->
+  <div class="section-accent"><div class="accent-line"></div><span>CEC</span></div>
+  <h2>Cascaded Error Compensation, Now With Numbers</h2>
+
+  <p>
+    The intuition from Part 1 turned into a five-step pipeline:
+  </p>
+
+  <ul class="flow-list">
+    <li><span class="flow-icon">1️⃣</span><div><strong>Quantize layers 0..l−1</strong> in sequence, not independently.</div></li>
+    <li><span class="flow-icon">2️⃣</span><div><strong>Capture layer l's real inputs</strong> via <code>forward_pre_hook</code> — the drifted activations it will actually see, not clean FP16 ones. First 8 tokens per sequence are BOS-filtered.</div></li>
+    <li><span class="flow-icon">3️⃣</span><div><strong>Fit AWQ-style per-channel scales</strong> against those drifted inputs — a 20-point grid search over α minimizing real output reconstruction error.</div></li>
+    <li><span class="flow-icon">4️⃣</span><div><strong>Fold the scale into the preceding RMSNorm</strong> — mathematically exact, zero inference overhead, no custom kernel.</div></li>
+    <li><span class="flow-icon">5️⃣</span><div><strong>Move to layer l+1</strong>, which now sees inputs drifted by everything quantized so far.</div></li>
+  </ul>
+
+  <p>The RMSNorm fold is the detail I like most — it's not an approximation:</p>
+
+  <div class="math-block">
+    x / RMS(x) · (w / s) · (W · s) = x / RMS(x) · w · W = LN<sub>old</sub>(x) · W ✓<br/>
+    <span class="comment">// scale and inverse-scale cancel exactly — same forward pass, same latency, same kernels</span>
+  </div>
+
+  <p>
+    There's also a safety fallback: α = 0 (plain RTN, no scaling) is always tested as a baseline per layer. If no α &gt; 0 beats it, CEC keeps s = 1. It fires in about 12% of layer-groups — mostly where RTN already fits the drifted distribution well enough. The other 88% is where the AWQ-style scaling is doing real work, at a mean active α ≈ 0.42.
+  </p>
+
+  <!-- RESULTS -->
+  <div class="section-accent"><div class="accent-line"></div><span>Results</span></div>
+  <h2>Where RDQ Lands Across Three Architectures</h2>
+
+  <p>
+    WikiText-2 perplexity, group-128 asymmetric quantization, measured under identical protocol against RTN, AWQ, SpinQuant, and LeanQuant on LLaMA-3-8B, Qwen-2.5-7B, and Mistral-7B:
+  </p>
+
+  <table class="feat-table">
+    <thead>
+      <tr>
+        <th>Method</th>
+        <th>LLaMA-3-8B W4</th>
+        <th>LLaMA-3-8B W3</th>
+        <th>Qwen-2.5-7B W4</th>
+        <th>Qwen-2.5-7B W3</th>
+        <th>Mistral-7B W4</th>
+        <th>Mistral-7B W3</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>FP16</td>
+        <td class="num">5.557</td><td class="num">—</td>
+        <td class="num">6.158</td><td class="num">—</td>
+        <td class="num">5.632</td><td class="num">—</td>
+      </tr>
+      <tr>
+        <td>RTN-128</td>
+        <td class="num">5.831</td><td class="num">14.088</td>
+        <td class="num">6.463</td><td class="num">8.199</td>
+        <td class="num">5.983</td><td class="num">7.435</td>
+      </tr>
+      <tr>
+        <td>AWQ</td>
+        <td class="num">7.077</td><td class="num">8.912</td>
+        <td class="num">8.497</td><td class="num">9.491</td>
+        <td class="num">6.326</td><td class="num">7.273</td>
+      </tr>
+      <tr>
+        <td>SpinQuant</td>
+        <td class="num">6.967</td><td class="num">7.782</td>
+        <td class="num">6.752</td><td class="num">7.653</td>
+        <td class="num">6.154</td><td class="num">7.021</td>
+      </tr>
+      <tr>
+        <td>LeanQuant</td>
+        <td class="num">6.924</td><td class="num">7.611</td>
+        <td class="num">7.250</td><td class="num">8.300</td>
+        <td class="num">6.200</td><td class="num">7.300</td>
+      </tr>
+      <tr>
+        <td>RDQ + CEC (ours)</td>
+        <td class="best">5.620</td><td class="best">7.552</td>
+        <td class="best">6.384</td><td class="best">7.462</td>
+        <td class="best">5.732</td><td class="best">6.876</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="highlight-box">
+    <div class="stats-row">
+      <div class="stat-item">
+        <div class="big-stat">−46.4%</div>
+        <div class="stat-label">vs RTN at W3A16<br/>on LLaMA-3-8B</div>
+      </div>
+      <div class="stat-item">
+        <div class="big-stat">6 / 6</div>
+        <div class="stat-label">model × bit-width cells<br/>beating LeanQuant</div>
+      </div>
+      <div class="stat-item">
+        <div class="big-stat">1–4%</div>
+        <div class="stat-label">of FP16 perplexity<br/>at W4A16, all models</div>
+      </div>
+      <div class="stat-item">
+        <div class="big-stat">0×</div>
+        <div class="stat-label">inference overhead —<br/>standard GGUF / AIMET output</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- THE ABLATION -->
+  <div class="section-accent"><div class="accent-line"></div><span>The Obvious Objection</span></div>
+  <h2>"Isn't This Just AWQ With Different Calibration Data?"</h2>
+
+  <p>
+    Yes — and that's kind of the point. Table 3 in the paper is built specifically to answer this, on Qwen-2.5-7B at W3A16, where AWQ has its worst showing:
+  </p>
+
+  <table class="feat-table">
+    <thead>
+      <tr>
+        <th>Method</th>
+        <th>W3 PPL</th>
+        <th>What's different</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>AWQ (static FP16 calibration)</td>
+        <td class="num">9.491</td>
+        <td>Independent layers, clean inputs</td>
+      </tr>
+      <tr>
+        <td>RTN-128 (no scaling)</td>
+        <td class="num">8.199</td>
+        <td>No calibration at all</td>
+      </tr>
+      <tr>
+        <td>CEC (α=0, sequential only)</td>
+        <td class="num">10.310</td>
+        <td>Drifted calibration, no AWQ scaling</td>
+      </tr>
+      <tr>
+        <td>RDQ + CEC (both)</td>
+        <td class="best">7.462</td>
+        <td>Both components</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    The AWQ scaling formula is <em>identical</em> in row 1 and row 4. The only difference is whether the calibration data reflects what the layer actually receives at inference. That gap — 9.49 → 7.46 — is entirely drift-aware calibration.
+  </p>
+
+  <div class="callout orange">
+    <strong>The surprise:</strong> sequential calibration alone, without AWQ scaling (row 3), is <em>worse</em> than plain RTN — 10.31 vs 8.20. Re-calibrating on drifted inputs without also improving the per-channel dynamic range just disturbs the RTN grid. Neither piece works alone; you need drift-aware inputs <em>and</em> the scaling search together.
+  </div>
+
+  <p>
+    There's also an architecture-sensitivity story here. AWQ's salient-channel heuristic — <code>E|X|</code> on clean FP16 activations — was effectively derived from LLaMA-family statistics, and it mis-identifies important channels on Qwen's different weight distribution (AWQ W4 gives 8.50 on Qwen vs RDQ's 6.38 — a 2.11 PPL gap). CEC sidesteps this because its importance metric is computed on whatever the layer actually sees, which makes it distribution-agnostic by construction.
+  </p>
+
+  <!-- ROTRDQ REVISIT -->
+  <div class="section-accent"><div class="accent-line"></div><span>Revisiting Part 1</span></div>
+  <h2>So Where Does the RotRDQ Hypothesis Stand?</h2>
+
+  <p>
+    Last post I floated this: if outliers are severe enough to corrupt CEC's starting point, pre-rotating to eliminate them and <em>then</em> running CEC on the cleaner distribution should be strictly better than either alone. Honest update — the RDQ paper doesn't test this combination. It's still an open hypothesis, not a validated result.
+  </p>
+  <p>
+    What the paper does establish is that CEC is explicitly a <strong>wrapper, not a replacement</strong>: it's compatible with any per-layer quantizer — RTN, GPTQ, AWQ, LeanQuant — because the sequential drift-correction loop is orthogonal to the per-layer optimization itself. That's the same property that would make RotRDQ possible in principle: rotate first for geometry, then let CEC run its sequential capture-and-fit loop against the rotated (and still drifting) residual stream. Nothing in the CEC mechanism assumes un-rotated inputs.
+  </p>
+
+  <p>Updating the decision map from Part 1 with what's now measured vs. still open:</p>
+
+  <ul class="flow-list">
+    <li><span class="flow-icon">🔴</span><div><strong>Outliers dominate, drift is mild?</strong> Rotation (QuaRot/SpinQuant) — unchanged from Part 1, now with no new evidence either way from the RDQ experiments.</div></li>
+    <li><span class="flow-icon">🟢</span><div><strong>Drift dominates, outliers are mild?</strong> CEC alone — now backed by measured numbers: −46.4% vs RTN at W3 on LLaMA, SOTA on 6/6 cells tested.</div></li>
+    <li><span class="flow-icon">🟠</span><div><strong>Both are severe?</strong> RotRDQ — theoretically composable (CEC is quantizer-agnostic by design), but <strong>untested</strong>. This is the natural next experiment, not a confirmed result.</div></li>
+    <li><span class="flow-icon">🟣</span><div><strong>MoE architecture?</strong> Still unresolved — Gemma 4 26B experiments are ongoing, see below.</div></li>
+  </ul>
+
+  <!-- HONESTY SECTION -->
+  <div class="section-accent"><div class="accent-line"></div><span>Where the Theory Is Weaker Than the Numbers</span></div>
+  <h2>The Gaussian Bound Doesn't Actually Hold</h2>
+
+  <p>
+    The paper includes a perplexity bound derived under a Gaussian-residual assumption: <code>PPL_quant ≤ PPL_fp16 · exp(K√(2·D_total))</code>. It predicts a 1.06× degradation at W3 on LLaMA-3-8B. The measured degradation is 1.36×. The bound is violated, not conservative — which is exactly what you'd expect once you know 84% of layers fail the Gaussian normality test. I've kept this in the paper as a labeled proposition rather than a theorem for that reason; it's directionally right (more drift → worse PPL) but not a tight guarantee at 3-bit.
+  </p>
+
+  <!-- SUMMARY -->
+  <div class="section-accent"><div class="accent-line"></div><span>Takeaway</span></div>
+  <h2>Updated One-Paragraph Summary</h2>
+
+  <p>
+    Part 1's framework still holds: GPTQ corrects error locally via Hessian sensitivity, AWQ protects vulnerable channels via scaling, and rotation methods (QuaRot, SpinQuant) eliminate outliers geometrically before quantization ever happens. RDQ's Cascaded Error Compensation addresses the piece none of those touch — error that accumulates across the depth of the network, correlated with log-perplexity at r=0.999, growing 6,548× across layers, and not covered by a Gaussian-regime theory that turns out to hold for only 16% of the model. On three architectures and two bit-widths, CEC beats the best published baseline at every cell tested, at zero inference overhead. Whether it stacks with rotation is still an open question.
+  </p>
+
+  <div class="highlight-box">
+    <div class="stats-row">
+      <div class="stat-item">
+        <div class="big-stat">AWQ</div>
+        <div class="stat-label">Scale the sensitive<br/>channels up</div>
+      </div>
+      <div class="stat-item">
+        <div class="big-stat">GPTQ</div>
+        <div class="stat-label">Redistribute error<br/>sequentially</div>
+      </div>
+      <div class="stat-item">
+        <div class="big-stat">Rotation</div>
+        <div class="stat-label">Eliminate outliers<br/>geometrically</div>
+      </div>
+      <div class="stat-item">
+        <div class="big-stat">CEC</div>
+        <div class="stat-label">−46.4% PPL vs RTN,<br/>measured, W3A16</div>
+      </div>
+    </div>
+  </div>
+
+  <p>
+    Next up: KurboQuant, the KV-cache side of this — channel-aware quantization extending TurboQuant, targeting ICLR 2027. And the Gemma 4 MoE run is still open: dynamic expert routing makes both AWQ's scale search and CEC's drift estimation harder than in a dense model, since active-expert statistics shift with the input. More once I have clean numbers there.
+  </p>
+
+  <div class="callout">
+    <strong>Related reading:</strong><br/>
+    RDQ paper (this post): <a href="https://arxiv.org/pdf/2607.10137" target="_blank">arxiv.org/pdf/2607.10137</a> ·
+    GPTQ: <a href="https://arxiv.org/abs/2210.17323" target="_blank">arxiv.org/abs/2210.17323</a> ·
+    AWQ: <a href="https://arxiv.org/abs/2306.00978" target="_blank">arxiv.org/abs/2306.00978</a> ·
+    QuaRot: <a href="https://arxiv.org/abs/2404.00456" target="_blank">arxiv.org/abs/2404.00456</a> ·
+    SpinQuant: <a href="https://arxiv.org/abs/2405.16406" target="_blank">arxiv.org/abs/2405.16406</a> ·
+    LeanQuant: <a href="https://arxiv.org/abs/2407.10032" target="_blank">arxiv.org/abs/2407.10032</a>
+  </div>
+
+</article>
+
+<!-- ── FOOTER ── -->
+<footer class="site-footer">
+  <p>Written by <strong>Prateek Singh</strong> · Senior Manager, GenAI &amp; Digital Health AI · Samsung Research Institute India</p>
+  <p style="margin-top:0.5rem;"><a href="https://prateeksinghphd.com">prateeksinghphd.com</a></p>
+</footer>
+
+</body>
+</html>
