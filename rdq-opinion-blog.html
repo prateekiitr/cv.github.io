@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>PTQ Is Solving the Wrong Problem — My Take After Writing RDQ | Prateek Singh</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0d0d12;
+      --bg-card: #13131a;
+      --bg-card2: #1a1a24;
+      --teal: #00d9b4;
+      --purple: #7c6bff;
+      --pink: #ff6b9d;
+      --orange: #ffb347;
+      --text: #e2e2ef;
+      --muted: #8888aa;
+      --border: rgba(255,255,255,0.07);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 17px;
+      line-height: 1.75;
+      min-height: 100vh;
+    }
+
+    .site-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.4rem 2.5rem;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(13,13,18,0.92);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+    .site-logo {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: 1.15rem;
+      color: var(--teal);
+      text-decoration: none;
+      letter-spacing: 0.02em;
+    }
+    .site-nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-left: 1.8rem;
+      transition: color 0.2s;
+    }
+    .site-nav a:hover { color: var(--teal); }
+
+    .hero {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 5rem 2rem 3.5rem;
+      animation: fadeUp 0.6s ease both;
+    }
+    .hero-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.6rem;
+      flex-wrap: wrap;
+    }
+    .tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.3em 0.85em;
+      border-radius: 20px;
+      background: rgba(0,217,180,0.12);
+      color: var(--teal);
+      border: 1px solid rgba(0,217,180,0.25);
+    }
+    .tag.purple { background: rgba(124,107,255,0.12); color: var(--purple); border-color: rgba(124,107,255,0.25); }
+    .tag.pink { background: rgba(255,107,157,0.12); color: var(--pink); border-color: rgba(255,107,157,0.25); }
+    .hero-date {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: clamp(2.1rem, 5vw, 3.1rem);
+      line-height: 1.15;
+      margin-bottom: 1.3rem;
+      letter-spacing: -0.01em;
+    }
+    .hero h1 em {
+      font-style: italic;
+      background: linear-gradient(90deg, var(--teal), var(--purple));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .hero-subtitle {
+      font-size: 1.1rem;
+      color: var(--muted);
+      max-width: 620px;
+      line-height: 1.6;
+    }
+    .byline {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      margin-top: 1.6rem;
+      font-size: 0.86rem;
+      color: var(--muted);
+    }
+    .byline strong { color: var(--text); }
+
+    .divider { max-width: 780px; margin: 0 auto; padding: 0 2rem; }
+    .divider::after { content: ""; display: block; height: 1px; background: var(--border); }
+
+    .article {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 3rem 2rem 2rem;
+      animation: fadeUp 0.7s ease both;
+    }
+    .article p { margin-bottom: 1.3rem; color: var(--text); }
+    .article strong { color: #fff; font-weight: 600; }
+    .article em { color: var(--teal); font-style: italic; }
+    .article a { color: var(--teal); }
+
+    .article h2 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: 1.6rem;
+      margin: 2.6rem 0 1.1rem;
+      letter-spacing: -0.005em;
+    }
+
+    .section-accent {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      margin: 2.8rem 0 0.4rem;
+    }
+    .section-accent .accent-line { width: 28px; height: 2px; background: linear-gradient(90deg, var(--teal), var(--purple)); }
+    .section-accent span {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .callout {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--teal);
+      border-radius: 10px;
+      padding: 1.2rem 1.4rem;
+      margin: 1.5rem 0;
+      font-size: 0.96rem;
+      color: var(--text);
+    }
+    .callout.purple { border-color: var(--purple); }
+    .callout.pink   { border-color: var(--pink); }
+
+    .opinion-tag {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--pink);
+      margin-bottom: 0.5rem;
+    }
+
+    .highlight-box {
+      background: linear-gradient(135deg, rgba(0,217,180,0.06), rgba(124,107,255,0.06));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.8rem;
+      margin: 2rem 0;
+    }
+    .stats-row { display: flex; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap; text-align: center; }
+    .stat-item { flex: 1; min-width: 130px; }
+    .big-stat { font-family: 'Playfair Display', serif; font-weight: 900; font-size: 1.5rem; color: var(--teal); margin-bottom: 0.2rem; }
+    .stat-label { font-size: 0.82rem; color: var(--muted); line-height: 1.4; }
+
+    .flow-list { list-style: none; margin: 1.5rem 0 2rem; }
+    .flow-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.9rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      margin-bottom: 0.7rem;
+      font-size: 0.92rem;
+    }
+    .flow-icon { font-size: 1.1rem; line-height: 1.6; }
+    .flow-list strong { color: #fff; }
+
+    .site-footer {
+      max-width: 780px;
+      margin: 3rem auto 0;
+      padding: 2rem 2rem 3rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .site-footer a { color: var(--teal); text-decoration: none; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 600px) {
+      .site-header { padding: 1rem 1.25rem; }
+      .site-nav { display: none; }
+      .hero, .article, .divider { padding-left: 1.25rem; padding-right: 1.25rem; }
+      .hero h1 { font-size: 1.9rem; }
+      .stats-row { gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="/" class="site-logo">Prateek Singh, PhD</a>
+  <nav class="site-nav">
+    <a href="/">Home</a>
+    <a href="/blog">Blog</a>
+    <a href="/research">Research</a>
+    <a href="/contact">Contact</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="hero-meta">
+    <span class="tag pink">Opinion</span>
+    <span class="tag">Quantization</span>
+    <span class="tag purple">LLM Research</span>
+    <span class="hero-date">July 14, 2026</span>
+  </div>
+  <h1>PTQ Is Solving the Wrong Problem — <em>My Take</em> After Writing RDQ</h1>
+  <p class="hero-subtitle">
+    Six months of chasing residual stream drift left me with some opinions I haven't fully said out loud yet. This is that post — less "here are the numbers," more "here's what I think it means."
+  </p>
+  <div class="byline">
+    <span><strong>Prateek Singh</strong> · Author, RDQ (arXiv:2607.10137)</span>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<article class="article">
+
+  <p>
+    I've now written two posts laying out what RDQ found — the mechanism, the numbers, the ablation that survives the "isn't this just AWQ" objection. This one is different. It's not a results post. It's what I actually think, having spent six months staring at residual streams, about where the quantization field is spending its effort and where I think it's misallocated.
+  </p>
+  <p>
+    Take this as opinion, not as a claim I can fully defend with a p-value. Some of it I'm confident in. Some of it is a hunch I'd bet on but wouldn't stake a paper on yet.
+  </p>
+
+  <!-- OPINION 1 -->
+  <div class="section-accent"><div class="accent-line"></div><span>Opinion 01</span></div>
+  <h2>We've Over-Invested in Outlier Suppression</h2>
+
+  <span class="opinion-tag">Confidence: high</span>
+  <p>
+    Rotation methods — QuaRot, SpinQuant — are elegant, and I said so in my last post. But look at how much of the field's attention has gone toward outlier geometry versus cross-layer error accumulation. Almost all of it is the former. GPTQ, AWQ, SmoothQuant, OmniQuant, QuaRot, SpinQuant, LeanQuant — every one of them optimizes each layer against a clean, idealized input. Not one of the widely-cited PTQ methods asks what the layer actually receives after everything upstream has already been quantized.
+  </p>
+  <p>
+    That's a strange blind spot for a field this mature. It's not that outliers don't matter — they clearly do. It's that we found one failure mode early (outliers are visually dramatic, easy to profile, satisfying to fix), and the field anchored on it so hard that a second, larger failure mode sat there unmeasured for years. The r=0.999 correlation between drift and log-PPL isn't a subtle effect. It was just never the thing anyone was plotting.
+  </p>
+
+  <div class="callout pink">
+    My honest read: if I had to bet on where the next real gains in sub-4-bit PTQ come from, it's not a better rotation matrix. It's better modeling of what happens to the stream over 32+ sequential error injections. Rotation is a one-shot geometric fix. Drift is a compounding process. Compounding processes deserve sequential fixes, not one-shot ones.
+  </p>
+
+  <!-- OPINION 2 -->
+  <div class="section-accent"><div class="accent-line"></div><span>Opinion 02</span></div>
+  <h2>The Gaussian Assumption Should Have Been Questioned a Decade Ago</h2>
+
+  <span class="opinion-tag">Confidence: high</span>
+  <p>
+    27 of 32 LLaMA-3-8B layers fail a KS normality test. That's not a subtle statistical technicality — it's most of the model. And yet a huge amount of PTQ theory, mine included, quietly assumes Gaussian residuals because the math is tractable when you do. My own Theorem 2 bound predicts 1.06× degradation at W3; the real number is 1.36×. The bound isn't conservative, it's <em>wrong</em>, in the specific sense of being violated rather than just loose.
+  </p>
+  <p>
+    I don't think this is a small embarrassment unique to my paper. I think it's evidence that a lot of theoretical PTQ work has been building clean proofs on a distributional assumption nobody actually checked. I checked it because I was already instrumenting the residual stream for other reasons — not because I set out looking for this. I suspect if more people ran a KS test on their calibration activations before writing a bound, we'd see a lot more "proposition" labels and a lot fewer "theorem" labels in this literature. That's not a bad thing. It's more honest.
+  </p>
+
+  <!-- OPINION 3 -->
+  <div class="section-accent"><div class="accent-line"></div><span>Opinion 03</span></div>
+  <h2>"Static Calibration" Is the Field's Quiet Bug</h2>
+
+  <span class="opinion-tag">Confidence: medium-high</span>
+  <p>
+    The AWQ-on-Qwen result bothers me more than it probably should. AWQ gives 8.50 PPL on Qwen-2.5-7B at W4 — worse than doing nothing (RTN gives 6.46). That's not a small gap. A well-regarded, widely-deployed method underperforming the null baseline on a mainstream model, because its salient-channel heuristic was implicitly tuned on LLaMA-family statistics and doesn't transfer.
+  </p>
+  <p>
+    I don't think this is really an AWQ-specific problem. I think it's evidence that most "activation-aware" methods are activation-aware of the <em>wrong</em> activations — clean, static, single-snapshot FP16 activations, treated as if they were architecture-invariant ground truth. CEC's fix is almost embarrassingly simple in hindsight: measure the channel importance on what the layer will really see, and it stops mattering whether your heuristic happens to transfer across architectures, because you're not relying on a transferable heuristic at all.
+  </p>
+
+  <div class="highlight-box">
+    <div class="stats-row">
+      <div class="stat-item"><div class="big-stat">8.50</div><div class="stat-label">AWQ W4 PPL<br/>on Qwen-2.5-7B</div></div>
+      <div class="stat-item"><div class="big-stat">6.46</div><div class="stat-label">RTN (no calibration<br/>at all) on the same model</div></div>
+      <div class="stat-item"><div class="big-stat">6.38</div><div class="stat-label">RDQ+CEC —<br/>drift-aware calibration</div></div>
+    </div>
+  </div>
+
+  <!-- OPINION 4 -->
+  <div class="section-accent"><div class="accent-line"></div><span>Opinion 04</span></div>
+  <h2>I Don't Think RDQ Is the Endpoint — And I'm Wary of Papers That Claim to Be</h2>
+
+  <span class="opinion-tag">Confidence: high, this one's more meta</span>
+  <p>
+    I structured RDQ around one central number (r=0.999) because I think that's genuinely the strongest thing in the paper — but I want to be careful not to oversell it. CEC is a wrapper around AWQ-style scaling. It's compatible with GPTQ, LeanQuant, whatever comes next. I said this explicitly in the paper and I mean it: the contribution is the sequential drift-correction principle, not a specific scaling formula. If someone plugs LeanQuant's loss-aware grid into the CEC loop and beats my W3 numbers next quarter, that's not a competing result, that's the expected next step.
+  </p>
+  <p>
+    I think the field has a mild allergy to admitting a method is a "wrapper" rather than a self-contained breakthrough, because wrappers sound less publishable. I'd rather be right about scope than get credit for a bigger claim than the evidence supports. The Theorem-2-as-proposition decision was the same instinct — better to under-claim and be correct than to claim a tight bound I know gets violated at the bit-width that actually matters.
+  </p>
+
+  <!-- WHAT I'D TEST NEXT -->
+  <div class="section-accent"><div class="accent-line"></div><span>What I'd Actually Bet On</span></div>
+  <h2>If I Had Another Six Months</h2>
+
+  <ul class="flow-list">
+    <li><span class="flow-icon">🎯</span><div><strong>RotRDQ, properly tested.</strong> Rotation for geometry, CEC for drift, on the same model. I've said this hypothesis out loud twice now without evidence — that's the next thing I owe this series, not more theory.</div></li>
+    <li><span class="flow-icon">🎯</span><div><strong>Drift-aware calibration for activation quantization, not just weights.</strong> W+A CEC is untouched in the paper. Activations see drifted inputs too, and I'd guess the effect is larger there, not smaller.</div></li>
+    <li><span class="flow-icon">🎯</span><div><strong>A non-Gaussian version of the perplexity bound.</strong> Not because the current one is useless — it's directionally right — but because I think a bound that doesn't assume Gaussianity is achievable and would actually hold at W3.</div></li>
+    <li><span class="flow-icon">🎯</span><div><strong>Checking whether this generalizes past dense transformers.</strong> MoE routing means the "layer receives drifted input" story gets more complicated — the drift itself becomes input-dependent. I don't know yet if CEC's calibration-set assumptions survive that.</div></li>
+  </ul>
+
+  <!-- CLOSE -->
+  <div class="section-accent"><div class="accent-line"></div><span>Where I Land</span></div>
+  <h2>The Honest Summary</h2>
+
+  <p>
+    My opinion, stated plainly: the PTQ field has spent disproportionate effort on outlier geometry because outliers are easy to see and satisfying to fix, while a larger, more predictable failure mode — cross-layer drift, correlated with perplexity almost perfectly — sat underexamined because it required instrumenting the whole forward pass instead of one weight matrix. I don't think RDQ closes that gap. I think it's the first paper to put a number on how big the gap is.
+  </p>
+  <p>
+    If you disagree with any of this — especially the claim that static calibration is a field-wide quiet bug rather than an AWQ-specific quirk — I'd genuinely like to hear the counter-argument. That's the kind of pushback that would actually change what I test next.
+  </p>
+
+  <div class="callout">
+    <strong>Related reading:</strong><br/>
+    RDQ paper: <a href="https://arxiv.org/pdf/2607.10137" target="_blank">arxiv.org/pdf/2607.10137</a> ·
+    Part 1 — The Rotation Trick: <a href="/blog/rotation-trick-quantization">on this blog</a> ·
+    Part 2 — The Numbers Are In: <a href="/blog/rdq-results">on this blog</a>
+  </div>
+
+</article>
+
+<footer class="site-footer">
+  <p>Written by <strong>Prateek Singh</strong> · Senior Manager, GenAI &amp; Digital Health AI · Samsung Research Institute India</p>
+  <p style="margin-top:0.5rem;"><a href="https://prateeksinghphd.com">prateeksinghphd.com</a></p>
+</footer>
+
+</body>
+</html>

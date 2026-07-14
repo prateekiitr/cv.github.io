@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>RDQ by the Numbers | Prateek Singh</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0d0d12;
+      --bg-card: #13131a;
+      --bg-card2: #1a1a24;
+      --teal: #00d9b4;
+      --purple: #7c6bff;
+      --pink: #ff6b9d;
+      --orange: #ffb347;
+      --text: #e2e2ef;
+      --muted: #8888aa;
+      --border: rgba(255,255,255,0.07);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 17px;
+      line-height: 1.75;
+      min-height: 100vh;
+    }
+    .site-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.4rem 2.5rem;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(13,13,18,0.92);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+    .site-logo {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: 1.15rem;
+      color: var(--teal);
+      text-decoration: none;
+      letter-spacing: 0.02em;
+    }
+    .site-nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-left: 1.8rem;
+      transition: color 0.2s;
+    }
+    .site-nav a:hover { color: var(--teal); }
+
+    .hero { max-width: 780px; margin: 0 auto; padding: 4.5rem 2rem 3rem; animation: fadeUp 0.6s ease both; }
+    .hero-meta { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.6rem; flex-wrap: wrap; }
+    .tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.3em 0.85em; border-radius: 20px;
+      background: rgba(0,217,180,0.12); color: var(--teal); border: 1px solid rgba(0,217,180,0.25);
+    }
+    .tag.purple { background: rgba(124,107,255,0.12); color: var(--purple); border-color: rgba(124,107,255,0.25); }
+    .tag.orange { background: rgba(255,179,71,0.12); color: var(--orange); border-color: rgba(255,179,71,0.25); }
+    .hero-date { font-size: 0.8rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+    .hero h1 {
+      font-family: 'Playfair Display', serif; font-weight: 900;
+      font-size: clamp(2.1rem, 5vw, 3.2rem); line-height: 1.12; margin-bottom: 1.2rem; letter-spacing: -0.01em;
+    }
+    .hero h1 em {
+      font-style: italic;
+      background: linear-gradient(90deg, var(--teal), var(--purple));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .hero-subtitle { font-size: 1.1rem; color: var(--muted); max-width: 600px; line-height: 1.6; }
+
+    .divider { max-width: 780px; margin: 0 auto; padding: 0 2rem; }
+    .divider::after { content: ""; display: block; height: 1px; background: var(--border); }
+
+    .article { max-width: 780px; margin: 0 auto; padding: 3rem 2rem 2rem; animation: fadeUp 0.7s ease both; }
+    .article p { margin-bottom: 1.2rem; color: var(--text); }
+    .article strong { color: #fff; font-weight: 600; }
+    .article em { color: var(--teal); font-style: italic; }
+    .article a { color: var(--teal); }
+
+    .section-accent { display: flex; align-items: center; gap: 0.7rem; margin: 2.6rem 0 0.4rem; }
+    .section-accent .accent-line { width: 28px; height: 2px; background: linear-gradient(90deg, var(--teal), var(--purple)); }
+    .section-accent span {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+    }
+
+    /* ── NUMBER CARD — the core unit of this post ── */
+    .num-card {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem 1.7rem;
+      margin: 1.1rem 0;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .num-card:hover { border-color: rgba(0,217,180,0.3); transform: translateX(3px); }
+    .num-figure {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: 2.1rem;
+      line-height: 1;
+      white-space: nowrap;
+      background: linear-gradient(135deg, var(--teal), var(--purple));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      min-width: 118px;
+    }
+    .num-figure.pink { background: linear-gradient(135deg, var(--pink), var(--orange)); -webkit-background-clip: text; background-clip: text; }
+    .num-body { flex: 1; }
+    .num-label { font-size: 0.95rem; color: var(--text); font-weight: 500; margin-bottom: 0.2rem; }
+    .num-detail { font-size: 0.84rem; color: var(--muted); line-height: 1.5; }
+
+    .feat-table {
+      width: 100%; border-collapse: collapse; margin: 1.5rem 0 2rem; font-size: 0.88rem;
+    }
+    .feat-table th {
+      text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 0.66rem;
+      text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted);
+      padding: 0.7rem 0.8rem; border-bottom: 1px solid var(--border);
+    }
+    .feat-table td { padding: 0.75rem 0.8rem; border-bottom: 1px solid var(--border); color: var(--muted); }
+    .feat-table tr:hover td { background: rgba(255,255,255,0.025); }
+    .feat-table td:first-child { color: var(--text); font-weight: 500; }
+    .feat-table td.num { font-family: 'JetBrains Mono', monospace; color: var(--text); }
+    .feat-table td.best { color: var(--teal); font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+
+    .callout {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--teal);
+      border-radius: 10px;
+      padding: 1.2rem 1.4rem;
+      margin: 1.5rem 0;
+      font-size: 0.96rem;
+    }
+    .callout.orange { border-color: var(--orange); }
+
+    .chip-list { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 1.2rem 0 1.8rem; }
+    .chip {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
+      background: var(--bg-card2); border: 1px solid var(--border);
+      border-radius: 20px; padding: 0.4em 0.9em; color: var(--muted);
+    }
+
+    .site-footer {
+      max-width: 780px; margin: 3rem auto 0; padding: 2rem 2rem 3rem;
+      border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted);
+    }
+    .site-footer a { color: var(--teal); text-decoration: none; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 600px) {
+      .site-header { padding: 1rem 1.25rem; }
+      .site-nav { display: none; }
+      .hero, .article, .divider { padding-left: 1.25rem; padding-right: 1.25rem; }
+      .hero h1 { font-size: 1.9rem; }
+      .num-card { flex-direction: column; align-items: flex-start; gap: 0.6rem; }
+      .num-figure { font-size: 1.7rem; min-width: 0; }
+      .feat-table { font-size: 0.75rem; }
+      .feat-table th, .feat-table td { padding: 0.55rem 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="/" class="site-logo">Prateek Singh, PhD</a>
+  <nav class="site-nav">
+    <a href="/">Home</a>
+    <a href="/blog">Blog</a>
+    <a href="/research">Research</a>
+    <a href="/contact">Contact</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="hero-meta">
+    <span class="tag">Quantization</span>
+    <span class="tag purple">LLM Research</span>
+    <span class="tag orange">By the Numbers</span>
+    <span class="hero-date">July 14, 2026</span>
+  </div>
+  <h1>RDQ, <em>by the Numbers</em></h1>
+  <p class="hero-subtitle">
+    No narrative this time — just every stat from the paper that actually mattered, in one scroll. If you only have two minutes, this is the post.
+  </p>
+</section>
+
+<div class="divider"></div>
+
+<article class="article">
+
+  <p>
+    I've written the diagnosis post and the results post already. This one skips the story and just lays out the numbers, in the order I'd want them if someone handed me this paper cold.
+  </p>
+
+  <!-- THE DIAGNOSIS -->
+  <div class="section-accent"><div class="accent-line"></div><span>The Diagnosis</span></div>
+
+  <div class="num-card">
+    <div class="num-figure">r = 0.999</div>
+    <div class="num-body">
+      <div class="num-label">Correlation between total KL drift and log-perplexity</div>
+      <div class="num-detail">Across every method and bit-width tested. p &lt; 0.001. This is the single number the whole paper hangs on.</div>
+    </div>
+  </div>
+
+  <div class="num-card">
+    <div class="num-figure">6,548×</div>
+    <div class="num-body">
+      <div class="num-label">Growth in residual stream variance across depth</div>
+      <div class="num-detail">σ² ≈ 10⁻⁴ at early layers, ≈ 0.65 by layer 32. Later layers are categorically more fragile to upstream drift.</div>
+    </div>
+  </div>
+
+  <div class="num-card">
+    <div class="num-figure pink">27 / 32</div>
+    <div class="num-body">
+      <div class="num-label">Layers that fail Kolmogorov–Smirnov normality</div>
+      <div class="num-detail">84% non-Gaussian. Only layers {1, 7, 20, 26, 28, 30} pass. Invalidates the Gaussian assumption in most PTQ theory, including my own Theorem 2.</div>
+    </div>
+  </div>
+
+  <div class="num-card">
+    <div class="num-figure">2.42×</div>
+    <div class="num-body">
+      <div class="num-label">RTN's perplexity ratio, W4 → W3, on LLaMA-3-8B</div>
+      <div class="num-detail">5.83 → 14.09 PPL, for only 1.33× more compression. The cliff the whole paper is trying to explain.</div>
+    </div>
+  </div>
+
+  <!-- THE RESULTS -->
+  <div class="section-accent"><div class="accent-line"></div><span>The Results</span></div>
+
+  <div class="num-card">
+    <div class="num-figure">6 / 6</div>
+    <div class="num-body">
+      <div class="num-label">Model × bit-width cells where RDQ+CEC beats LeanQuant</div>
+      <div class="num-detail">LLaMA-3-8B, Qwen-2.5-7B, Mistral-7B — each at W3A16 and W4A16. Best published baseline, beaten every time.</div>
+    </div>
+  </div>
+
+  <div class="num-card">
+    <div class="num-figure">−46.4%</div>
+    <div class="num-body">
+      <div class="num-label">PPL reduction vs RTN, W3A16, LLaMA-3-8B</div>
+      <div class="num-detail">14.09 → 7.55. The largest single gain in the paper, on the model with the most severe drift.</div>
+    </div>
+  </div>
+
+  <div class="num-card">
+    <div class="num-figure">1–4%</div>
+    <div class="num-body">
+      <div class="num-label">Distance from FP16 at W4A16, across all three models</div>
+      <div class="num-detail">5.62 vs 5.557 (LLaMA), 6.38 vs 6.158 (Qwen), 5.73 vs 5.632 (Mistral). Near-lossless 4-bit.</div>
+    </div>
+  </div>
+
+  <div class="num-card">
+    <div class="num-figure">0×</div>
+    <div class="num-body">
+      <div class="num-label">Inference overhead</div>
+      <div class="num-detail">Scales fold into RMSNorm weights — mathematically exact. Standard group-128 output, deployable on AIMET, GGUF, any existing stack.</div>
+    </div>
+  </div>
+
+  <table class="feat-table">
+    <thead>
+      <tr><th>Model</th><th>W4 PPL</th><th>W3 PPL</th><th>vs. best baseline (W3)</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>LLaMA-3-8B</td><td class="best">5.620</td><td class="best">7.552</td><td class="num">−0.06 vs LeanQuant</td></tr>
+      <tr><td>Qwen-2.5-7B</td><td class="best">6.384</td><td class="best">7.462</td><td class="num">−0.84 vs LeanQuant</td></tr>
+      <tr><td>Mistral-7B</td><td class="best">5.732</td><td class="best">6.876</td><td class="num">−0.42 vs LeanQuant</td></tr>
+    </tbody>
+  </table>
+
+  <!-- THE ABLATION -->
+  <div class="section-accent"><div class="accent-line"></div><span>The Ablation</span></div>
+
+  <div class="num-card">
+    <div class="num-figure">−2.03</div>
+    <div class="num-body">
+      <div class="num-label">PPL gap from drift-aware calibration alone, Qwen W3</div>
+      <div class="num-detail">Same AWQ scaling formula, only the calibration data changes: 9.49 → 7.46. The whole gain, isolated.</div>
+    </div>
+  </div>
+
+  <div class="num-card">
+    <div class="num-figure pink">+2.11</div>
+    <div class="num-body">
+      <div class="num-label">PPL gap where AWQ underperforms plain RTN, Qwen W4</div>
+      <div class="num-detail">8.50 (AWQ) vs 6.46 (RTN, no calibration at all). AWQ's salient-channel heuristic mis-transfers off LLaMA statistics.</div>
+    </div>
+  </div>
+
+  <div class="num-card">
+    <div class="num-figure pink">10.31</div>
+    <div class="num-body">
+      <div class="num-label">PPL when sequential calibration runs with no AWQ scaling</div>
+      <div class="num-detail">Worse than RTN's 8.20. Confirms neither component works alone — you need drift-aware inputs and the scaling search together.</div>
+    </div>
+  </div>
+
+  <div class="callout orange">
+    <strong>Reading the ablation in one line:</strong> the AWQ formula was never the problem — the calibration data was. Fix the data, the same formula goes from underperformer to SOTA.
+  </div>
+
+  <!-- COST -->
+  <div class="section-accent"><div class="accent-line"></div><span>The Cost</span></div>
+
+  <div class="chip-list">
+    <span class="chip">30 min calibration — LLaMA-3-8B, A100-80GB, W3</span>
+    <span class="chip">~20 wall-clock hrs — 70B, unbatched</span>
+    <span class="chip">~5 wall-clock hrs — 70B, batched</span>
+    <span class="chip">One-time offline cost</span>
+    <span class="chip">Amortizes in &lt;1 min of inference at 1K queries/day</span>
+  </div>
+
+  <!-- THE GAP -->
+  <div class="section-accent"><div class="accent-line"></div><span>Where the Theory Falls Short</span></div>
+
+  <div class="num-card">
+    <div class="num-figure pink">1.36×</div>
+    <div class="num-body">
+      <div class="num-label">Actual PPL degradation at W3, vs. 1.06× predicted</div>
+      <div class="num-detail">The Gaussian-regime perplexity bound (Theorem 2) is violated, not conservative — expected, given 84% of layers are non-Gaussian. Kept as a proposition, not a theorem.</div>
+    </div>
+  </div>
+
+  <p style="margin-top: 2rem;">
+    That's the whole paper in numbers. If you want the reasoning behind any one of these, the diagnosis post and results post go deeper.
+  </p>
+
+  <div class="callout">
+    <strong>Related reading:</strong><br/>
+    RDQ paper: <a href="https://arxiv.org/pdf/2607.10137" target="_blank">arxiv.org/pdf/2607.10137</a> ·
+    Part 1 — The Rotation Trick: <a href="/blog/rotation-trick-quantization">on this blog</a> ·
+    Part 2 — The Numbers Are In: <a href="/blog/rdq-results">on this blog</a> ·
+    Opinion — PTQ Is Solving the Wrong Problem: <a href="/blog/rdq-opinion">on this blog</a>
+  </div>
+
+</article>
+
+<footer class="site-footer">
+  <p>Written by <strong>Prateek Singh</strong> · Senior Manager, GenAI &amp; Digital Health AI · Samsung Research Institute India</p>
+  <p style="margin-top:0.5rem;"><a href="https://prateeksinghphd.com">prateeksinghphd.com</a></p>
+</footer>
+
+</body>
+</html>
