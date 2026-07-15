@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>LLM Infrastructure Calculator | Prateek Singh</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0d0d12;
+      --bg-card: #13131a;
+      --bg-card2: #1a1a24;
+      --bg-well: #0a0a0e;
+      --teal: #00d9b4;
+      --purple: #7c6bff;
+      --pink: #ff6b9d;
+      --orange: #ffb347;
+      --text: #e2e2ef;
+      --muted: #8888aa;
+      --border: rgba(255,255,255,0.07);
+      --border-strong: rgba(255,255,255,0.14);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15.5px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .mono { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+
+    /* ── HEADER ── */
+    .site-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.4rem 2.5rem;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(13,13,18,0.92);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+    .site-logo {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: 1.15rem;
+      color: var(--teal);
+      text-decoration: none;
+      letter-spacing: 0.02em;
+    }
+    .site-nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-left: 1.8rem;
+      transition: color 0.2s;
+    }
+    .site-nav a:hover { color: var(--teal); }
+
+    /* ── INTRO ── */
+    .intro {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 3.2rem 2rem 2rem;
+    }
+    .hero-meta { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.4rem; flex-wrap: wrap; }
+    .tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.3em 0.85em;
+      border-radius: 20px;
+      background: rgba(0,217,180,0.12);
+      color: var(--teal);
+      border: 1px solid rgba(0,217,180,0.25);
+    }
+    .back-link {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--purple);
+      text-decoration: none;
+      border: 1px solid rgba(124,107,255,0.25);
+      background: rgba(124,107,255,0.08);
+      padding: 0.5em 1em;
+      border-radius: 8px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .back-link:hover { border-color: var(--purple); background: rgba(124,107,255,0.14); }
+    .intro h1 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
+      line-height: 1.15;
+      margin-bottom: 0.9rem;
+      letter-spacing: -0.01em;
+      max-width: 30ch;
+    }
+    .intro p {
+      color: var(--muted);
+      max-width: 68ch;
+      font-size: 1.02rem;
+    }
+
+    /* ── CONSOLE LAYOUT ── */
+    .console {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 1rem 2rem 5rem;
+      display: grid;
+      grid-template-columns: minmax(300px, 360px) 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+    @media (max-width: 900px) {
+      .console { grid-template-columns: 1fr; }
+    }
+
+    .panel { display: flex; flex-direction: column; gap: 16px; }
+
+    .card {
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .card h2 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+      color: var(--muted);
+      margin: 0 0 14px;
+    }
+    .card h3 {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #fff;
+      margin: 0 0 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+    .field:last-child { margin-bottom: 0; }
+    .field label {
+      font-size: 12.5px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+    }
+    .field label .unit { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5f6478; }
+
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .row4 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    input[type="number"], select {
+      width: 100%;
+      background: var(--bg-well);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13.5px;
+      padding: 8px 10px;
+      transition: border-color 0.12s ease;
+    }
+    select {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13.5px;
+      appearance: none;
+      background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+      background-position: calc(100% - 16px) center, calc(100% - 11px) center;
+      background-size: 5px 5px, 5px 5px;
+      background-repeat: no-repeat;
+      padding-right: 30px;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(0,217,180,0.15);
+    }
+
+    .toggle-group {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .toggle-group button {
+      flex: 1;
+      background: var(--bg-well);
+      border: none;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12.5px;
+      font-weight: 500;
+      padding: 8px 6px;
+      cursor: pointer;
+      border-right: 1px solid var(--border);
+    }
+    .toggle-group button:last-child { border-right: none; }
+    .toggle-group button.active { background: var(--teal); color: #06110d; }
+    .toggle-group button:focus-visible { outline: 2px solid var(--teal); outline-offset: -2px; }
+
+    /* ── HEADLINE ── */
+    .headline-card {
+      background: linear-gradient(135deg, rgba(0,217,180,0.08), rgba(124,107,255,0.06));
+      border: 1px solid rgba(0,217,180,0.2);
+      border-radius: 14px;
+      padding: 22px 24px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 24px;
+      align-items: center;
+    }
+    @media (max-width: 620px) { .headline-card { grid-template-columns: 1fr; } }
+    .headline-figure .label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .headline-figure .big-number {
+      font-family: 'Playfair Display', serif;
+      font-size: 48px;
+      font-weight: 900;
+      color: var(--teal);
+      line-height: 1;
+    }
+    .headline-detail {
+      font-size: 13px;
+      color: var(--muted);
+      border-left: 1px solid var(--border-strong);
+      padding-left: 24px;
+    }
+    @media (max-width: 620px) {
+      .headline-detail { border-left: none; padding-left: 0; border-top: 1px solid var(--border); padding-top: 14px; }
+    }
+    .headline-detail .hd-row { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; }
+    .headline-detail .hd-row .v { font-family: 'JetBrains Mono', monospace; color: var(--text); }
+
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 620px) { .grid2 { grid-template-columns: 1fr; } }
+
+    .status-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-weight: 600;
+      background: rgba(0,217,180,0.12);
+      color: var(--teal);
+      border: 1px solid rgba(0,217,180,0.25);
+    }
+
+    /* stacked bar */
+    .stacked-bar {
+      display: flex;
+      width: 100%;
+      height: 24px;
+      border-radius: 5px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+    .stacked-bar .seg { height: 100%; min-width: 2px; }
+    .stacked-bar .seg.weights { background: var(--purple); }
+    .stacked-bar .seg.kv { background: var(--orange); }
+    .stacked-bar .seg.activation { background: var(--pink); }
+    .stacked-bar .seg.overhead { background: var(--muted); }
+
+    .cap-line {
+      display: flex;
+      justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      color: #5f6478;
+      margin-bottom: 14px;
+    }
+
+    .mem-table { width: 100%; border-collapse: collapse; }
+    .mem-table tr { border-top: 1px solid var(--border); }
+    .mem-table tr:first-child { border-top: none; }
+    .mem-table td { padding: 7px 0; font-size: 13px; }
+    .mem-table td.swatch-cell { width: 20px; }
+    .swatch { display: inline-block; width: 9px; height: 9px; border-radius: 2px; }
+    .swatch.weights { background: var(--purple); }
+    .swatch.kv { background: var(--orange); }
+    .swatch.activation { background: var(--pink); }
+    .swatch.overhead { background: var(--muted); }
+    .mem-table td.name { color: var(--muted); }
+    .mem-table td.val { text-align: right; font-family: 'JetBrains Mono', monospace; color: var(--text); }
+    .mem-table tr.total td { border-top: 1px solid var(--border-strong); font-weight: 700; padding-top: 9px; color: #fff; }
+
+    .equation-block {
+      background: var(--bg-well);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+    }
+    .eq-row {
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-family: 'JetBrains Mono', monospace; font-size: 12.5px;
+      padding: 4px 0; color: var(--muted);
+    }
+    .eq-row .eq-val { color: var(--text); }
+    .eq-row.result {
+      border-top: 1px dashed var(--border-strong);
+      margin-top: 6px; padding-top: 10px; color: var(--text);
+      font-weight: 600; font-size: 13.5px;
+    }
+    .eq-row.result .eq-val { color: var(--teal); }
+    .eq-note { font-size: 12px; color: #5f6478; margin-top: 4px; }
+
+    .stat-list { display: flex; flex-direction: column; }
+    .stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-top: 1px solid var(--border); font-size: 13px; }
+    .stat-row:first-child { border-top: none; }
+    .stat-row .name { color: var(--muted); }
+    .stat-row .val { font-family: 'JetBrains Mono', monospace; }
+
+    .precision-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 14px; }
+    .precision-strip .p-item {
+      background: var(--bg-well);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 10px;
+      text-align: center;
+    }
+    .precision-strip .p-item.active { border-color: var(--teal); background: rgba(0,217,180,0.08); }
+    .precision-strip .p-item .p-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px; color: #5f6478; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 3px;
+    }
+    .precision-strip .p-item .p-val { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; }
+
+    .site-footer {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 1.5rem 2rem 3rem;
+      font-size: 12.5px;
+      color: #5f6478;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="/" class="site-logo">Prateek Singh, PhD</a>
+  <nav class="site-nav">
+    <a href="/">Home</a>
+    <a href="https://prateeksinghphd.in/blogs.html">Blog</a>
+    <a href="/research">Research</a>
+    <a href="/contact">Contact</a>
+  </nav>
+</header>
+
+<section class="intro">
+  <div class="hero-meta">
+    <span class="tag">Infrastructure</span>
+    <a href="llm-infrastructure-sizing-blog.html" class="back-link">← Read the writeup</a>
+  </div>
+  <h1>LLM Infrastructure Calculator</h1>
+  <p>Pick a model, a precision, a GPU, and a usage pattern. Storage, VRAM breakdown, concurrency, and GPU count update live from the architecture and workload you set below.</p>
+</section>
+
+<div class="console">
+  <section class="panel controls">
+    <div class="card">
+      <h2>Model</h2>
+      <div class="field">
+        <label for="preset">Preset</label>
+        <select autocomplete="off" id="preset"></select>
+      </div>
+      <div class="field">
+        <label for="params">Parameters <span class="unit">billions</span></label>
+        <input autocomplete="off" type="number" id="params" step="0.1" min="0.01" />
+      </div>
+      <div class="row4">
+        <div class="field">
+          <label for="layers">Layers</label>
+          <input autocomplete="off" type="number" id="layers" step="1" min="1" />
+        </div>
+        <div class="field">
+          <label for="hidden">Hidden dim</label>
+          <input autocomplete="off" type="number" id="hidden" step="1" min="1" />
+        </div>
+        <div class="field">
+          <label for="heads">Attn heads</label>
+          <input autocomplete="off" type="number" id="heads" step="1" min="1" />
+        </div>
+        <div class="field">
+          <label for="kvheads">KV heads</label>
+          <input autocomplete="off" type="number" id="kvheads" step="1" min="1" />
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="wprec">Weight precision</label>
+          <select autocomplete="off" id="wprec">
+            <option value="4">FP32</option>
+            <option value="2" selected>FP16 / BF16</option>
+            <option value="1">INT8</option>
+            <option value="0.5">INT4</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="kvprec">KV cache precision</label>
+          <select autocomplete="off" id="kvprec">
+            <option value="2" selected>FP16 / BF16</option>
+            <option value="1">INT8</option>
+            <option value="0.5">INT4</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Context &amp; hardware</h2>
+      <div class="field">
+        <label for="seqlen">Max context length <span class="unit">tokens</span></label>
+        <input autocomplete="off" type="number" id="seqlen" step="512" min="128" value="4096" />
+      </div>
+      <div class="field">
+        <label for="gpu">GPU card</label>
+        <select autocomplete="off" id="gpu"></select>
+      </div>
+      <div class="field" id="customgpu-field" style="display:none;">
+        <label for="customgpu">Custom VRAM <span class="unit">GB</span></label>
+        <input autocomplete="off" type="number" id="customgpu" step="1" min="1" value="80" />
+      </div>
+      <div class="field">
+        <label>Deployment mode</label>
+        <div class="toggle-group" id="deploy-toggle">
+          <button data-mode="gpu" class="active" type="button">GPU-resident</button>
+          <button data-mode="offload" type="button">CPU offload / mmap</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Usage pattern</h2>
+      <div class="row2">
+        <div class="field">
+          <label for="users">Users</label>
+          <input autocomplete="off" type="number" id="users" step="1" min="0" value="1000" />
+        </div>
+        <div class="field">
+          <label for="reqrate">Requests / user / hr</label>
+          <input autocomplete="off" type="number" id="reqrate" step="0.1" min="0" value="12" />
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="prompttok">Avg prompt <span class="unit">tokens</span></label>
+          <input autocomplete="off" type="number" id="prompttok" step="10" min="1" value="500" />
+        </div>
+        <div class="field">
+          <label for="outtok">Avg output <span class="unit">tokens</span></label>
+          <input autocomplete="off" type="number" id="outtok" step="10" min="1" value="500" />
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="prefilltps">Prefill speed <span class="unit">tok/s</span></label>
+          <input autocomplete="off" type="number" id="prefilltps" step="50" min="1" value="3000" />
+        </div>
+        <div class="field">
+          <label for="decodetps">Decode speed <span class="unit">tok/s · seq</span></label>
+          <input autocomplete="off" type="number" id="decodetps" step="1" min="1" value="45" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel readout">
+    <div class="headline-card">
+      <div class="headline-figure">
+        <div class="label">GPUs required</div>
+        <div class="big-number mono" id="out-gpucount">—</div>
+      </div>
+      <div class="headline-detail" id="out-gpudetail"></div>
+    </div>
+
+    <div class="card">
+      <h3>VRAM per replica <span class="status-pill" id="vram-status"></span></h3>
+      <div class="stacked-bar" id="vram-bar"></div>
+      <div class="cap-line">
+        <span id="vram-total-label">—</span>
+        <span id="vram-cap-label">—</span>
+      </div>
+      <table class="mem-table" id="vram-table"></table>
+      <div class="precision-strip" id="precision-strip"></div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>Concurrency — Little's Law</h3>
+        <div class="equation-block">
+          <div class="eq-row"><span>&lambda; arrival rate</span><span class="eq-val" id="out-lambda">—</span></div>
+          <div class="eq-row"><span>W avg time-in-system</span><span class="eq-val" id="out-w">—</span></div>
+          <div class="eq-row result"><span>L = &lambda; &times; W</span><span class="eq-val" id="out-L">—</span></div>
+        </div>
+        <div class="eq-note">L is the average number of requests resident in the system at once — this sets the KV-cache batch size, not &lambda; alone.</div>
+      </div>
+
+      <div class="card">
+        <h3>Host RAM</h3>
+        <table class="mem-table" id="ram-table"></table>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>Sizing detail</h3>
+        <div class="stat-list" id="verdict-list"></div>
+      </div>
+      <div class="card">
+        <h3>Storage <span class="unit" style="font-weight:400;font-size:11px;color:#5f6478">disk</span></h3>
+        <table class="mem-table" id="storage-table"></table>
+      </div>
+    </div>
+  </section>
+</div>
+
+<footer class="site-footer">
+  Estimates for capacity planning — validate against a real serving benchmark (vLLM, TGI, TensorRT-LLM) before procurement.
+  &nbsp;·&nbsp; <a href="llm-infrastructure-sizing-blog.html" style="color:var(--teal);">Read how these numbers are derived →</a>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  var PRESETS = {
+    tinyllama: { label: "TinyLlama 1.1B", params: 1.1, layers: 22, hidden: 2048, heads: 32, kvheads: 4 },
+    llama3_8b: { label: "Llama 3 8B", params: 8, layers: 32, hidden: 4096, heads: 32, kvheads: 8 },
+    mistral_7b: { label: "Mistral 7B", params: 7.3, layers: 32, hidden: 4096, heads: 32, kvheads: 8 },
+    qwen25_32b: { label: "Qwen 2.5 32B", params: 32.5, layers: 64, hidden: 5120, heads: 40, kvheads: 8 },
+    llama3_70b: { label: "Llama 3 70B", params: 70, layers: 80, hidden: 8192, heads: 64, kvheads: 8 },
+    custom: { label: "Custom", params: 13, layers: 40, hidden: 5120, heads: 40, kvheads: 40 }
+  };
+
+  var GPUS = {
+    rtx4090: { label: "RTX 4090 — 24 GB", vram: 24 },
+    l40s: { label: "L40S — 48 GB", vram: 48 },
+    a100_40: { label: "A100 — 40 GB", vram: 40 },
+    a100_80: { label: "A100 — 80 GB", vram: 80 },
+    h100: { label: "H100 — 80 GB", vram: 80 },
+    h200: { label: "H200 — 141 GB", vram: 141 },
+    custom: { label: "Custom…", vram: null }
+  };
+
+  var GB = 1024 * 1024 * 1024;
+
+  var els = {};
+  ["preset","params","layers","hidden","heads","kvheads","wprec","kvprec","seqlen","gpu","customgpu","customgpu-field",
+   "users","reqrate","prompttok","outtok","prefilltps","decodetps"].forEach(function (id) {
+    els[id] = document.getElementById(id);
+  });
+
+  function populateSelect(sel, map) {
+    Object.keys(map).forEach(function (key) {
+      var opt = document.createElement("option");
+      opt.value = key;
+      opt.textContent = map[key].label;
+      sel.appendChild(opt);
+    });
+  }
+  populateSelect(els.preset, PRESETS);
+  populateSelect(els.gpu, GPUS);
+  els.preset.value = "llama3_8b";
+  els.gpu.value = "a100_80";
+
+  function applyPreset(key) {
+    var p = PRESETS[key];
+    if (!p) return;
+    els.params.value = p.params;
+    els.layers.value = p.layers;
+    els.hidden.value = p.hidden;
+    els.heads.value = p.heads;
+    els.kvheads.value = p.kvheads;
+  }
+  applyPreset("llama3_8b");
+
+  els.preset.addEventListener("change", function () {
+    applyPreset(els.preset.value);
+    compute();
+  });
+  els.gpu.addEventListener("change", function () {
+    els["customgpu-field"].style.display = els.gpu.value === "custom" ? "flex" : "none";
+    compute();
+  });
+
+  var deployMode = "gpu";
+  var deployButtons = document.querySelectorAll("#deploy-toggle button");
+  deployButtons.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      deployButtons.forEach(function (b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+      deployMode = btn.getAttribute("data-mode");
+      compute();
+    });
+  });
+
+  ["params","layers","hidden","heads","kvheads","wprec","kvprec","seqlen","customgpu",
+   "users","reqrate","prompttok","outtok","prefilltps","decodetps"].forEach(function (id) {
+    els[id].addEventListener("input", compute);
+    els[id].addEventListener("change", compute);
+  });
+
+  function fmtBytes(bytes) {
+    if (bytes <= 0) return "0 GB";
+    var gb = bytes / GB;
+    if (gb < 1) return (bytes / (1024 * 1024)).toFixed(0) + " MB";
+    if (gb < 1000) return gb.toFixed(gb < 10 ? 2 : 1) + " GB";
+    return (gb / 1024).toFixed(2) + " TB";
+  }
+  function fmtNum(n, d) {
+    if (n === undefined || n === null || isNaN(n)) return "—";
+    return n.toLocaleString(undefined, { maximumFractionDigits: d === undefined ? 0 : d, minimumFractionDigits: 0 });
+  }
+
+  function compute() {
+    var params = parseFloat(els.params.value) || 0;
+    var layers = parseInt(els.layers.value, 10) || 1;
+    var hidden = parseInt(els.hidden.value, 10) || 1;
+    var heads = parseInt(els.heads.value, 10) || 1;
+    var kvheads = Math.min(parseInt(els.kvheads.value, 10) || 1, heads);
+    var wBytesPerParam = parseFloat(els.wprec.value);
+    var kvBytesPerElem = parseFloat(els.kvprec.value);
+    var seqLen = parseInt(els.seqlen.value, 10) || 1;
+    var headDim = hidden / heads;
+
+    var gpuKey = els.gpu.value;
+    var vramPerCard = gpuKey === "custom" ? (parseFloat(els.customgpu.value) || 1) : GPUS[gpuKey].vram;
+    var vramPerCardBytes = vramPerCard * GB;
+
+    var users = parseFloat(els.users.value) || 0;
+    var reqPerUserHr = parseFloat(els.reqrate.value) || 0;
+    var promptTok = parseFloat(els.prompttok.value) || 1;
+    var outTok = parseFloat(els.outtok.value) || 1;
+    var prefillTps = parseFloat(els.prefilltps.value) || 1;
+    var decodeTps = parseFloat(els.decodetps.value) || 1;
+
+    // ---- Little's Law ----
+    var lambda = (users * reqPerUserHr) / 3600; // req/sec
+    var wPrefill = promptTok / prefillTps;
+    var wDecode = outTok / decodeTps;
+    var W = wPrefill + wDecode; // sec/req
+    var L = lambda * W; // concurrent requests (avg, in flight)
+    var batch = Math.max(1, Math.ceil(L));
+
+    // ---- Model storage (weights) ----
+    var weightBytes = params * 1e9 * wBytesPerParam;
+
+    // ---- KV cache per sequence & total ----
+    var kvBytesPerSeq = 2 * layers * kvheads * headDim * seqLen * kvBytesPerElem;
+    var kvTotalBytes = kvBytesPerSeq * batch;
+
+    // ---- Activation memory (rough, prefill-peak heuristic; one layer, not summed across depth) ----
+    var ACT_CONST = 8;
+    var actBytesPerSeq = promptTok * hidden * kvBytesPerElem * ACT_CONST;
+    var actTotalBytes = actBytesPerSeq * batch;
+
+    // ---- Overhead ----
+    var cudaOverhead = 1 * GB;
+    var subtotal = weightBytes + kvTotalBytes + actTotalBytes + cudaOverhead;
+    var fragmentation = subtotal * 0.12;
+    var totalVramNeeded = subtotal + fragmentation;
+
+    // ---- Parallelism floor: cards needed just to hold weights ----
+    var cardsForWeights = Math.max(1, Math.ceil(weightBytes / (vramPerCardBytes * 0.85)));
+
+    // ---- Max concurrent sequences one replica (cardsForWeights cards) can hold ----
+    var replicaVram = cardsForWeights * vramPerCardBytes;
+    var reservedFixed = weightBytes + cudaOverhead * cardsForWeights;
+    var perSeqCost = (kvBytesPerSeq + actBytesPerSeq) * 1.12; // fold in frag margin per seq
+    var availableForSeqs = (replicaVram - reservedFixed) * 0.88; // leave ~12% margin
+    var maxConcurrentPerReplica = Math.max(0, Math.floor(availableForSeqs / perSeqCost));
+    if (maxConcurrentPerReplica < 1) maxConcurrentPerReplica = 0;
+
+    // ---- Replicas needed to cover required concurrency L ----
+    var replicas;
+    if (maxConcurrentPerReplica < 1) {
+      var extraCards = Math.max(1, Math.ceil((kvBytesPerSeq + actBytesPerSeq + cudaOverhead) / (vramPerCardBytes * 0.85)));
+      cardsForWeights = cardsForWeights + extraCards;
+      replicas = 1;
+      maxConcurrentPerReplica = 1;
+    } else {
+      replicas = Math.max(1, Math.ceil(batch / maxConcurrentPerReplica));
+    }
+    var totalGpus = replicas * cardsForWeights;
+
+    // ---- Host RAM ----
+    var osRam = 4 * GB;
+    var runtimeRam = 4 * GB;
+    var loadingBuffer = deployMode === "gpu" ? 2 * GB : Math.max(0, weightBytes - replicaVram) + 4 * GB;
+    var totalRam = osRam + runtimeRam + loadingBuffer;
+
+    // ---- Storage ----
+    var opsOverheadPct = 0.4;
+    var storageOps = weightBytes * opsOverheadPct;
+    var totalStorage = weightBytes + storageOps;
+
+    // =========================================================
+    // Render
+    // =========================================================
+
+    document.getElementById("out-gpucount").textContent = fmtNum(totalGpus);
+    document.getElementById("out-gpudetail").innerHTML =
+      '<div class="hd-row"><span>Cards to hold weights (parallelism floor)</span><span class="v">' + fmtNum(cardsForWeights) + '</span></div>' +
+      '<div class="hd-row"><span>Max concurrent sequences / replica</span><span class="v">' + fmtNum(maxConcurrentPerReplica) + '</span></div>' +
+      '<div class="hd-row"><span>Replicas to cover required concurrency L</span><span class="v">' + fmtNum(replicas) + '</span></div>' +
+      '<div class="hd-row"><span>Total GPUs = replicas &times; cards/replica</span><span class="v">' + fmtNum(replicas) + ' &times; ' + fmtNum(cardsForWeights) + ' = ' + fmtNum(totalGpus) + '</span></div>';
+
+    var vramWeights = weightBytes;
+    var vramKv = kvTotalBytes;
+    var vramAct = actTotalBytes;
+    var vramOverhead = cudaOverhead * cardsForWeights + fragmentation;
+    var vramSumForBar = vramWeights + vramKv + vramAct + vramOverhead;
+    var barCap = replicaVram;
+
+    function pct(x) { return Math.max(0, Math.min(100, (x / barCap) * 100)); }
+    document.getElementById("vram-bar").innerHTML =
+      '<div class="seg weights" style="width:' + pct(vramWeights) + '%"></div>' +
+      '<div class="seg kv" style="width:' + pct(vramKv) + '%"></div>' +
+      '<div class="seg activation" style="width:' + pct(vramAct) + '%"></div>' +
+      '<div class="seg overhead" style="width:' + pct(vramOverhead) + '%"></div>';
+
+    var fits = vramSumForBar <= barCap;
+    document.getElementById("vram-total-label").textContent = fmtBytes(vramSumForBar) + " used";
+    document.getElementById("vram-cap-label").textContent = fmtBytes(barCap) + " capacity (" + cardsForWeights + "× " + vramPerCard + " GB)";
+    document.getElementById("vram-status").textContent = fits ? "Fits" : "Sized via replicas";
+
+    document.getElementById("vram-table").innerHTML =
+      row("weights", "Model weights", vramWeights) +
+      row("kv", "KV cache (batch " + batch + ")", vramKv) +
+      row("activation", "Activation memory (peak)", vramAct) +
+      row("overhead", "CUDA context + fragmentation", vramOverhead) +
+      '<tr class="total"><td></td><td class="name">Total per replica</td><td class="val">' + fmtBytes(vramSumForBar) + '</td></tr>';
+
+    function row(cls, name, bytes) {
+      return '<tr><td class="swatch-cell"><span class="swatch ' + cls + '"></span></td><td class="name">' + name + '</td><td class="val">' + fmtBytes(bytes) + '</td></tr>';
+    }
+
+    var precisions = [["FP32", 4], ["FP16", 2], ["INT8", 1], ["INT4", 0.5]];
+    document.getElementById("precision-strip").innerHTML = precisions.map(function (p) {
+      var active = p[1] === wBytesPerParam;
+      return '<div class="p-item' + (active ? ' active' : '') + '"><div class="p-name">' + p[0] + '</div><div class="p-val">' + fmtBytes(params * 1e9 * p[1]) + '</div></div>';
+    }).join("");
+
+    document.getElementById("out-lambda").textContent = lambda.toFixed(3) + " req/s";
+    document.getElementById("out-w").textContent = W.toFixed(2) + " s  (" + wPrefill.toFixed(2) + " prefill + " + wDecode.toFixed(2) + " decode)";
+    document.getElementById("out-L").textContent = L.toFixed(2) + "  →  batch " + batch;
+
+    document.getElementById("ram-table").innerHTML =
+      simpleRow("Base OS", osRam) +
+      simpleRow("Runtime / orchestration", runtimeRam) +
+      simpleRow(deployMode === "gpu" ? "Loading buffer" : "CPU-offloaded weights + buffer", loadingBuffer) +
+      '<tr class="total"><td class="name">Recommended host RAM</td><td class="val">' + fmtBytes(totalRam) + '</td></tr>';
+
+    function simpleRow(name, bytes) {
+      return '<tr><td class="name">' + name + '</td><td class="val">' + fmtBytes(bytes) + '</td></tr>';
+    }
+
+    document.getElementById("verdict-list").innerHTML =
+      statRow("Head dim", headDim.toFixed(0)) +
+      statRow("GQA ratio", heads + " heads / " + kvheads + " KV heads") +
+      statRow("KV cache per sequence", fmtBytes(kvBytesPerSeq)) +
+      statRow("Required concurrency (L)", L.toFixed(2) + " → batch " + batch) +
+      statRow("Deployment mode", deployMode === "gpu" ? "GPU-resident" : "CPU offload / mmap");
+
+    function statRow(name, val) {
+      return '<div class="stat-row"><span class="name">' + name + '</span><span class="val">' + val + '</span></div>';
+    }
+
+    document.getElementById("storage-table").innerHTML =
+      simpleRow("Model weights on disk", weightBytes) +
+      simpleRow("Logs, cache, backups (~40%)", storageOps) +
+      '<tr class="total"><td class="name">Total storage</td><td class="val">' + fmtBytes(totalStorage) + '</td></tr>';
+  }
+
+  compute();
+  window.addEventListener("pageshow", function () {
+    els.preset.value = "llama3_8b";
+    applyPreset("llama3_8b");
+    els.gpu.value = "a100_80";
+    els["customgpu-field"].style.display = "none";
+    compute();
+  });
+})();
+</script>
+</body>
+</html>

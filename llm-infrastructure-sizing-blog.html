@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>Sizing an LLM Deployment: The Arithmetic Behind Storage, VRAM, and Concurrency | Prateek Singh</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0d0d12;
+      --bg-card: #13131a;
+      --bg-card2: #1a1a24;
+      --teal: #00d9b4;
+      --purple: #7c6bff;
+      --pink: #ff6b9d;
+      --orange: #ffb347;
+      --text: #e2e2ef;
+      --muted: #8888aa;
+      --border: rgba(255,255,255,0.07);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 17px;
+      line-height: 1.75;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    .site-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.4rem 2.5rem;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(13,13,18,0.92);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+    .site-logo {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: 1.15rem;
+      color: var(--teal);
+      text-decoration: none;
+      letter-spacing: 0.02em;
+    }
+    .site-nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-left: 1.8rem;
+      transition: color 0.2s;
+    }
+    .site-nav a:hover { color: var(--teal); }
+
+    /* ── HERO ── */
+    .hero {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 5rem 2rem 3.5rem;
+      animation: fadeUp 0.6s ease both;
+    }
+    .hero-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.6rem;
+      flex-wrap: wrap;
+    }
+    .tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.3em 0.85em;
+      border-radius: 20px;
+      background: rgba(0,217,180,0.12);
+      color: var(--teal);
+      border: 1px solid rgba(0,217,180,0.25);
+    }
+    .tag.purple { background: rgba(124,107,255,0.12); color: var(--purple); border-color: rgba(124,107,255,0.25); }
+    .tag.orange { background: rgba(255,179,71,0.12); color: var(--orange); border-color: rgba(255,179,71,0.25); }
+    .hero-date {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      line-height: 1.12;
+      margin-bottom: 1.3rem;
+      letter-spacing: -0.01em;
+    }
+    .hero h1 em {
+      font-style: italic;
+      background: linear-gradient(90deg, var(--teal), var(--purple));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .hero-subtitle {
+      font-size: 1.15rem;
+      color: var(--muted);
+      max-width: 640px;
+      line-height: 1.6;
+    }
+
+    /* ── SERIES NOTE ── */
+    .series-note {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 0 2rem 1rem;
+    }
+    .series-note a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--purple);
+      text-decoration: none;
+      border: 1px solid rgba(124,107,255,0.25);
+      background: rgba(124,107,255,0.08);
+      padding: 0.5em 1em;
+      border-radius: 8px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .series-note a:hover { border-color: var(--purple); background: rgba(124,107,255,0.14); }
+    .series-note a.cta {
+      color: var(--teal);
+      border-color: rgba(0,217,180,0.3);
+      background: rgba(0,217,180,0.08);
+    }
+    .series-note a.cta:hover { border-color: var(--teal); background: rgba(0,217,180,0.16); }
+
+    .divider {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+    .divider::after {
+      content: "";
+      display: block;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── ARTICLE ── */
+    .article {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 3rem 2rem 2rem;
+      animation: fadeUp 0.7s ease both;
+    }
+    .article p { margin-bottom: 1.3rem; color: var(--text); }
+    .article strong { color: #fff; font-weight: 600; }
+    .article em { color: var(--teal); font-style: italic; }
+    .article a { color: var(--teal); }
+
+    .article h2 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: 1.7rem;
+      margin: 2.6rem 0 1.1rem;
+      letter-spacing: -0.005em;
+    }
+    .article h3 {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      font-size: 1.15rem;
+      margin: 1.8rem 0 0.9rem;
+      color: var(--teal);
+    }
+
+    .section-accent {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      margin: 2.8rem 0 0.4rem;
+    }
+    .section-accent .accent-line {
+      width: 28px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--teal), var(--purple));
+    }
+    .section-accent span {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ── CALLOUT ── */
+    .callout {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--teal);
+      border-radius: 10px;
+      padding: 1.2rem 1.4rem;
+      margin: 1.5rem 0;
+      font-size: 0.96rem;
+      color: var(--text);
+    }
+    .callout.purple { border-color: var(--purple); }
+    .callout.orange { border-color: var(--orange); }
+    .callout.pink   { border-color: var(--pink); }
+
+    /* ── HIGHLIGHT BOX ── */
+    .highlight-box {
+      background: linear-gradient(135deg, rgba(0,217,180,0.06), rgba(124,107,255,0.06));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.8rem;
+      margin: 2rem 0;
+    }
+    .highlight-box .big-stat {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: 1.6rem;
+      color: var(--teal);
+      margin-bottom: 0.2rem;
+    }
+    .highlight-box .stat-label {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .stats-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      text-align: center;
+    }
+    .stat-item { flex: 1; min-width: 130px; }
+
+    /* ── METHOD GRID ── */
+    .method-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin: 1.5rem 0 2rem;
+    }
+    .method-card {
+      position: relative;
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.3rem;
+      overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .method-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.16); }
+    .method-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .method-card.storage::before     { background: var(--purple); }
+    .method-card.memory::before      { background: var(--orange); }
+    .method-card.concurrency::before { background: var(--teal); }
+    .method-card.fleet::before       { background: var(--pink); }
+    .method-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.66rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 0.3rem;
+    }
+    .method-name {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: 1.15rem;
+      margin-bottom: 0.6rem;
+    }
+    .method-badge {
+      font-size: 0.83rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    /* ── TABLE ── */
+    .feat-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0 2rem;
+      font-size: 0.9rem;
+    }
+    .feat-table th {
+      text-align: left;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      padding: 0.7rem 0.9rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .feat-table td {
+      padding: 0.8rem 0.9rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .feat-table tr:hover td { background: rgba(255,255,255,0.025); }
+    .feat-table td:first-child { color: var(--text); font-weight: 500; }
+    .feat-table td.num { font-family: 'JetBrains Mono', monospace; color: var(--text); }
+    .feat-table td.best { color: var(--teal); font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+
+    /* ── MATH BLOCK ── */
+    .math-block {
+      background: #0a0a0e;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.1rem 1.4rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.87rem;
+      color: var(--text);
+      margin: 1.4rem 0;
+      overflow-x: auto;
+      line-height: 1.7;
+    }
+    .math-block .comment { color: var(--muted); }
+
+    /* ── FLOW LIST ── */
+    .flow-list { list-style: none; margin: 1.5rem 0 2rem; }
+    .flow-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.9rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      margin-bottom: 0.7rem;
+      font-size: 0.92rem;
+      transition: border-color 0.2s;
+    }
+    .flow-list li:hover { border-color: rgba(0,217,180,0.25); }
+    .flow-icon { font-size: 1.1rem; line-height: 1.6; }
+    .flow-list strong { color: #fff; }
+
+    /* ── CHIP LIST ── */
+    .chip-list { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 1.2rem 0 1.8rem; }
+    .chip {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 0.4em 0.9em;
+      color: var(--muted);
+    }
+
+    /* ── CALC CTA ── */
+    .calc-cta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      background: linear-gradient(135deg, rgba(0,217,180,0.08), rgba(124,107,255,0.08));
+      border: 1px solid rgba(0,217,180,0.25);
+      border-radius: 14px;
+      padding: 1.6rem 1.8rem;
+      margin: 2rem 0;
+    }
+    .calc-cta h3 { margin: 0 0 0.3rem; color: #fff; font-size: 1.1rem; font-family: 'DM Sans', sans-serif; font-weight: 600; }
+    .calc-cta p { margin: 0; color: var(--muted); font-size: 0.9rem; max-width: 46ch; }
+    .calc-cta a.btn {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #06110d;
+      background: linear-gradient(90deg, var(--teal), #6ee7cf);
+      text-decoration: none;
+      padding: 0.75em 1.3em;
+      border-radius: 8px;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .calc-cta a.btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px -8px rgba(0,217,180,0.5); }
+
+    /* ── FOOTER ── */
+    .site-footer {
+      max-width: 820px;
+      margin: 3rem auto 0;
+      padding: 2rem 2rem 3rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .site-footer a { color: var(--teal); text-decoration: none; }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 700px) {
+      .method-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 600px) {
+      .site-header { padding: 1rem 1.25rem; }
+      .site-nav { display: none; }
+      .hero, .article, .series-note { padding-left: 1.25rem; padding-right: 1.25rem; }
+      .divider { padding: 0 1.25rem; }
+      .hero h1 { font-size: 2rem; }
+      .method-grid { grid-template-columns: 1fr; }
+      .stats-row { gap: 1rem; }
+      .feat-table { font-size: 0.78rem; }
+      .feat-table th, .feat-table td { padding: 0.6rem 0.5rem; }
+      .calc-cta { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <a href="/" class="site-logo">Prateek Singh, PhD</a>
+  <nav class="site-nav">
+    <a href="/">Home</a>
+    <a href="https://prateeksinghphd.in/blogs.html">Blog</a>
+    <a href="/research">Research</a>
+    <a href="/contact">Contact</a>
+  </nav>
+</header>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-meta">
+    <span class="tag">Infrastructure</span>
+    <span class="tag purple">Capacity Planning</span>
+    <span class="tag orange">LLM Serving</span>
+    <span class="hero-date">July 15, 2026</span>
+  </div>
+  <h1>Sizing an LLM Deployment: The Arithmetic Behind Storage, <em>VRAM, and Concurrency</em></h1>
+  <p class="hero-subtitle">
+    Four numbers decide whether a GPU fleet is right-sized or quietly wrong: model storage, inference memory, concurrency, and GPU count. Here's how each one is actually derived from architecture and workload — not guessed from a spreadsheet someone copied three jobs ago.
+  </p>
+</section>
+
+<div class="series-note" style="display:flex; flex-wrap:wrap; gap:0.6rem;">
+  <a href="llm-infrastructure-calculator.html" target="_blank" class="cta">Open the interactive calculator →</a>
+</div>
+
+<div class="divider"></div>
+
+<!-- ── ARTICLE ── -->
+<article class="article">
+
+  <p>
+    Every capacity plan I've reviewed starts the same way: someone estimates how much VRAM a model needs, picks a GPU, and multiplies by a headcount that feels safe. Most of the time it's close enough. Occasionally it's off by 2–3×, in either direction — over-provisioned racks sitting half-idle, or a launch that pages the on-call at the first real burst of traffic.
+  </p>
+  <p>
+    The gap isn't sloppiness. It's that the arithmetic has four distinct parts, each borrowed from a different discipline — transformer architecture, queueing theory, systems memory management — and it's rare to see all four written down together. This post does that: storage, inference memory, concurrency, and fleet sizing, in order, with the formulas that actually produce each number.
+  </p>
+
+  <!-- FOUR NUMBERS -->
+  <div class="section-accent"><div class="accent-line"></div><span>The Shape of the Problem</span></div>
+  <h2>Four Numbers, Four Different Disciplines</h2>
+
+  <div class="method-grid">
+    <div class="method-card storage">
+      <div class="method-label">01 · Disk</div>
+      <div class="method-name">Storage</div>
+      <div class="method-badge">Parameters × precision. The one genuinely simple formula in this whole post.</div>
+    </div>
+    <div class="method-card memory">
+      <div class="method-label">02 · VRAM</div>
+      <div class="method-name">Inference Memory</div>
+      <div class="method-badge">Weights, KV cache, activations, and overhead — one shared budget, derived from architecture.</div>
+    </div>
+    <div class="method-card concurrency">
+      <div class="method-label">03 · Load</div>
+      <div class="method-name">Concurrency</div>
+      <div class="method-badge">How many requests are actually in flight at once — Little's Law, not a headcount.</div>
+    </div>
+    <div class="method-card fleet">
+      <div class="method-label">04 · Fleet</div>
+      <div class="method-name">GPU Count</div>
+      <div class="method-badge">A memory-bound floor for holding the weights, then replicated to cover the load.</div>
+    </div>
+  </div>
+
+  <!-- STORAGE -->
+  <div class="section-accent"><div class="accent-line"></div><span>01 · Storage</span></div>
+  <h2>Model Storage: Parameters Times Precision</h2>
+
+  <p>
+    This part really is just arithmetic. A parameter stored at a given precision takes a fixed number of bits, and the model file is the parameter count times that width, converted to bytes:
+  </p>
+
+  <div class="math-block">
+    Storage = Parameters × (Bits per Parameter / 8)<br/>
+    <span class="comment">// FP32 = 4 bytes/param · FP16/BF16 = 2 · INT8 = 1 · INT4 = 0.5</span>
+  </div>
+
+  <table class="feat-table">
+    <thead>
+      <tr>
+        <th>Model</th>
+        <th>Params</th>
+        <th>FP16</th>
+        <th>INT8</th>
+        <th>INT4</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Mistral 7B</td><td class="num">7.3B</td><td class="num">14.6 GB</td><td class="num">7.3 GB</td><td class="best">3.65 GB</td></tr>
+      <tr><td>Llama 3 8B</td><td class="num">8B</td><td class="num">16.0 GB</td><td class="num">8.0 GB</td><td class="best">4.0 GB</td></tr>
+      <tr><td>Qwen 2.5 32B</td><td class="num">32.5B</td><td class="num">65.0 GB</td><td class="num">32.5 GB</td><td class="best">16.3 GB</td></tr>
+      <tr><td>Llama 3 70B</td><td class="num">70B</td><td class="num">140.0 GB</td><td class="num">70.0 GB</td><td class="best">35.0 GB</td></tr>
+    </tbody>
+  </table>
+
+  <p>
+    The only place this trips people up is precision mismatch between disk and serving — a checkpoint stored in FP16 doesn't shrink on disk just because you plan to quantize it at load time. Disk size reflects what you store; VRAM size reflects what you actually load and run, which is the next, more interesting number.
+  </p>
+
+  <!-- MEMORY -->
+  <div class="section-accent"><div class="accent-line"></div><span>02 · Inference Memory</span></div>
+  <h2>VRAM Is One Budget, Not a Sum of Independent Guesses</h2>
+
+  <p>
+    For a GPU-resident deployment, everything the model needs to run a forward pass — weights, KV cache, transient activations, and framework overhead — competes for the same pool of VRAM on the same card. Host RAM is a separate, much smaller concern (OS, orchestration process, a loading buffer), not a second full copy of the model. Four terms make up the VRAM budget, and three of them are commonly estimated wrong.
+  </p>
+
+  <h3>Weights</h3>
+  <p>Same formula as storage, evaluated at serving precision — this is the one term that's just a lookup.</p>
+
+  <h3>KV cache</h3>
+  <p>
+    This is where context length and architecture actually enter the picture. The cache holds a key and value vector per token, per layer, for every layer simultaneously — unlike activations, it can't be freed as the forward pass moves on, because generation needs all of it for every future token:
+  </p>
+
+  <div class="math-block">
+    KV cache = 2 × layers × kv_heads × head_dim × seq_len × batch × bytes/elem<br/>
+    <span class="comment">// the leading 2 covers K and V; head_dim = hidden_dim / attention_heads</span>
+  </div>
+
+  <div class="callout purple">
+    <strong>The detail that's easy to miss:</strong> the formula uses <code>kv_heads</code>, not total attention heads. Grouped-query attention — used in Llama 3, Mistral, and most current open models — shares key/value projections across groups of query heads, so <code>kv_heads</code> is a fraction of the total head count. Llama 3 8B has 32 attention heads but only 8 KV heads. Sizing the cache off total heads overstates it by 4×, on that model alone.
+  </div>
+
+  <h3>Activation memory</h3>
+  <p>
+    The forward pass needs working memory for QKV projections, attention scores, and the MLP intermediate — real, and usually the most over- or under-estimated term in a back-of-envelope calculation, because it gets treated like the KV cache when it behaves nothing like it.
+  </p>
+
+  <div class="math-block">
+    Activations ≈ prompt_tokens × hidden_dim × bytes/elem × c &nbsp;<span class="comment">// c ≈ 8, one layer's peak</span>
+  </div>
+
+  <div class="callout orange">
+    <strong>Not multiplied by layer count.</strong> Inference executes layers sequentially and frees each layer's activations before the next one starts — there's no backward pass to retain them for. Training has to keep every layer's activations around for backprop, which is where the "multiply by depth" instinct comes from, and it's wrong here. This formula also assumes flash-attention-style serving, so it skips the O(seq_len²) attention-score term a naive implementation would materialize — at very long context on a non-flash engine, treat it as a floor, not a ceiling.
+  </div>
+
+  <h3>Fixed overhead</h3>
+  <p>
+    A CUDA context reserves roughly a gigabyte per process before a single model weight loads, and serving engines hold back a fragmentation margin — commonly 10–15% — so a burst in KV cache or activation size doesn't fail an allocation mid-request. Both are small next to weights and KV cache, but they're not zero, and skipping them is why a calculation that "fits exactly" sometimes doesn't in production.
+  </p>
+
+  <div class="chip-list">
+    <span class="chip">weights: lookup</span>
+    <span class="chip">KV cache: scales with context × kv_heads</span>
+    <span class="chip">activations: one layer, not all layers</span>
+    <span class="chip">overhead: ~1 GB + 10–15% margin</span>
+  </div>
+
+  <!-- CONCURRENCY -->
+  <div class="section-accent"><div class="accent-line"></div><span>03 · Concurrency</span></div>
+  <h2>What "Concurrent Users" Actually Means</h2>
+
+  <p>
+    The KV cache formula above needs a batch size — how many sequences are resident in memory at once. The instinct is to compute this as users times request rate. That number is real, but it isn't concurrency; it's <strong>arrival rate</strong>, the rate at which new work shows up. Concurrency is a different quantity, and queueing theory already has the formula for it — Little's Law, one of the oldest results in the field:
+  </p>
+
+  <div class="math-block">
+    L = λ × W<br/>
+    <span class="comment">// L = avg. requests resident in the system · λ = arrival rate (req/s) · W = avg. time-in-system (s)</span>
+  </div>
+
+  <p>
+    λ comes from your usage pattern — users times requests per user per second. W is how long a request actually takes to serve, which is itself prefill time plus decode time:
+  </p>
+
+  <div class="math-block">
+    W = (prompt_tokens / prefill_tok_s) + (output_tokens / decode_tok_s)
+  </div>
+
+  <div class="callout">
+    <strong>Worked example.</strong> 1,000 users, each sending 12 requests/hour, 500 prompt tokens and 500 output tokens per request, 3,000 tok/s prefill and 45 tok/s decode per stream:
+    <br/><br/>
+    λ = 1000 × 12 / 3600 = <strong>3.33 req/s</strong><br/>
+    W = 500/3000 + 500/45 = 0.17 + 11.11 = <strong>11.28 s</strong><br/>
+    L = 3.33 × 11.28 = <strong>37.6</strong> → batch of <strong>38</strong> concurrent sequences
+  </div>
+
+  <p>
+    That's the number the KV cache formula should use as <code>batch</code> — not 3.33. Sizing memory off the arrival rate alone assumes every request is served instantaneously, which undersizes the cache by roughly the average latency of a request, and gets worse the longer generations run.
+  </p>
+
+  <!-- FLEET -->
+  <div class="section-accent"><div class="accent-line"></div><span>04 · Fleet Sizing</span></div>
+  <h2>From One Replica to a GPU Count</h2>
+
+  <p>
+    With the per-sequence costs and the required concurrency both in hand, sizing the fleet is two separate questions answered in order — how many cards does it take to even hold the weights, and then how many of those units does the load require:
+  </p>
+
+  <ol class="flow-list" style="list-style:none;">
+    <li><span class="flow-icon">1️⃣</span><div><strong>Parallelism floor.</strong> Cards needed just to hold the weights: <code>ceil(weight_bytes / usable_vram_per_card)</code>, with a small margin held back for context/fragmentation. This is the minimum footprint of one replica, before a single request is served.</div></li>
+    <li><span class="flow-icon">2️⃣</span><div><strong>Headroom per replica.</strong> Whatever VRAM is left on that card set after weights and fixed overhead, divided by the KV-cache-plus-activation cost of one sequence, gives the max concurrent sequences one replica can actually hold.</div></li>
+    <li><span class="flow-icon">3️⃣</span><div><strong>Replicate for load.</strong> Divide the required concurrency L by that per-replica capacity, round up — that's how many replicas you need.</div></li>
+    <li><span class="flow-icon">4️⃣</span><div><strong>Total GPUs = replicas × cards per replica.</strong> Two multiplications, both grounded in a real memory budget rather than a single "GPUs ≈ concurrent users / some constant" heuristic.</div></li>
+  </ol>
+
+  <div class="highlight-box">
+    <div class="stats-row">
+      <div class="stat-item">
+        <div class="big-stat">14.9 GB</div>
+        <div class="stat-label">Llama 3 8B weights<br/>at FP16</div>
+      </div>
+      <div class="stat-item">
+        <div class="big-stat">19.0 GB</div>
+        <div class="stat-label">KV cache at batch 38,<br/>4K context, GQA</div>
+      </div>
+      <div class="stat-item">
+        <div class="big-stat">40.4 GB</div>
+        <div class="stat-label">total VRAM per replica,<br/>weights + KV + activation + overhead</div>
+      </div>
+      <div class="stat-item">
+        <div class="big-stat">1×</div>
+        <div class="stat-label">80 GB card —<br/>fits with headroom to spare</div>
+      </div>
+    </div>
+  </div>
+
+  <p>
+    Change the model to Llama 3 70B on 24 GB cards and the same four steps still apply — they just resolve differently: seven cards to even hold the weights (the parallelism floor), roughly 18 concurrent sequences per replica once weights and overhead are reserved, and three replicas to cover the same 38-sequence load. Twenty-one GPUs, derived the same way as the single-GPU case, not from a different rule of thumb for "big models."
+  </p>
+
+  <!-- SUMMARY -->
+  <div class="section-accent"><div class="accent-line"></div><span>Takeaway</span></div>
+  <h2>The Short Version</h2>
+
+  <p>
+    Storage is parameters times precision — the easy one. VRAM is weights, KV cache, activations, and overhead sharing one pool, where the KV cache scales with context length and the true KV-head count, and activations scale with one layer, not the whole network. Concurrency is Little's Law, <code>L = λ × W</code>, not the arrival rate on its own. And the fleet size is a memory-bound floor for the weights, replicated until it covers that concurrency. Four numbers, four short derivations, no napkin required.
+  </p>
+
+  <div class="calc-cta">
+    <div>
+      <h3>Run the numbers on your own model</h3>
+      <p>An interactive version of everything above — pick a model, a precision, a GPU, and a usage pattern, and watch the VRAM breakdown and GPU count update live.</p>
+    </div>
+    <a href="llm-infrastructure-calculator.html" target="_blank" class="btn">Open the calculator →</a>
+  </div>
+
+  <div class="callout">
+    <strong>Papers referenced:</strong><br/>
+    GQA (grouped-query attention): <a href="https://arxiv.org/abs/2305.13245" target="_blank">arxiv.org/abs/2305.13245</a> ·
+    FlashAttention: <a href="https://arxiv.org/abs/2205.14135" target="_blank">arxiv.org/abs/2205.14135</a> ·
+    PagedAttention / vLLM: <a href="https://arxiv.org/abs/2309.06180" target="_blank">arxiv.org/abs/2309.06180</a>
+  </div>
+
+</article>
+
+<!-- ── FOOTER ── -->
+<footer class="site-footer">
+  <p>Written by <strong>Prateek Singh</strong> · Senior Manager, GenAI &amp; Digital Health AI · Samsung Research Institute India</p>
+  <p style="margin-top:0.5rem;"><a href="https://prateeksinghphd.com">prateeksinghphd.com</a></p>
+</footer>
+
+</body>
+</html>
