@@ -15,9 +15,9 @@
   <meta name="theme-color" content="#0a0a0f">
 
   <!-- Primary SEO -->
-  <title>Prateek Singh — Senior AI Leader | GenAI &amp; Healthcare AI | Samsung</title>
-  <meta name="description" content="Senior AI leader specializing in GenAI, Healthcare AI, ECG &amp; PPG signal processing, and on-device LLM deployment. Building scalable AI systems at Samsung Research Institute, Noida. PhD IIT Roorkee.">
-  <meta name="keywords" content="Prateek Singh, AI Engineer, Healthcare AI, GenAI, ECG AI, PPG Signal Processing, Deep Learning, Edge AI, LLM Deployment, Samsung AI, Blood Pressure Prediction, on-device AI, Qualcomm QNN, IIT Roorkee">
+  <title>Prateek Singh — Senior AI Leader | GenAI &amp; On-Device AI | Qualcomm</title>
+  <meta name="description" content="Senior AI leader specializing in GenAI, Healthcare AI, ECG &amp; PPG signal processing, and on-device LLM deployment. AI/ML Platform Software Architect (Staff Manager) at Qualcomm, Hyderabad. PhD IIT Roorkee.">
+  <meta name="keywords" content="Prateek Singh, AI Engineer, Healthcare AI, GenAI, ECG AI, PPG Signal Processing, Deep Learning, Edge AI, LLM Deployment, Qualcomm AI, Blood Pressure Prediction, on-device AI, Qualcomm QNN, IIT Roorkee">
   <meta name="author" content="Prateek Singh">
   <link rel="canonical" href="https://prateeksinghphd.in">
 
@@ -25,14 +25,14 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://prateeksinghphd.in">
   <meta property="og:title" content="Prateek Singh — Senior AI Leader | GenAI &amp; Healthcare AI">
-  <meta property="og:description" content="Senior AI leader at Samsung Research Institute, Noida. PhD IIT Roorkee. Specializing in GenAI, Healthcare AI, ECG/PPG signal processing, and on-device LLM deployment.">
+  <meta property="og:description" content="AI/ML Platform Software Architect (Staff Manager) at Qualcomm, Hyderabad. PhD IIT Roorkee. Specializing in GenAI, Healthcare AI, ECG/PPG signal processing, and on-device LLM deployment.">
   <meta property="og:image" content="https://prateeksinghphd.in/images/banner1.JPG">
 
   <!-- Twitter / X card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:site" content="@prateek2987">
   <meta name="twitter:title" content="Prateek Singh — Senior AI Leader | GenAI &amp; Healthcare AI">
-  <meta name="twitter:description" content="Senior AI leader at Samsung Research Institute, Noida. PhD IIT Roorkee. GenAI, Healthcare AI, on-device LLM deployment.">
+  <meta name="twitter:description" content="AI/ML Platform Software Architect (Staff Manager) at Qualcomm, Hyderabad. PhD IIT Roorkee. GenAI, on-device AI, LLM deployment.">
   <meta name="twitter:image" content="https://prateeksinghphd.in/images/banner1.JPG">
 
   <!-- Structured Data — Person schema (Google Knowledge Panel signal) -->
@@ -43,10 +43,10 @@
     "name": "Prateek Singh",
     "url": "https://prateeksinghphd.in",
     "image": "https://prateeksinghphd.in/images/profile-1.jpeg",
-    "jobTitle": "Senior Manager, GenAI & Digital Health AI",
+    "jobTitle": "AI/ML Platform Software Architect, Staff Manager",
     "worksFor": {
       "@type": "Organization",
-      "name": "Samsung Research Institute, Noida"
+      "name": "Qualcomm"
     },
     "alumniOf": {
       "@type": "CollegeOrUniversity",
@@ -691,48 +691,140 @@
     .tag-pink { background: rgba(255,107,157,.08); color: var(--accent2); border-color: rgba(255,107,157,.25); }
     .tag-orange { background: rgba(255,179,71,.08); color: var(--accent4); border-color: rgba(255,179,71,.25); }
 
-    /* ─── EXPERIENCE ─── */
-    .timeline { position: relative; padding-left: 2rem; }
-    .timeline::before {
-      content: '';
+    /* ─── EXPERIENCE — JOURNEY ROAD ─── */
+    .journey { position: relative; max-width: 900px; margin: 0 auto; }
+    .journey-road-svg {
       position: absolute;
-      left: 0; top: .5rem; bottom: .5rem;
-      width: 1px;
-      background: linear-gradient(to bottom, var(--accent3), var(--accent), var(--accent2), transparent);
+      left: 50%; top: 0;
+      transform: translateX(-50%);
+      height: 100%; width: 160px;
+      overflow: visible;
+      pointer-events: none;
     }
-    .timeline-item {
-      position: relative;
-      padding: 0 0 3.5rem 2.5rem;
+    .road-base {
+      fill: none;
+      stroke: var(--surface2);
+      stroke-width: 34;
+      stroke-linecap: round;
     }
-    .timeline-item::before {
-      content: '';
+    .road-edge {
+      fill: none;
+      stroke: var(--border);
+      stroke-width: 38;
+      stroke-linecap: round;
+    }
+    .road-center {
+      fill: none;
+      stroke: var(--accent3);
+      stroke-width: 2.5;
+      stroke-dasharray: 14 12;
+      opacity: .85;
+      animation: road-dash 1.4s linear infinite;
+    }
+    .road-progress {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 4;
+      stroke-linecap: round;
+      opacity: .0;
+    }
+    @keyframes road-dash { to { stroke-dashoffset: -26; } }
+    .journey-traveler {
       position: absolute;
-      left: -4px; top: .4rem;
-      width: 9px; height: 9px;
+      left: 50%;
+      top: 0;
+      width: 18px; height: 18px;
+      margin-left: -9px;
       border-radius: 50%;
-      background: var(--bg);
-      border: 1.5px solid var(--accent3);
-      transition: all .3s;
+      background: radial-gradient(circle at 35% 35%, #fff, var(--accent3));
+      box-shadow: 0 0 18px var(--accent3), 0 0 40px rgba(0,217,180,.4);
+      z-index: 3;
+      transition: top .15s linear;
     }
-    .timeline-item:nth-child(2)::before { border-color: var(--accent); }
-    .timeline-item:nth-child(3)::before { border-color: var(--accent2); }
-    .timeline-item:nth-child(4)::before { border-color: var(--accent4); }
-    .timeline-item:hover::before { background: var(--accent3); box-shadow: 0 0 12px var(--accent3); }
-    .timeline-meta {
+
+    .journey-stop {
+      position: relative;
       display: flex;
       align-items: center;
-      gap: 1rem;
-      margin-bottom: .5rem;
-      flex-wrap: wrap;
+      padding: 3.2rem 0;
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity .7s ease, transform .7s ease;
     }
-    .timeline-period {
+    .journey-stop.visible { opacity: 1; transform: translateY(0); }
+    .journey-stop.side-l { justify-content: flex-start; }
+    .journey-stop.side-r { justify-content: flex-end; }
+
+    .journey-card {
+      width: calc(50% - 110px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.4rem 1.5rem;
+      position: relative;
+      transition: border-color .3s, box-shadow .3s;
+    }
+    .journey-stop:hover .journey-card { border-color: var(--accent); box-shadow: 0 8px 32px rgba(124,107,255,.15); }
+
+    /* milestone marker on the road */
+    .journey-milestone {
+      position: absolute;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .35rem;
+    }
+    .milestone-logo {
+      width: 58px; height: 58px;
+      border-radius: 50%;
+      background: var(--surface2);
+      border: 2px solid var(--accent3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
       font-family: 'JetBrains Mono', monospace;
-      font-size: .62rem;
+      font-weight: 700;
+      font-size: .8rem;
+      color: var(--text);
+      box-shadow: 0 0 0 6px var(--bg), 0 0 20px rgba(0,217,180,.35);
+      overflow: hidden;
+      transition: transform .3s, box-shadow .3s;
+    }
+    .milestone-logo img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .milestone-logo.light { background: #fff; }
+    .milestone-logo.light img { width: 78%; height: 78%; object-fit: contain; border-radius: 0; }
+    .journey-stop:hover .milestone-logo { transform: scale(1.12); }
+    .journey-stop.mk-purple .milestone-logo { border-color: var(--accent); box-shadow: 0 0 0 6px var(--bg), 0 0 20px rgba(124,107,255,.35); }
+    .journey-stop.mk-pink .milestone-logo { border-color: var(--accent2); box-shadow: 0 0 0 6px var(--bg), 0 0 20px rgba(255,107,157,.3); }
+    .journey-stop.mk-orange .milestone-logo { border-color: var(--accent4); box-shadow: 0 0 0 6px var(--bg), 0 0 20px rgba(255,179,71,.3); }
+    .milestone-year {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .6rem;
+      letter-spacing: .12em;
+      padding: .18rem .55rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--accent3);
+      white-space: nowrap;
+    }
+    /* mile marker sign */
+    .milestone-mile {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .55rem;
       letter-spacing: .15em;
       color: var(--text-dim);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: .12rem .45rem;
       text-transform: uppercase;
     }
-    .timeline-badge {
+
+    .journey-badge {
       font-family: 'JetBrains Mono', monospace;
       font-size: .58rem;
       padding: .2rem .6rem;
@@ -742,30 +834,217 @@
       border-radius: 2px;
       letter-spacing: .1em;
       text-transform: uppercase;
+      display: inline-block;
+      margin-bottom: .55rem;
     }
-    .timeline-badge.purple { background: rgba(124,107,255,.1); color: var(--accent); border-color: rgba(124,107,255,.25); }
-    .timeline-badge.pink { background: rgba(255,107,157,.08); color: var(--accent2); border-color: rgba(255,107,157,.2); }
-    .timeline-badge.orange { background: rgba(255,179,71,.08); color: var(--accent4); border-color: rgba(255,179,71,.25); }
-    .timeline-org {
+    .journey-badge.purple { background: rgba(124,107,255,.1); color: var(--accent); border-color: rgba(124,107,255,.25); }
+    .journey-badge.pink { background: rgba(255,107,157,.08); color: var(--accent2); border-color: rgba(255,107,157,.2); }
+    .journey-badge.orange { background: rgba(255,179,71,.08); color: var(--accent4); border-color: rgba(255,179,71,.25); }
+    .journey-org {
       font-family: 'Playfair Display', serif;
-      font-size: 1.35rem;
+      font-size: 1.25rem;
       font-weight: 700;
       color: var(--text);
-      margin-bottom: .2rem;
+      margin-bottom: .15rem;
     }
-    .timeline-role {
-      font-size: .88rem;
+    .journey-role {
+      font-size: .84rem;
       color: var(--text-muted);
-      margin-bottom: .75rem;
+      margin-bottom: .7rem;
       font-weight: 300;
     }
-    .timeline-desc {
-      font-size: .9rem;
+    .journey-desc {
+      font-size: .86rem;
       color: var(--text-dim);
-      line-height: 1.75;
-      max-width: 640px;
+      line-height: 1.7;
     }
-    .timeline-desc strong { color: var(--text-muted); font-weight: 500; }
+    .journey-desc strong { color: var(--text-muted); font-weight: 500; }
+
+    /* start & finish flags */
+    .journey-flag {
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .62rem;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      padding: .8rem 0;
+      position: relative;
+      z-index: 4;
+    }
+    .journey-flag span {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: .35rem .9rem;
+      border-radius: 3px;
+    }
+    .journey-flag.finish span { color: var(--accent3); border-color: rgba(0,217,180,.35); }
+
+    /* ─── parallel consulting route ─── */
+    .journey { overflow: visible; }
+    .parallel-route { position: relative; }
+    .parallel-line {
+      position: absolute;
+      top: 0; bottom: 0;
+      right: -2px;
+      width: 0;
+      border-right: 2px dashed rgba(255,179,71,.45);
+      z-index: 1;
+    }
+    .parallel-sticky {
+      position: sticky;
+      top: 6.5rem;
+      float: right;
+      width: 210px;
+      margin-right: -270px;
+      z-index: 5;
+    }
+    .parallel-card {
+      background: var(--surface);
+      border: 1px dashed rgba(255,179,71,.4);
+      border-radius: 10px;
+      padding: 1.1rem 1.2rem;
+      box-shadow: 0 8px 28px rgba(0,0,0,.35);
+    }
+    .parallel-card .journey-org { font-size: 1rem; }
+    .parallel-card .journey-role { font-size: .74rem; margin-bottom: .5rem; }
+    .parallel-card .journey-desc { font-size: .76rem; line-height: 1.6; }
+
+    @media (max-width: 1240px) {
+      .parallel-sticky { position: static; float: none; width: auto; margin: 0 0 2rem 0; }
+      .parallel-line { display: none; }
+    }
+
+    @media (max-width: 820px) {
+      .journey-road-svg { left: 30px; transform: none; width: 60px; }
+      .journey-traveler { left: 30px; }
+      .journey-stop { justify-content: flex-end !important; }
+      .journey-card { width: calc(100% - 105px); }
+      .journey-milestone { left: 30px; }
+      .milestone-logo { width: 46px; height: 46px; font-size: .65rem; }
+    }
+
+    /* ─── PROJECTS — CIRCUIT BOARD ─── */
+    .circuit-board {
+      position: relative;
+      padding: 2rem 0;
+    }
+    .circuit-traces {
+      position: absolute;
+      inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .circuit-traces path.trace {
+      fill: none;
+      stroke: var(--border);
+      stroke-width: 1.5;
+      opacity: .8;
+    }
+    .circuit-traces circle.via {
+      fill: var(--surface2);
+      stroke: var(--border);
+      stroke-width: 1.5;
+    }
+    .circuit-traces circle.pulse {
+      fill: var(--accent3);
+      filter: drop-shadow(0 0 6px var(--accent3));
+    }
+    .chip-grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 3.5rem 2.5rem;
+    }
+    .chip-slot {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      opacity: 0;
+      transform: translateY(24px) scale(.97);
+      transition: opacity .6s ease, transform .6s ease;
+    }
+    .chip-slot.visible { opacity: 1; transform: none; }
+    .chip-pins {
+      display: flex;
+      justify-content: space-evenly;
+      height: 12px;
+      padding: 0 2.5rem;
+    }
+    .chip-pins i {
+      width: 8px; height: 12px;
+      background: linear-gradient(to bottom, var(--text-dim), var(--surface2));
+      opacity: .55;
+      border-radius: 1px;
+      transition: opacity .3s, background .3s;
+    }
+    .chip-pins-top i { background: linear-gradient(to top, var(--text-dim), var(--surface2)); }
+    .chip-slot:hover .chip-pins i { opacity: 1; background: var(--accent3); box-shadow: 0 0 6px var(--accent3); }
+    .chip-body {
+      position: relative;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      overflow: hidden;
+      transition: border-color .3s, box-shadow .3s, transform .3s;
+    }
+    /* chip notch */
+    .chip-body::before {
+      content: '';
+      position: absolute;
+      top: -1px; left: 50%;
+      transform: translateX(-50%);
+      width: 34px; height: 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 12px 12px;
+      z-index: 2;
+    }
+    .chip-slot:hover .chip-body {
+      border-color: var(--accent3);
+      box-shadow: 0 0 0 1px rgba(0,217,180,.25), 0 14px 44px rgba(0,217,180,.12);
+      transform: translateY(-3px);
+    }
+    .chip-label {
+      display: flex;
+      align-items: center;
+      gap: .7rem;
+      padding: .55rem 1.25rem;
+      border-bottom: 1px dashed var(--border);
+      background: var(--code-bg);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .chip-code {
+      font-size: .62rem;
+      letter-spacing: .18em;
+      color: var(--accent3);
+    }
+    .chip-die {
+      flex: 0 0 auto;
+      width: 9px; height: 9px;
+      border: 1px solid var(--text-dim);
+      background:
+        linear-gradient(var(--text-dim), var(--text-dim)) center/1px 100% no-repeat,
+        linear-gradient(var(--text-dim), var(--text-dim)) center/100% 1px no-repeat;
+      opacity: .6;
+    }
+    .chip-tag {
+      margin-left: auto;
+      font-size: .58rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+    .chip-slot:hover .chip-tag { color: var(--text-muted); }
+    .chip-body .fw-card {
+      border: none;
+      border-radius: 0;
+      margin: 0;
+      background: transparent;
+    }
 
     /* ─── SKILLS ─── */
     .skills-grid {
@@ -1356,7 +1635,7 @@
     <div class="hero-bg"></div>
     <div class="hero-grid"></div>
     <div class="hero-content">
-      <div class="hero-label">Senior Manager, GenAI &amp; Digital Health AI · Samsung</div>
+      <div class="hero-label">AI/ML Platform Software Architect · Staff Manager · Qualcomm</div>
       <h1 class="hero-name">Dr. Prateek<br>Singh</h1>
       <p class="hero-tagline">
         Most AI models fail outside the lab. I build ones that don't.
@@ -1413,7 +1692,7 @@
       <div class="about-grid">
         <div class="about-right">
           <h2 class="section-title">Building AI that<br><em>lives on devices</em></h2>
-          <p>I hold a <strong>PhD in Signal Processing and AI</strong> from IIT Roorkee and currently lead AI initiatives as Senior Manager of GenAI &amp; Digital Health AI at <strong>Samsung Research Institute, Noida</strong>. My work sits at the intersection of on-device LLM deployment, physiological signal processing, and production-grade AI systems.</p>
+          <p>I hold a <strong>PhD in Signal Processing and AI</strong> from IIT Roorkee and currently work as AI/ML Platform Software Architect (Staff Manager) at <strong>Qualcomm, Hyderabad</strong>. Previously, I led GenAI &amp; Digital Health AI initiatives as Senior Manager at Samsung Research Institute, Noida. My work sits at the intersection of on-device LLM deployment, physiological signal processing, and production-grade AI systems.</p>
           <p>I've contributed to <strong>FDA-ready cardiovascular monitoring solutions</strong>, built intelligent RAG systems for clinical analytics, and shipped LLM features on constrained hardware. My research explores quantization, model compression, and efficient inference across CPUs, NPUs, and Qualcomm QNN.</p>
           <p>Previously at <strong>Mercedes-Benz R&amp;D India</strong> (in-cabin AI, 2022–2025) and <strong>Elastic Care, Canada</strong> (FDA-cleared AI modules, 2019–2022). Invited speaker at IIM Sambalpur, NIT Jalandhar, and other institutions.</p>
           <div class="about-tags">
@@ -1443,56 +1722,197 @@
   <section class="section" id="experience">
     <div class="container">
       <div class="section-label purple">Career</div>
-      <h2 class="section-title">Work <em>Experience</em></h2>
-      <p class="section-sub">From biomedical signal processing to production GenAI — a decade of building at the edge of AI and healthcare.</p>
-      <div class="timeline">
-        <div class="timeline-item">
-          <div class="timeline-meta">
-            <span class="timeline-period">2025 — Present</span>
-            <span class="timeline-badge">Current</span>
+      <h2 class="section-title">The <em>Journey</em></h2>
+      <p class="section-sub">From biomedical signal processing to production GenAI — a decade on the road, milestone by milestone.</p>
+
+      <div class="journey" id="journey">
+        <svg class="journey-road-svg" preserveAspectRatio="none" aria-hidden="true">
+          <path class="road-edge" d=""></path>
+          <path class="road-base" d=""></path>
+          <path class="road-center" d=""></path>
+        </svg>
+        <div class="journey-traveler"></div>
+
+        <div class="journey-flag"><span>▸ START — Jul 2015</span></div>
+
+        <div class="journey-stop side-l">
+          <div class="journey-milestone">
+            <div class="milestone-mile">Mile 01</div>
+            <div class="milestone-logo">CBS</div>
+            <div class="milestone-year">Jul 2015 — Jun 2017</div>
           </div>
-          <div class="timeline-org">Samsung Research Institute, Noida</div>
-          <div class="timeline-role">Senior Manager — GenAI & Digital Health AI, Noida</div>
-          <p class="timeline-desc">
-            Leading on-device AI initiatives across <strong>LLM deployment, GenAI systems, and physiological signal processing</strong> (ECG, PPG, audio) — targeting deployment across Samsung's 500M+ active device ecosystem. Built intelligent RAG systems for clinical data analytics, enabling clinicians to query physiological datasets in natural language. Driving NPU acceleration via Qualcomm QNN SDK and custom AI agent frameworks at production scale.
-          </p>
-        </div>
-        <div class="timeline-item">
-          <div class="timeline-meta">
-            <span class="timeline-period">2022 — 2025</span>
-            <span class="timeline-badge purple">Automotive AI</span>
+          <div class="journey-card">
+            <span class="journey-badge orange">Academia</span>
+            <div class="journey-org">CBS Group of Colleges, Agra</div>
+            <div class="journey-role">Assistant Professor</div>
+            <p class="journey-desc">
+              Taught core engineering courses and mentored undergraduate students — building the <strong>teaching and research foundations</strong> that shaped a decade of applied AI work.
+            </p>
           </div>
-          <div class="timeline-org">Mercedes-Benz R&amp;D India</div>
-          <div class="timeline-role">AI Engineer — In-Cabin Intelligent Features</div>
-          <p class="timeline-desc">
-            Developed <strong>in-cabin AI features</strong> for smart vehicles, applying multimodal sensing and real-time signal processing for driver monitoring systems. Two pending patents in automotive health sensing.
-          </p>
         </div>
-        <div class="timeline-item">
-          <div class="timeline-meta">
-            <span class="timeline-period">2019 — 2022</span>
-            <span class="timeline-badge pink">HealthTech</span>
+
+        <div class="journey-stop side-r mk-purple">
+          <div class="journey-milestone">
+            <div class="milestone-mile">Mile 02</div>
+            <div class="milestone-logo light"><img src="assets/logos/iitr.png" alt="IIT Roorkee" loading="lazy" onerror="this.parentNode.textContent='IITR'"></div>
+            <div class="milestone-year">Jul 2017 — Jun 2018</div>
           </div>
-          <div class="timeline-org">Elastic Care, Canada</div>
-          <div class="timeline-role">AI Lead — FDA-Cleared Algorithms</div>
-          <p class="timeline-desc">
-            Led development of <strong>FDA-cleared AI modules</strong> for wearable vital sign monitoring (HR, RR, arrhythmia classification). Supported FDA 510(k) submissions and SaMD compliance frameworks for cardiovascular and metabolic monitoring pipelines.
-          </p>
-        </div>
-        <div class="timeline-item">
-          <div class="timeline-meta">
-            <span class="timeline-period">Ongoing</span>
-            <span class="timeline-badge orange">Consulting</span>
+          <div class="journey-card">
+            <span class="journey-badge pink">Research</span>
+            <div class="journey-org">IIT Roorkee</div>
+            <div class="journey-role">Senior Research Fellow — Virtual Labs</div>
+            <p class="journey-desc">
+              Senior Research Fellow on the <strong>Virtual Labs</strong> initiative — developing remote experimentation platforms for engineering education, and the launchpad for the doctoral journey in signal processing &amp; AI at IIT Roorkee.
+            </p>
           </div>
-          <div class="timeline-org">Independent Consultant</div>
-          <div class="timeline-role">Regulatory AI & Health-Tech Advisory</div>
-          <p class="timeline-desc">
-            Consulting for global health-tech startups including Vigo Health Care, Pareto Tree, and others on <strong>FDA 510(k), SaMD compliance, and clinical trial design</strong>. Invited speaker at IIM Sambalpur, NIT Jalandhar, and invited reviewer for IEEE TIM, IEEE IoT Journal, and Scientific Reports (Nature).
-          </p>
         </div>
+
+        <div class="parallel-route">
+          <div class="parallel-line"></div>
+          <div class="parallel-sticky">
+            <div class="parallel-card">
+              <span class="journey-badge orange">Frontage Road</span>
+              <div class="journey-org">Independent Consulting</div>
+              <div class="journey-role">Regulatory AI &amp; Health-Tech Advisory · Jan 2019 — Present</div>
+              <p class="journey-desc">
+                Running <strong>alongside every role since Elastic Care</strong> — advising global health-tech startups (Vigo Health Care, Pareto Tree, and others) on <strong>FDA 510(k), SaMD compliance, and clinical trial design</strong>. Invited speaker at IIM Sambalpur and NIT Jalandhar; peer reviewer for IEEE TIM, IEEE IoT Journal, and Scientific Reports (Nature).
+              </p>
+            </div>
+          </div>
+
+        <div class="journey-stop side-l mk-pink">
+          <div class="journey-milestone">
+            <div class="milestone-mile">Mile 03</div>
+            <div class="milestone-logo light"><img src="assets/logos/ec.png" alt="Elastic Care" loading="lazy" onerror="this.parentNode.textContent='EC'"></div>
+            <div class="milestone-year">Jan 2019 — Dec 2022</div>
+          </div>
+          <div class="journey-card">
+            <span class="journey-badge pink">HealthTech</span>
+            <div class="journey-org">Elastic Care, Canada</div>
+            <div class="journey-role">AI Lead — FDA-Cleared Algorithms</div>
+            <p class="journey-desc">
+              Led development of <strong>FDA-cleared AI modules</strong> for wearable vital sign monitoring (HR, RR, arrhythmia classification). Supported FDA 510(k) submissions and SaMD compliance frameworks for cardiovascular and metabolic monitoring pipelines.
+            </p>
+          </div>
+        </div>
+
+        <div class="journey-stop side-r mk-orange">
+          <div class="journey-milestone">
+            <div class="milestone-mile">Mile 04</div>
+            <div class="milestone-logo"><img src="assets/logos/mb.png" alt="Mercedes-Benz" loading="lazy" onerror="this.parentNode.textContent='MB'"></div>
+            <div class="milestone-year">Jan 2022 — Dec 2025</div>
+          </div>
+          <div class="journey-card">
+            <span class="journey-badge purple">Automotive AI</span>
+            <div class="journey-org">Mercedes-Benz R&amp;D India</div>
+            <div class="journey-role">AI Engineer — In-Cabin Intelligent Features</div>
+            <p class="journey-desc">
+              Developed <strong>in-cabin AI features</strong> for smart vehicles, applying multimodal sensing and real-time signal processing for driver monitoring systems. Two pending patents in automotive health sensing.
+            </p>
+          </div>
+        </div>
+
+        <div class="journey-stop side-l">
+          <div class="journey-milestone">
+            <div class="milestone-mile">Mile 05</div>
+            <div class="milestone-logo"><img src="assets/logos/sam.png" alt="Samsung Research" loading="lazy" onerror="this.parentNode.textContent='Samsung'"></div>
+            <div class="milestone-year">Jan 2025 — Aug 2026</div>
+          </div>
+          <div class="journey-card">
+            <span class="journey-badge purple">On-Device GenAI</span>
+            <div class="journey-org">Samsung Research Institute, Noida</div>
+            <div class="journey-role">Senior Manager — GenAI &amp; Digital Health AI</div>
+            <p class="journey-desc">
+              Led on-device AI initiatives across <strong>LLM deployment, GenAI systems, and physiological signal processing</strong> (ECG, PPG, audio) — targeting Samsung's 500M+ active device ecosystem. Built intelligent RAG systems for clinical data analytics and drove NPU acceleration via Qualcomm QNN SDK and custom AI agent frameworks at production scale.
+            </p>
+          </div>
+        </div>
+
+        <div class="journey-stop side-r">
+          <div class="journey-milestone">
+            <div class="milestone-mile">Mile 06</div>
+            <div class="milestone-logo"><img src="assets/logos/qc.png" alt="Qualcomm" loading="lazy" onerror="this.parentNode.textContent='QC'"></div>
+            <div class="milestone-year">Aug 2026 — Now</div>
+          </div>
+          <div class="journey-card">
+            <span class="journey-badge">Current</span>
+            <div class="journey-org">Qualcomm, Hyderabad</div>
+            <div class="journey-role">AI/ML Platform Software Architect — Staff Manager</div>
+            <p class="journey-desc">
+              Architecting <strong>AI/ML platform software for on-device inference on Snapdragon</strong> — spanning LLM runtimes, quantization, and NPU acceleration across the Qualcomm AI software stack, bringing efficient GenAI to billions of edge devices.
+            </p>
+          </div>
+        </div>
+        </div><!-- /.parallel-route -->
+
+        <div class="journey-flag finish"><span>⚑ THE ROAD CONTINUES…</span></div>
       </div>
     </div>
   </section>
+
+  <script>
+  (function () {
+    function initAll(){ document.querySelectorAll('.journey').forEach(initJourney); }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initAll); else initAll();
+    function initJourney(journey) {
+    const svg = journey.querySelector('.journey-road-svg');
+    const paths = svg.querySelectorAll('path');
+    const traveler = journey.querySelector('.journey-traveler');
+    const stops = journey.querySelectorAll('.journey-stop');
+
+    // Build a winding S-curve road matching the journey height
+    function buildRoad() {
+      const h = journey.offsetHeight;
+      const w = 160, cx = w / 2, amp = 42;
+      svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+      svg.setAttribute('width', w);
+      svg.setAttribute('height', h);
+      const seg = h / (stops.length + 1);
+      let d = 'M ' + cx + ' 0';
+      for (let i = 0; i < stops.length + 1; i++) {
+        const dir = i % 2 === 0 ? 1 : -1;
+        const y0 = i * seg, y1 = (i + 1) * seg;
+        d += ' C ' + (cx + amp * dir) + ' ' + (y0 + seg * .35) + ', '
+                   + (cx + amp * dir) + ' ' + (y1 - seg * .35) + ', '
+                   + cx + ' ' + y1;
+      }
+      paths.forEach(p => p.setAttribute('d', d));
+    }
+    buildRoad();
+    window.addEventListener('resize', buildRoad);
+    // rebuild after fonts/images settle
+    window.addEventListener('load', buildRoad);
+
+    // Reveal cards on scroll
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.25 });
+    stops.forEach(s => io.observe(s));
+
+    // Glowing traveler follows scroll along the road
+    const centerPath = svg.querySelector('.road-center');
+    function moveTraveler() {
+      const rect = journey.getBoundingClientRect();
+      const vh = window.innerHeight;
+      let t = (vh * 0.55 - rect.top) / rect.height;
+      t = Math.max(0, Math.min(1, t));
+      try {
+        const len = centerPath.getTotalLength();
+        const pt = centerPath.getPointAtLength(len * t);
+        const svgRect = svg.getBoundingClientRect();
+        const jRect = journey.getBoundingClientRect();
+        const scaleX = svgRect.width / 160;
+        traveler.style.top = (pt.y * (svgRect.height / journey.offsetHeight)) + 'px';
+        traveler.style.left = (svgRect.left - jRect.left + pt.x * scaleX) + 'px';
+        traveler.style.marginLeft = '-9px';
+      } catch (e) { /* path not ready */ }
+    }
+    window.addEventListener('scroll', moveTraveler, { passive: true });
+    window.addEventListener('resize', moveTraveler);
+    moveTraveler();
+    }
+  })();
+  </script>
 
   <!-- SKILLS -->
   <section class="section" id="skills">
@@ -1588,10 +2008,17 @@
     <div class="container">
       <div class="section-label">Featured Work</div>
       <h2 class="section-title">Selected <em>Projects</em></h2>
-      <p class="section-sub">End-to-end AI systems — from wearable signal processing to LLM deployment on edge devices.</p>
-      <div class="fw-grid">
+      <p class="section-sub">End-to-end AI systems — each one a chip on the board, from wearable signal processing to LLM deployment on edge devices.</p>
 
-        <div class="fw-card c-purple">
+      <div class="circuit-board" id="circuitBoard">
+        <svg class="circuit-traces" aria-hidden="true"></svg>
+        <div class="chip-grid">
+
+        <div class="chip-slot">
+          <div class="chip-pins chip-pins-top"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="chip-body">
+            <div class="chip-label"><span class="chip-code">AGT-01</span><span class="chip-die"></span><span class="chip-tag">Agentic AI</span></div>
+            <div class="fw-card c-purple">
           <div class="fw-card-head">
             <div class="fw-icon">🤝</div>
             <div class="fw-title-group">
@@ -1612,8 +2039,15 @@
             <span><strong>Impact:</strong> Bringing safe, private, fully on-device AI agents to consumer mobile platforms.</span>
           </div>
         </div>
+          </div>
+          <div class="chip-pins chip-pins-bottom"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
 
-        <div class="fw-card c-teal">
+        <div class="chip-slot">
+          <div class="chip-pins chip-pins-top"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="chip-body">
+            <div class="chip-label"><span class="chip-code">WBL-02</span><span class="chip-die"></span><span class="chip-tag">Wearable AI</span></div>
+            <div class="fw-card c-teal">
           <div class="fw-card-head">
             <div class="fw-icon">🧠</div>
             <div class="fw-title-group">
@@ -1634,8 +2068,15 @@
             <span><strong>Impact:</strong> Scalable, cuffless BP monitoring for millions of wearable users — 2 papers under review.</span>
           </div>
         </div>
+          </div>
+          <div class="chip-pins chip-pins-bottom"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
 
-        <div class="fw-card c-blue">
+        <div class="chip-slot">
+          <div class="chip-pins chip-pins-top"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="chip-body">
+            <div class="chip-label"><span class="chip-code">ECG-03</span><span class="chip-die"></span><span class="chip-tag">IEEE Q1</span></div>
+            <div class="fw-card c-blue">
           <div class="fw-card-head">
             <div class="fw-icon">❤️</div>
             <div class="fw-title-group">
@@ -1655,8 +2096,15 @@
             <span><strong>Impact:</strong> Reliable ECG interpretation in low-cost wearables and remote patient monitoring.</span>
           </div>
         </div>
+          </div>
+          <div class="chip-pins chip-pins-bottom"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
 
-        <div class="fw-card c-purple">
+        <div class="chip-slot">
+          <div class="chip-pins chip-pins-top"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="chip-body">
+            <div class="chip-label"><span class="chip-code">ABP-04</span><span class="chip-die"></span><span class="chip-tag">Deep Learning</span></div>
+            <div class="fw-card c-purple">
           <div class="fw-card-head">
             <div class="fw-icon">🧬</div>
             <div class="fw-title-group">
@@ -1676,8 +2124,15 @@
             <span><strong>Impact:</strong> Continuous, cuffless BP monitoring for clinical and home-use systems.</span>
           </div>
         </div>
+          </div>
+          <div class="chip-pins chip-pins-bottom"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
 
-        <div class="fw-card c-amber">
+        <div class="chip-slot">
+          <div class="chip-pins chip-pins-top"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="chip-body">
+            <div class="chip-label"><span class="chip-code">RAG-05</span><span class="chip-die"></span><span class="chip-tag">GenAI</span></div>
+            <div class="fw-card c-amber">
           <div class="fw-card-head">
             <div class="fw-icon">🤖</div>
             <div class="fw-title-group">
@@ -1697,8 +2152,15 @@
             <span><strong>Impact:</strong> Clinicians query physiological data conversationally — no SQL required.</span>
           </div>
         </div>
+          </div>
+          <div class="chip-pins chip-pins-bottom"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
 
-        <div class="fw-card c-green">
+        <div class="chip-slot">
+          <div class="chip-pins chip-pins-top"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="chip-body">
+            <div class="chip-label"><span class="chip-code">EDG-06</span><span class="chip-die"></span><span class="chip-tag">Edge AI</span></div>
+            <div class="fw-card c-green">
           <div class="fw-card-head">
             <div class="fw-icon">📱</div>
             <div class="fw-title-group">
@@ -1718,8 +2180,15 @@
             <span><strong>Impact:</strong> Bringing full GenAI to mobile and embedded devices at consumer scale.</span>
           </div>
         </div>
+          </div>
+          <div class="chip-pins chip-pins-bottom"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
 
-        <div class="fw-card c-red">
+        <div class="chip-slot">
+          <div class="chip-pins chip-pins-top"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="chip-body">
+            <div class="chip-label"><span class="chip-code">AUT-07</span><span class="chip-die"></span><span class="chip-tag">Automotive</span></div>
+            <div class="fw-card c-red">
           <div class="fw-card-head">
             <div class="fw-icon">🚗</div>
             <div class="fw-title-group">
@@ -1739,7 +2208,11 @@
             <span><strong>Impact:</strong> Real-time driver health awareness and safety, directly within the vehicle.</span>
           </div>
         </div>
+          </div>
+          <div class="chip-pins chip-pins-bottom"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
 
+        </div>
       </div>
     </div>
   </section>
@@ -2301,5 +2774,68 @@
       fadeObs.observe(el);
     });
   </script>
+
+  <script>
+  (function () {
+    function initBoard(){
+      const board=document.getElementById('circuitBoard');
+      if(!board) return;
+      const svg=board.querySelector('.circuit-traces');
+      const slots=[...board.querySelectorAll('.chip-slot')];
+
+      const io=new IntersectionObserver(es=>es.forEach(e=>{
+        if(e.isIntersecting) e.target.classList.add('visible');
+      }),{threshold:.15});
+      slots.forEach(s=>io.observe(s));
+
+      let pulses=[];
+      function build(){
+        const br=board.getBoundingClientRect();
+        svg.setAttribute('viewBox','0 0 '+br.width+' '+br.height);
+        svg.innerHTML='';
+        pulses=[];
+        // connect consecutive chips with manhattan (right-angle) PCB traces
+        for(let i=0;i<slots.length-1;i++){
+          const r1=slots[i].getBoundingClientRect(), r2=slots[i+1].getBoundingClientRect();
+          const x1=r1.left-br.left+r1.width/2, y1=r1.bottom-br.top;
+          const x2=r2.left-br.left+r2.width/2, y2=r2.top-br.top;
+          const midY=(y1+y2)/2;
+          const d='M '+x1+' '+(y1-6)+' L '+x1+' '+midY+' L '+x2+' '+midY+' L '+x2+' '+(y2+6);
+          const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+          path.setAttribute('d',d); path.setAttribute('class','trace');
+          svg.appendChild(path);
+          // vias at corners
+          [[x1,midY],[x2,midY]].forEach(([cx,cy])=>{
+            const v=document.createElementNS('http://www.w3.org/2000/svg','circle');
+            v.setAttribute('cx',cx); v.setAttribute('cy',cy); v.setAttribute('r',3.5);
+            v.setAttribute('class','via'); svg.appendChild(v);
+          });
+          // pulse dot per trace
+          const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
+          dot.setAttribute('r',3); dot.setAttribute('class','pulse');
+          svg.appendChild(dot);
+          pulses.push({path,dot,t:Math.random(),speed:.0016+Math.random()*.0012});
+        }
+      }
+      function tick(){
+        pulses.forEach(p=>{
+          p.t+=p.speed; if(p.t>1)p.t=0;
+          try{
+            const len=p.path.getTotalLength();
+            const pt=p.path.getPointAtLength(len*p.t);
+            p.dot.setAttribute('cx',pt.x); p.dot.setAttribute('cy',pt.y);
+          }catch(e){}
+        });
+        requestAnimationFrame(tick);
+      }
+      build();
+      requestAnimationFrame(tick);
+      window.addEventListener('resize',build);
+      window.addEventListener('load',build);
+    }
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initBoard); else initBoard();
+  })();
+  </script>
+
 </body>
 </html>
