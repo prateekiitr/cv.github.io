@@ -1,5 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem('theme');
+      if (t === 'light') document.documentElement.classList.add('light');
+    } catch (e) {}
+  })();
+</script>
 <head>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DCEDZ55RDE"></script>
@@ -13,6 +21,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="dark">
   <meta name="theme-color" content="#0a0a0f">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta property="og:locale" content="en_US">
 
   <!-- Primary SEO -->
   <title>Prateek Singh — Senior AI Leader | GenAI &amp; On-Device AI | Qualcomm</title>
@@ -63,8 +73,18 @@
     "knowsAbout": [
       "GenAI", "Healthcare AI", "ECG Signal Processing", "PPG Signal Processing",
       "LLM Deployment", "On-Device AI", "Quantization", "Qualcomm QNN",
-      "Deep Learning", "Biomedical Signal Processing", "FDA SaMD"
+      "Deep Learning", "Biomedical Signal Processing", "FDA SaMD",
+      "Regulatory Consulting", "Medical Device Algorithm Development"
     ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "url": "https://prateeksinghphd.in",
+    "name": "Prateek Singh — AI/ML Portfolio",
+    "publisher": { "@type": "Person", "name": "Prateek Singh" }
   }
   </script>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
@@ -84,6 +104,44 @@
       --text-dim: #6a6a8a;
       --code-bg: #0f0f1a;
       color-scheme: dark;
+    }
+
+    html.light {
+      --bg: #fafafc;
+      --surface: #ffffff;
+      --surface2: #f1f1f6;
+      --border: #dcdce6;
+      --accent: #5b45e0;
+      --accent2: #e2437a;
+      --accent3: #00967d;
+      --accent4: #c97f11;
+      --text: #14141c;
+      --text-muted: #3f3f52;
+      --text-dim: #6a6a80;
+      --code-bg: #f1f1f6;
+      color-scheme: light;
+    }
+    html.light body::before { opacity: .08; }
+
+    .theme-toggle {
+      position: relative;
+      width: 40px; height: 40px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      color: var(--text-muted);
+      cursor: pointer;
+      margin-left: 1.5rem;
+      transition: border-color .2s, color .2s, transform .3s;
+      flex-shrink: 0;
+    }
+    .theme-toggle:hover { border-color: var(--accent3); color: var(--accent3); transform: rotate(15deg); }
+    .theme-toggle .theme-icon-moon { display: none; }
+    html.light .theme-toggle .theme-icon-sun { display: none; }
+    html.light .theme-toggle .theme-icon-moon { display: block; }
+    @media (max-width: 900px) {
+      .theme-toggle { margin-left: .75rem; }
     }
 
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1611,8 +1669,12 @@
       <li><a href="blogs.html">Blogs</a></li>
       <li><a href="#newsletter">Newsletter</a></li>
       <li><a href="#contact">Contact</a></li>
-      <li><a href="https://drive.google.com/uc?export=download&id=1KGFLEqOoYPD45Bxmr1i5w_IZX4-cCC9e" class="cta-link" target="_blank">Download CV</a></li>
+      <li><a href="https://drive.google.com/uc?export=download&id=1KGFLEqOoYPD45Bxmr1i5w_IZX4-cCC9e" class="cta-link" target="_blank" rel="noopener">Download CV</a></li>
     </ul>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark theme" title="Toggle theme">
+      <i class="fas fa-sun theme-icon-sun"></i>
+      <i class="fas fa-moon theme-icon-moon"></i>
+    </button>
     <button class="hamburger" id="hamburger" aria-label="Menu">
       <span></span><span></span><span></span>
     </button>
@@ -1627,7 +1689,7 @@
     <a href="#publications" class="mobile-link">Research</a>
     <a href="blogs.html" class="mobile-link">Blogs</a>
     <a href="#contact" class="mobile-link">Contact</a>
-    <a href="https://drive.google.com/uc?export=download&id=14gdos6ddnlDyDwy4nHHKoLFCtV171YbR" class="mobile-link" target="_blank">CV ↓</a>
+    <a href="https://drive.google.com/uc?export=download&id=14gdos6ddnlDyDwy4nHHKoLFCtV171YbR" class="mobile-link" target="_blank" rel="noopener">CV ↓</a>
   </div>
 
   <!-- HERO -->
@@ -1707,10 +1769,10 @@
             <span class="tag tag-pink">RAG Architecture</span>
           </div>
           <div class="hero-actions" style="opacity:1;animation:none;">
-            <a href="https://drive.google.com/uc?export=download&id=14gdos6ddnlDyDwy4nHHKoLFCtV171YbR" class="btn-primary" target="_blank">
+            <a href="https://drive.google.com/uc?export=download&id=14gdos6ddnlDyDwy4nHHKoLFCtV171YbR" class="btn-primary" target="_blank" rel="noopener">
               <i class="fas fa-download"></i> Download CV
             </a>
-            <a href="https://scholar.google.com/citations?user=nYZhJaMAAAAJ&hl=en" target="_blank" class="btn-secondary">
+            <a href="https://scholar.google.com/citations?user=nYZhJaMAAAAJ&hl=en" target="_blank" class="btn-secondary" rel="noopener">
               <i class="fas fa-graduation-cap"></i> Google Scholar
             </a>
           </div>
@@ -2327,7 +2389,7 @@
         <li class="pub-item">
           <span class="pub-num">01</span>
           <div class="pub-title">
-            <a href="https://www.sciencedirect.com/science/article/pii/S095741742301477X" target="_blank" style="color:inherit;text-decoration:none;">
+            <a href="https://www.sciencedirect.com/science/article/pii/S095741742301477X" target="_blank" style="color:inherit;text-decoration:none;" rel="noopener">
               Singh, Prateek, Ambalika Sharma, and Shreesha Maiya. "<strong>Automated atrial fibrillation classification based on denoising stacked autoencoder and optimized deep network.</strong>" Expert Systems with Applications 233 (2023): 120975.
             </a>
             <span class="if-badge">I.F. 8.5</span>
@@ -2337,7 +2399,7 @@
         <li class="pub-item">
           <span class="pub-num">02</span>
           <div class="pub-title">
-            <a href="https://ieeexplore.ieee.org/abstract/document/9853604" target="_blank" style="color:inherit;text-decoration:none;">
+            <a href="https://ieeexplore.ieee.org/abstract/document/9853604" target="_blank" style="color:inherit;text-decoration:none;" rel="noopener">
               P. Singh and A. Sharma, "<strong>Attention-Based Convolutional Denoising Autoencoder for Two-Lead ECG Denoising and Arrhythmia Classification</strong>," IEEE Transactions on Instrumentation and Measurement, vol. 71, 2022.
             </a>
             <span class="if-badge">I.F. 5.6</span>
@@ -2347,7 +2409,7 @@
         <li class="pub-item">
           <span class="pub-num">03</span>
           <div class="pub-title">
-            <a href="https://ieeexplore.ieee.org/abstract/document/9877905" target="_blank" style="color:inherit;text-decoration:none;">
+            <a href="https://ieeexplore.ieee.org/abstract/document/9877905" target="_blank" style="color:inherit;text-decoration:none;" rel="noopener">
               P. Singh and A. Sharma, "<strong>Interpretation and Classification of Arrhythmia using Deep Convolutional Network</strong>," IEEE Transactions on Instrumentation and Measurement, 2022.
             </a>
             <span class="if-badge">I.F. 5.6</span>
@@ -2358,7 +2420,7 @@
 
       <div style="margin-top:1.75rem;padding:1.25rem 1.5rem;background:var(--surface);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
         <span style="font-size:.88rem;color:var(--text-muted);">6 more publications across IEEE, Springer, and international conferences.</span>
-        <a href="https://scholar.google.com/citations?user=nYZhJaMAAAAJ&hl=en" target="_blank" class="btn-secondary" style="opacity:1;animation:none;font-size:.75rem;padding:.6rem 1.25rem;">
+        <a href="https://scholar.google.com/citations?user=nYZhJaMAAAAJ&hl=en" target="_blank" class="btn-secondary" style="opacity:1;animation:none;font-size:.75rem;padding:.6rem 1.25rem;" rel="noopener">
           <i class="fas fa-graduation-cap"></i> View All on Google Scholar
         </a>
       </div>
@@ -2368,7 +2430,7 @@
         <li class="pub-item">
           <span class="pub-num">P1</span>
           <div class="pub-title">
-            <a href="https://scholar.google.com/citations?user=nYZhJaMAAAAJ&hl=en" target="_blank" style="color:inherit;text-decoration:none;">
+            <a href="https://scholar.google.com/citations?user=nYZhJaMAAAAJ&hl=en" target="_blank" style="color:inherit;text-decoration:none;" rel="noopener">
               "<strong>System and Method for Sensing Vitals of Occupants in a Vehicle.</strong>" India Patent Application No. 202311086057 — Filed December 16, 2023. (Pending)
             </a>
           </div>
@@ -2377,7 +2439,7 @@
         <li class="pub-item">
           <span class="pub-num">P2</span>
           <div class="pub-title">
-            <a href="https://scholar.google.com/citations?user=nYZhJaMAAAAJ&hl=en" target="_blank" style="color:inherit;text-decoration:none;">
+            <a href="https://scholar.google.com/citations?user=nYZhJaMAAAAJ&hl=en" target="_blank" style="color:inherit;text-decoration:none;" rel="noopener">
               "<strong>Revolutionizing Vital Sensing in Automotive using Semi-Supervised Deep Learning.</strong>" India Patent Application No. 202413073052 — Filed November 11, 2024. (Pending)
             </a>
           </div>
@@ -2386,7 +2448,7 @@
         <li class="pub-item">
           <span class="pub-num">P3</span>
           <div class="pub-title">
-            <a href="https://scholar.google.com/citations?user=nYZhJaMAAAAJ&hl=en" target="_blank" style="color:inherit;text-decoration:none;">
+            <a href="https://scholar.google.com/citations?user=nYZhJaMAAAAJ&hl=en" target="_blank" style="color:inherit;text-decoration:none;" rel="noopener">
               "<strong>A Method to Optimize Variations in Signal Parameters for Detecting Hypertension.</strong>" India Patent Application No. 202511124353 — Filed December 15, 2025. (Pending)
             </a>
           </div>
@@ -2395,7 +2457,7 @@
       </ul>
 
       <div style="text-align:center;margin-top:2.5rem;">
-        <a href="https://scholar.google.com/citations?user=nYZhJaMAAAAJ&hl=en" target="_blank" class="btn-secondary">
+        <a href="https://scholar.google.com/citations?user=nYZhJaMAAAAJ&hl=en" target="_blank" class="btn-secondary" rel="noopener">
           <i class="fas fa-graduation-cap"></i> View All on Google Scholar
         </a>
       </div>
@@ -2542,19 +2604,19 @@
           <i class="fas fa-envelope"></i>
           <span id="email-text"></span>
         </a>
-        <a href="https://www.linkedin.com/in/prateek29s/" target="_blank" class="contact-link">
+        <a href="https://www.linkedin.com/in/prateek29s/" target="_blank" class="contact-link" rel="noopener">
           <i class="fab fa-linkedin"></i>
           <span>linkedin.com/in/prateek29s</span>
         </a>
-        <a href="https://scholar.google.com/citations?user=nYZhJaMAAAAJ&hl=en" target="_blank" class="contact-link">
+        <a href="https://scholar.google.com/citations?user=nYZhJaMAAAAJ&hl=en" target="_blank" class="contact-link" rel="noopener">
           <i class="fas fa-graduation-cap"></i>
           <span>Google Scholar Profile</span>
         </a>
-        <a href="https://prateeksinghphd.in" target="_blank" class="contact-link">
+        <a href="https://prateeksinghphd.in" target="_blank" class="contact-link" rel="noopener">
           <i class="fas fa-globe"></i>
           <span>prateeksinghphd.com</span>
         </a>
-        <a href="https://drive.google.com/uc?export=download&id=1tVeXWipJAWXlDcdZ-KwmBigfUgjYlEXK" target="_blank" class="contact-link">
+        <a href="https://drive.google.com/uc?export=download&id=1tVeXWipJAWXlDcdZ-KwmBigfUgjYlEXK" target="_blank" class="contact-link" rel="noopener">
           <i class="fas fa-file-pdf"></i>
           <span>Download Curriculum Vitae</span>
         </a>
@@ -2575,7 +2637,7 @@
           <a href="#" id="final-email-link" class="btn-primary">
             <i class="fas fa-envelope"></i> Send an Email
           </a>
-          <a href="https://www.linkedin.com/in/prateek29s/" target="_blank" class="btn-secondary">
+          <a href="https://www.linkedin.com/in/prateek29s/" target="_blank" class="btn-secondary" rel="noopener">
             <i class="fab fa-linkedin"></i> Connect on LinkedIn
           </a>
         </div>
@@ -2589,8 +2651,8 @@
       © 2026 <a href="https://www.prateeksinghphd.com">Prateek Singh</a> · Built with precision
     </div>
     <div class="footer-right">
-      <a href="https://www.linkedin.com/in/prateek29s/" target="_blank"><i class="fab fa-linkedin"></i></a>
-      <a href="https://scholar.google.com/citations?user=nYZhJaMAAAAJ&hl=en" target="_blank"><i class="fas fa-graduation-cap"></i></a>
+      <a href="https://www.linkedin.com/in/prateek29s/" target="_blank" rel="noopener"><i class="fab fa-linkedin"></i></a>
+      <a href="https://scholar.google.com/citations?user=nYZhJaMAAAAJ&hl=en" target="_blank" rel="noopener"><i class="fas fa-graduation-cap"></i></a>
       <a href="blogs.html"><i class="fas fa-pen-nib"></i></a>
     </div>
   </footer>
@@ -2729,6 +2791,18 @@
       scrollUp.classList.toggle('visible', window.scrollY > 500);
     }
     window.addEventListener('scroll', onScroll, { passive: true });
+
+    // ── Theme toggle (dark/light)
+    (function () {
+      var toggle = document.getElementById('themeToggle');
+      var meta = document.querySelector('meta[name="theme-color"]');
+      if (!toggle) return;
+      toggle.addEventListener('click', function () {
+        var isLight = document.documentElement.classList.toggle('light');
+        if (meta) meta.setAttribute('content', isLight ? '#fafafc' : '#0a0a0f');
+        try { localStorage.setItem('theme', isLight ? 'light' : 'dark'); } catch (e) {}
+      });
+    })();
 
     // ── Mobile menu
     const hamburger = document.getElementById('hamburger');
