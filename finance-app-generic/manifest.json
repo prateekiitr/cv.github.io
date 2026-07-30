@@ -1,0 +1,8 @@
+{
+  "name": "Finance Ledger",
+  "short_name": "Ledger",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0A0F17",
+  "theme_color": "#05080E"
+}
