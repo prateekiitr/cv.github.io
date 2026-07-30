@@ -467,17 +467,31 @@ export default function FinanceDashboard() {
       const items = [];
 
       const grossThisYear = grossAt(grossSalary, d, hikePct);
-      if (grossSalary > 0) {
-        const yearCalc = taxForYear({ grossSalary: grossThisYear, extraIncome: 0, monthsWorked: 12 });
-        items.push({ label: "Salary (net)", amountInr: yearCalc.net / 12, tag: "cash" });
+      const baseTaxCalc = grossSalary > 0 ? taxForYear({ grossSalary: grossThisYear, extraIncome: 0, monthsWorked: 12 }) : null;
+      if (baseTaxCalc) {
+        items.push({ label: "Salary (net)", amountInr: baseTaxCalc.net / 12, tag: "cash" });
       }
 
+      // Bonuses are taxed at the marginal rate on top of base salary, not
+      // handed out gross — a bonus pushes part of the year's income into a
+      // higher slab, so only the after-tax amount is real take-home cash.
+      const netOfMarginalTax = (bonusAmount) => {
+        if (!bonusAmount || !baseTaxCalc) return { net: 0, tax: 0 };
+        const withBonus = taxForYear({ grossSalary: grossThisYear, extraIncome: bonusAmount, monthsWorked: 12 });
+        const tax = Math.max(0, withBonus.tax - baseTaxCalc.tax);
+        return { net: bonusAmount - tax, tax };
+      };
+
       bonuses.filter((b) => b.date && monthKey(new Date(b.date)) === key).forEach((b) => {
-        items.push({ label: b.name || "Bonus", amountInr: Number(b.amount || 0), tag: "bonus" });
+        const gross = Number(b.amount || 0);
+        const { net, tax } = netOfMarginalTax(gross);
+        items.push({ label: b.name || "Bonus", sub: tax > 0 ? `Gross ${INR(gross)} · Tax ${INR(tax)}` : undefined, amountInr: net, tag: "bonus" });
       });
 
       if (grossSalary > 0 && annualBonusPct > 0 && d.getMonth() === 3) {
-        items.push({ label: "Annual Bonus (est.)", amountInr: grossThisYear * (annualBonusPct / 100), tag: "bonus" });
+        const gross = grossThisYear * (annualBonusPct / 100);
+        const { net, tax } = netOfMarginalTax(gross);
+        items.push({ label: "Annual Bonus (est.)", sub: tax > 0 ? `Gross ${INR(gross)} · Tax ${INR(tax)}` : undefined, amountInr: net, tag: "bonus" });
       }
 
       const byGrant = {};
@@ -705,7 +719,7 @@ function Schedule({ schedule, rsuGrants, setRsuGrants, usdInr, setUsdInr, hikePc
           </div>
         )}
         <p style={{ fontSize: 11.5, color: T.inkSoft, marginTop: 14, marginBottom: 0, lineHeight: 1.5 }}>
-          Grants vest in equal instalments with no cliff, first vest one period after the grant date. Annual bonus is estimated every April; one-time bonuses land in whichever month you set. RSU values are pre-tax — vesting is taxed as a perquisite in the vest month. Loan EMIs are the outflows shown — if a lender is disbursing directly to a builder for a construction-linked loan, add those tranches under that loan's disbursements instead of logging them separately, so they raise the EMI rather than double-counting as a cash outflow.
+          Grants vest in equal instalments with no cliff, first vest one period after the grant date. Annual bonus is estimated every April; one-time bonuses land in whichever month you set. RSU values are pre-tax — vesting is taxed as a perquisite in the vest month. Bonuses shown here are net of the marginal income tax they trigger on top of your base salary for that year (each bonus's card shows the gross and tax split). Loan EMIs are the outflows shown — if a lender is disbursing directly to a builder for a construction-linked loan, add those tranches under that loan's disbursements instead of logging them separately, so they raise the EMI rather than double-counting as a cash outflow.
         </p>
       </Card>
     </div>
