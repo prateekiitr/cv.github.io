@@ -413,6 +413,7 @@ export default function FinanceDashboard() {
   const bonusesThisFY = bonuses.filter((b) => b.date && fyOf(new Date(b.date)).start === currentFY.start).reduce((s, b) => s + Number(b.amount || 0), 0);
   const steady = taxForYear({ grossSalary, extraIncome: 0, monthsWorked: 12 });
   const thisFYCalc = taxForYear({ grossSalary, extraIncome: bonusesThisFY, monthsWorked: 12 });
+  const afterHike = taxForYear({ grossSalary: grossSalary * (1 + hikePct / 100), extraIncome: 0, monthsWorked: 12 });
   const netMonthlySteady = steady.net / 12;
 
   const totalRsuUsd = rsuGrants.reduce((s, g) => s + Number(g.amountUsd || 0), 0);
@@ -541,7 +542,7 @@ export default function FinanceDashboard() {
 
             {tab === "overview" && <Overview {...{ netMonthlySteady, householdMonthlyIncome, sideIncomeMonthly, spouseIncomeMonthly, totalInvested, spentThisMonth, totalMonthlyEmi, totalOutstanding, compBreakdown }} />}
             {tab === "schedule" && <Schedule {...{ schedule, rsuGrants, setRsuGrants, usdInr, setUsdInr, hikePct, setHikePct }} />}
-            {tab === "salary" && <SalaryLedger {...{ usdInr, setUsdInr, totalRsuInr, taxRegime, setTaxRegime, monthlyRent, setMonthlyRent, ded, setDed, capped, chapterVIA, fbpExempt, includeEmployeePF, setIncludeEmployeePF, steady, netMonthlySteady, thisFYCalc, bonusesThisFY, currentFY, hikePct, setHikePct, grossSalary, setGrossSalary, basicPct, setBasicPct, hraPctOfBasic, setHraPctOfBasic, ltaPctOfBasic, setLtaPctOfBasic, pfPctOfBasic, setPfPctOfBasic, gratuityPctOfBasic, setGratuityPctOfBasic, annualBonusPct, setAnnualBonusPct, compNow, bonuses, setBonuses }} />}
+            {tab === "salary" && <SalaryLedger {...{ usdInr, setUsdInr, totalRsuInr, taxRegime, setTaxRegime, monthlyRent, setMonthlyRent, ded, setDed, capped, chapterVIA, fbpExempt, includeEmployeePF, setIncludeEmployeePF, steady, netMonthlySteady, thisFYCalc, bonusesThisFY, currentFY, afterHike, hikePct, setHikePct, grossSalary, setGrossSalary, basicPct, setBasicPct, hraPctOfBasic, setHraPctOfBasic, ltaPctOfBasic, setLtaPctOfBasic, pfPctOfBasic, setPfPctOfBasic, gratuityPctOfBasic, setGratuityPctOfBasic, annualBonusPct, setAnnualBonusPct, compNow, bonuses, setBonuses }} />}
             {tab === "income" && <HouseholdIncome {...{ netMonthlySteady, sideIncomeMonthly, setSideIncomeMonthly, spouseIncomeMonthly, setSpouseIncomeMonthly, avgMonthlyRsu, includeRsuInIncome, setIncludeRsuInIncome, householdMonthlyIncome }} />}
             {tab === "investments" && <Investments {...{ investments, setInvestments, totalInvested, investByType }} />}
             {tab === "loans" && <Loans {...{ loans, setLoans, loanSnaps, totalMonthlyEmi, totalOutstanding }} />}
@@ -716,7 +717,7 @@ function SalaryLedger(props) {
   const {
     usdInr, setUsdInr, totalRsuInr, taxRegime, setTaxRegime, monthlyRent, setMonthlyRent, ded, setDed,
     capped, chapterVIA, fbpExempt, includeEmployeePF, setIncludeEmployeePF, steady, netMonthlySteady,
-    thisFYCalc, bonusesThisFY, currentFY, hikePct, setHikePct,
+    thisFYCalc, bonusesThisFY, currentFY, afterHike, hikePct, setHikePct,
     grossSalary, setGrossSalary, basicPct, setBasicPct, hraPctOfBasic, setHraPctOfBasic,
     ltaPctOfBasic, setLtaPctOfBasic, pfPctOfBasic, setPfPctOfBasic, gratuityPctOfBasic, setGratuityPctOfBasic,
     annualBonusPct, setAnnualBonusPct, compNow, bonuses, setBonuses,
@@ -851,7 +852,11 @@ function SalaryLedger(props) {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
           <YearColumn title="Steady State — Full Year" calc={steady} footLabel="Net Monthly Take-Home" footValue={INR(netMonthlySteady)} footTone={T.moss} />
           <YearColumn title={`${currentFY.label} — incl. bonuses`} calc={thisFYCalc} extraLabel="One-time bonuses this FY" footLabel="Net Cash This FY" footValue={INR(thisFYCalc.net)} footTone={T.brassDeep} />
+          <YearColumn title={`After Next Hike (+${hikePct}%)`} calc={afterHike} footLabel="Net Monthly (Post-Hike)" footValue={INR(afterHike.net / 12)} footTone={T.brass} />
         </div>
+        <p style={{ fontSize: 11, color: T.inkSoft, marginTop: 10, marginBottom: 0, fontStyle: "italic" }}>
+          "Steady State" and this FY use your gross salary as entered above — the hike % only changes the third column and next year's rows in the Monthly Schedule tab, not your current pay.
+        </p>
 
         <p style={{ fontSize: 11.5, color: T.inkSoft, marginTop: 16, marginBottom: 0, lineHeight: 1.5 }}>
           Estimates using FY2026-27 slabs as currently known, standard deduction, surcharge and 4% cess. RSU perquisite tax is not included here — that's taxed separately at each vest. Not a substitute for advice from a CA.
