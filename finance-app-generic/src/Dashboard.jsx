@@ -770,7 +770,7 @@ function SalaryLedger(props) {
           <h3 className="ldg-display" style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>Bonuses &amp; Stock</h3>
           <label className="ldg-mono" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, color: T.inkSoft }}>
             annual bonus
-            <input type="number" value={annualBonusPct} onChange={(e) => setAnnualBonusPct(Number(e.target.value) || 0)} style={{ width: 46, border: `1px solid ${T.rule}`, borderRadius: 4, padding: "3px 5px", fontSize: 12, background: T.paper }} /> % of gross
+            <input type="number" value={annualBonusPct} onChange={(e) => setAnnualBonusPct(Number(e.target.value) || 0)} style={{ width: 46, border: `1px solid ${T.rule}`, borderRadius: 4, padding: "3px 5px", fontSize: 12, background: T.paper, color: T.ink }} /> % of gross
           </label>
         </div>
         <LedgerRow label="Annual Bonus (est.)" sub="paid each April" value={INR(grossSalary * (annualBonusPct / 100))} />
@@ -799,7 +799,7 @@ function SalaryLedger(props) {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <span className="ldg-mono" style={{ fontSize: 11, color: T.inkSoft }}>@ ₹</span>
-            <input type="number" value={usdInr} onChange={(e) => setUsdInr(Number(e.target.value) || 0)} className="ldg-mono" style={{ width: 56, border: `1px solid ${T.rule}`, borderRadius: 4, padding: "3px 5px", fontSize: 12, background: T.paper }} />
+            <input type="number" value={usdInr} onChange={(e) => setUsdInr(Number(e.target.value) || 0)} className="ldg-mono" style={{ width: 56, border: `1px solid ${T.rule}`, borderRadius: 4, padding: "3px 5px", fontSize: 12, background: T.paper, color: T.ink }} />
           </div>
           <span className="ldg-mono" style={{ fontSize: 14, fontWeight: 500 }}>{INR(totalRsuInr)}</span>
         </div>
@@ -845,7 +845,7 @@ function SalaryLedger(props) {
           </label>
           <label className="ldg-mono" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, color: T.inkSoft }}>
             annual hike
-            <input type="number" value={hikePct} onChange={(e) => setHikePct(Number(e.target.value) || 0)} style={{ width: 50, border: `1px solid ${T.rule}`, borderRadius: 4, padding: "3px 5px", fontSize: 12, background: T.paper }} /> %
+            <input type="number" value={hikePct} onChange={(e) => setHikePct(Number(e.target.value) || 0)} style={{ width: 50, border: `1px solid ${T.rule}`, borderRadius: 4, padding: "3px 5px", fontSize: 12, background: T.paper, color: T.ink }} /> %
           </label>
         </div>
 
@@ -935,9 +935,15 @@ function HouseholdIncome({ netMonthlySteady, sideIncomeMonthly, setSideIncomeMon
 /* ---------------- INVESTMENTS ---------------- */
 function Investments({ investments, setInvestments, totalInvested, investByType }) {
   const [form, setForm] = useState({ name: "", type: INVESTMENT_TYPES[0], amount: "", date: new Date().toISOString().slice(0, 10), repeat: false, repeatMonths: 12 });
+  const [formError, setFormError] = useState("");
 
   const add = () => {
-    if (!form.name.trim() || !form.amount) return;
+    if (!form.amount || Number(form.amount) <= 0) {
+      setFormError("Enter an amount to add it.");
+      return;
+    }
+    setFormError("");
+    const name = form.name.trim() || `${form.type} ${investments.filter((i) => i.type === form.type).length + 1}`;
     if (form.repeat) {
       const seriesId = uid();
       const n = Math.max(1, Number(form.repeatMonths) || 12);
@@ -945,11 +951,11 @@ function Investments({ investments, setInvestments, totalInvested, investByType 
       const entries = [];
       for (let i = 0; i < n; i++) {
         const d = new Date(base.getFullYear(), base.getMonth() + i, base.getDate());
-        entries.push({ id: uid(), name: form.name, type: form.type, amount: Number(form.amount), date: d.toISOString().slice(0, 10), seriesId, seriesIndex: i + 1, seriesCount: n });
+        entries.push({ id: uid(), name, type: form.type, amount: Number(form.amount), date: d.toISOString().slice(0, 10), seriesId, seriesIndex: i + 1, seriesCount: n });
       }
       setInvestments((p) => [...entries, ...p]);
     } else {
-      setInvestments((p) => [{ id: uid(), name: form.name, type: form.type, amount: Number(form.amount), date: form.date }, ...p]);
+      setInvestments((p) => [{ id: uid(), name, type: form.type, amount: Number(form.amount), date: form.date }, ...p]);
     }
     setForm({ name: form.name, type: form.type, amount: "", date: new Date().toISOString().slice(0, 10), repeat: form.repeat, repeatMonths: form.repeatMonths });
   };
@@ -980,11 +986,12 @@ function Investments({ investments, setInvestments, totalInvested, investByType 
           {form.repeat && (
             <label className="ldg-mono" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: T.inkSoft }}>
               for
-              <input type="number" min="1" value={form.repeatMonths} onChange={(e) => setForm({ ...form, repeatMonths: e.target.value })} style={{ width: 56, border: `1px solid ${T.rule}`, borderRadius: 4, padding: "3px 5px", fontSize: 12, background: T.paper }} />
+              <input type="number" min="1" value={form.repeatMonths} onChange={(e) => setForm({ ...form, repeatMonths: e.target.value })} style={{ width: 56, border: `1px solid ${T.rule}`, borderRadius: 4, padding: "3px 5px", fontSize: 12, background: T.paper, color: T.ink }} />
               months
             </label>
           )}
         </div>
+        {formError && <div className="ldg-mono" style={{ color: T.rust, fontSize: 12, marginTop: 10 }}>{formError}</div>}
       </Card>
       <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: 20 }}>
         <Card>
@@ -1034,15 +1041,21 @@ function Loans({ loans, setLoans, loanSnaps, totalMonthlyEmi, totalOutstanding }
   const [openId, setOpenId] = useState(null);
   const [prepayOpenId, setPrepayOpenId] = useState(null);
   const [prepayForm, setPrepayForm] = useState({ amount: "", date: new Date().toISOString().slice(0, 10) });
+  const [formError, setFormError] = useState("");
 
   const previewEmi = form.principal && form.tenureMonths
     ? emi(Number(form.principal), Number(form.rate) || 0, Number(form.tenureMonths))
     : 0;
 
   const add = () => {
-    if (!form.name.trim() || !form.principal) return;
+    if (!form.principal || Number(form.principal) <= 0) {
+      setFormError("Enter a loan amount to add it.");
+      return;
+    }
+    setFormError("");
+    const name = form.name.trim() || `${form.type} ${loans.filter((l) => l.type === form.type).length + 1}`;
     setLoans((p) => [...p, {
-      id: uid(), name: form.name, type: form.type, principal: Number(form.principal), rate: Number(form.rate) || 0,
+      id: uid(), name, type: form.type, principal: Number(form.principal), rate: Number(form.rate) || 0,
       tenureMonths: Number(form.tenureMonths) || 240, emi: Number(form.emi) || 0, startDate: form.startDate, prepayments: [],
     }]);
     setForm({ name: "", type: form.type, principal: "", rate: "", tenureMonths: "", emi: "", startDate: new Date().toISOString().slice(0, 10) });
@@ -1209,6 +1222,7 @@ function Loans({ loans, setLoans, loanSnaps, totalMonthlyEmi, totalOutstanding }
           <Field label="First EMI Date"><input type="date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} style={inputStyle} /></Field>
           <button onClick={add} style={addBtnStyle}><Plus size={16} /> Add</button>
         </div>
+        {formError && <div className="ldg-mono" style={{ color: T.rust, fontSize: 12, marginTop: 10 }}>{formError}</div>}
         {previewEmi > 0 && !form.emi && (
           <div className="ldg-mono" style={{ marginTop: 12, fontSize: 12.5, color: T.brassDeep }}>
             Estimated EMI: <strong>{INR(previewEmi)}/mo</strong>
@@ -1279,7 +1293,7 @@ function Expenses({ expenses, setExpenses, totalSpent, spentThisMonth, spendByCa
           {form.repeat && (
             <label className="ldg-mono" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: T.inkSoft }}>
               for
-              <input type="number" min="1" value={form.repeatMonths} onChange={(e) => setForm({ ...form, repeatMonths: e.target.value })} style={{ width: 56, border: `1px solid ${T.rule}`, borderRadius: 4, padding: "3px 5px", fontSize: 12, background: T.paper }} />
+              <input type="number" min="1" value={form.repeatMonths} onChange={(e) => setForm({ ...form, repeatMonths: e.target.value })} style={{ width: 56, border: `1px solid ${T.rule}`, borderRadius: 4, padding: "3px 5px", fontSize: 12, background: T.paper, color: T.ink }} />
               months
             </label>
           )}
